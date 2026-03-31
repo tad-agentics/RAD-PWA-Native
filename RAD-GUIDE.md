@@ -477,6 +477,7 @@ If an agent has attempted a task 3 times without success, is uncertain about a s
 | `security-audit` | OWASP + RLS + secrets + deps audit | During `/pre-handoff`, or manually |
 | `testing` | 66 automated rule checks | Runs on agent stop via hooks |
 | `expo-native-reference` | Official RN + Expo doc map, env/EAS/Router pointers, RAD native wiring | Mobile Developer session warm-up; Tech Lead debugging native tooling; SDK or `create-expo-app` alignment |
+| `caching-strategies` | Cache-aside mental model for RAD — TanStack tiers, invalidation, Edge/optional Redis, stampede notes | Tuning `staleTime` / invalidation, stale UI bugs, adding Edge or Redis caches in tech spec |
 
 **Native Phase B:** Use the **`/native-init`** command (not a skill file) after Phase A when mode is `pwa-then-native`. It owns the extraction map from `src/lib` → `shared/` and Expo wiring; see `.cursor/commands/native-init.md`.
 

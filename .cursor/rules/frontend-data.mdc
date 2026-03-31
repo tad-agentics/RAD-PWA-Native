@@ -232,3 +232,7 @@ const interpretation = llm?.interpretation;
 - **Screen must work without LLM** — show raw data immediately, add interpretation as enhancement. Never block the screen on LLM loading.
 - **`supabase.functions.invoke()`** — the correct way to call Edge Functions from the Supabase client. Automatically includes the user's JWT.
 - **Never call LLM APIs directly from frontend** — no `fetch("https://openrouter.ai/...")` or any LLM API in components.
+
+### Related — cache methodology (client + optional server)
+
+TTL tiers, invalidation discipline, fail-open server cache, and stampede awareness mapped to RAD (TanStack Query + Supabase + Edge) live in **`.cursor/skills/caching-strategies/SKILL.md`**.

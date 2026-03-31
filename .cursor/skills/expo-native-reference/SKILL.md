@@ -1,6 +1,6 @@
 ---
 name: expo-native-reference
-description: Official React Native and Expo documentation map, plus supplemental library docs (NativeWind, FlashList, Reanimated, TanStack Query, etc.), environment requirements, and EAS/Router vocabulary for RAD mobile work (mobile/, shared/). Use when working on Expo, React Native, native UI libraries, EAS, Router, SDK alignment, or local tooling.
+description: Official React Native and Expo documentation map, supplemental library docs, EAS/Router vocabulary, and performance investigation pointers (Callstack RN best-practices skill) for RAD mobile work (mobile/, shared/). Use when working on Expo, React Native, FlashList/Reanimated/jank, bundle size, TTI, EAS, or SDK alignment.
 ---
 
 # Expo and React Native — official reference for RAD
@@ -50,6 +50,60 @@ If this skill and `mobile.mdc` disagree on **how to write code**, `mobile.mdc` w
 | Store upload automation | [EAS Submit](https://docs.expo.dev/submit/introduction/) | |
 | OTA JavaScript/asset updates | [EAS Update](https://docs.expo.dev/eas-update/introduction/) | |
 | Browser playground (optional) | [Expo Snack](https://snack.expo.dev/) | |
+
+---
+
+## Supplemental docs — libraries RAD uses on native
+
+Behavior is often defined by these packages; match **`mobile/package.json`** when reading migration notes.
+
+| Area | Documentation | Typical questions |
+| --- | --- | --- |
+| **NativeWind** | [NativeWind](https://www.nativewind.dev/) · [Expo Router](https://www.nativewind.dev/getting-started/expo-router) | `className`, `cssInterop`, theme |
+| **Expo Router** (deep) | [Router basics](https://docs.expo.dev/router/basics/core-concepts) · [Typed routes](https://docs.expo.dev/router/reference/typed-routes/) | Layouts, modals, linking |
+| **React Navigation** | [Docs](https://reactnavigation.org/docs/getting-started/) | Headers, stack/tab under the hood |
+| **FlashList** | [FlashList](https://shopify.github.io/flash-list/) | Recycling, `estimatedItemSize`, jank |
+| **Reanimated** | [Reanimated](https://docs.swmansion.com/react-native-reanimated/) | Worklets, UI-thread animation |
+| **expo-image** | [Expo Image](https://docs.expo.dev/versions/latest/sdk/image/) | `recyclingKey`, placeholders |
+| **react-native-reusables** | [Site](https://reactnativereusables.com/) | Primitives |
+| **TanStack Query** | [React](https://tanstack.com/query/latest/docs/framework/react/overview) | Same patterns as `shared/hooks/` |
+| **RHF + Zod** | [RHF](https://react-hook-form.com/get-started) · [Zod](https://zod.dev) | Forms / `shared/validation/` |
+| **Keyboard** | [keyboard-controller](https://kirillzyusko.github.io/react-native-keyboard-controller/) | Scroll + keyboard |
+| **Supabase (device)** | [JS ref](https://supabase.com/docs/reference/javascript/introduction) · [Native deep linking](https://supabase.com/docs/guides/auth/native-mobile-deep-linking) | Session + auth with `shared/api` |
+
+**Web parity (`src/`):** [React Router](https://reactrouter.com/home) · [Tailwind](https://tailwindcss.com/docs) — use when debugging web-vs-native behavior.
+
+---
+
+## Performance and profiling (Callstack)
+
+The file you may have is the **index** for Callstack’s **react-native-best-practices** agent skill ([repo](https://github.com/callstackincubator/agent-skills), [skill folder](https://github.com/callstackincubator/agent-skills/tree/main/skills/react-native-best-practices), MIT). The **deep content** lives in that repo’s `references/*.md` files — install or copy the whole skill if you want those chapters; the index alone is a **routing table**.
+
+**Workflow (from that skill):** *Measure → Optimize → Re-measure → Validate*. If the metric does not move, revert and try the next lever.
+
+**Priority themes:** (1) FPS & re-renders (2) bundle size (3) TTI (4) native work (5) memory (6) animations.
+
+**RAD alignment — do not “upgrade” stack from docs blindly:**
+
+- Lists: **`mobile.mdc` already requires FlashList** for dynamic lists — prefer that over lazy ScrollView.
+- Animations: **Reanimated only** — already in `mobile.mdc`.
+- Data / re-renders: default is **TanStack Query in `shared/hooks/`** — not Jotai/Zustand unless Tech Lead approves.
+- **React Compiler / Re.Pack / new state libraries:** optional; treat as architectural changes, not drive-by perf patches.
+
+**Where to start (then open Callstack `references/` if the skill is installed):**
+
+| Symptom | Direction |
+| --- | --- |
+| Janky UI / frame drops | RN DevTools / FPS → React profiler → list + re-render guides |
+| List scroll stutter | FlashList docs + Callstack list references |
+| Slow cold start | TTI markers + bundle analysis (Expo/EAS context) |
+| Fat JS bundle | `source-map-explorer` / Expo bundle analysis; avoid barrel imports |
+| Memory climbing | JS vs native leak chapters |
+| TextInput lag | Uncontrolled input / RHF patterns |
+
+**Security:** Treat **shell and bundle-analysis commands** from any external skill as *review before run*; pin tooling; don’t pipe remote scripts into a shell (per Callstack’s own skill notes).
+
+*Attribution: priority/workflow/problem mapping is derived from Callstack’s **react-native-best-practices** skill (MIT); full text and code samples are in their repository.*
 
 ---
 

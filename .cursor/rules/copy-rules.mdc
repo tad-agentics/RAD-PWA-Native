@@ -1,0 +1,96 @@
+---
+description: Voice, tone, and copy rules — [App Name]. Auto-loads on all screen files.
+globs:
+  - src/**/*.tsx
+  - mobile/**/*.tsx
+alwaysApply: false
+---
+
+> This file is the operational extract of `artifacts/docs/emotional-design-system.md`.
+> Populated during Phase 1 or by `/init` Step 4 from the EDS.
+> When EDS and this file diverge, update both — this file must never drift from the EDS.
+
+## Copy Formula
+
+Formula: [Exact sequence — e.g. "[Result] + [Reason personalized to user] + [Specific guidance if needed]"]
+Length: [Max sentences for primary copy — e.g. "2 sentences. Reason: 1 sentence. Total ≤40 words per screen."]
+Structure:
+  - Sentence 1: [What goes first — e.g. "Specific result (date, time, direction, color)"]
+  - Sentence 2: [What goes second — e.g. "Reason tied to user's profile — must include at least 1 personalization token"]
+Tone: [adjective], [adjective] — never [anti-adjective], [anti-adjective]
+Person: [How to address user — e.g. "Use 'bạn'. Never 'bạn ấy' or 'người dùng'."]
+
+## Forbidden Opening Words
+
+Never start any copy string with: [word], [word], [word], [word], [word]
+
+## Forbidden Words (anywhere in copy)
+
+Never use: [word], [word], [word], [word], [word]
+
+## Screen-Context Copy Rules
+
+Each context type has its own emotional objective. When context type and base formula conflict, context type wins.
+
+### Decision / Choice Moment
+Emotional objective: [What feeling to create — e.g. "Reduce cognitive load. Help user choose, don't add things to consider."]
+Formula override: [How this differs from base — e.g. "Best result on top. Show only 1 reason. Don't list all factors."]
+Example: "[Real copy with {{variables}} — e.g. 'Thứ Ba {{result.date}} — Trực Thành, Hoàng Đạo, hợp mệnh {{user.menh}} của bạn.'"]
+
+### Confirmation / Completion
+Emotional objective: [e.g. "Close the decision loop. Confirm the result as settled, not still a suggestion."]
+Formula override: [e.g. "First sentence: result as fact. Second sentence (optional): next action."]
+Example: "[Real copy — e.g. 'Ngày {{result.date}} đã sẵn sàng — giờ {{result.best_hour}} là thời điểm tốt nhất theo mệnh của bạn.'"]
+
+### Empty / Zero State
+Emotional objective: [e.g. "App is waiting to help, not empty and waiting to be filled."]
+Formula override: [e.g. "Positive invitation, specific about what app will do. Never 'Chưa có X. Hãy Y.'"]
+Example: "[Real copy — e.g. 'Cho biết ngày giờ sinh để mọi kết quả đều dành riêng cho bạn.'"]
+
+### Error State
+Emotional objective: [e.g. "Maintain trust. Technical errors must not make user doubt result accuracy."]
+Formula override: [e.g. "Acknowledge briefly. Specific action user can take. No excessive apology."]
+Example: "[Real copy — e.g. 'Không tải được kết quả lúc này. Thử lại sau vài giây.'"]
+
+### Onboarding
+Emotional objective: [e.g. "App is learning about user, not user filling out a form."]
+Formula override: [e.g. "Each input field has micro-copy explaining purpose in 1 sentence. Don't use placeholder as label."]
+Example: "[Real copy — e.g. 'Ngày sinh của bạn — dùng để tính Can Chi và tìm ngày hợp tuổi.'"]
+
+### Background / Ambient
+Emotional objective: [e.g. "Calm, familiar tone for everyday UI. No excitement, no urgency."]
+Nav labels: [Pattern — e.g. "Nouns only, no verbs. 'Lịch' not 'Xem Lịch'. 'Lá số' not 'Lập Lá Số Của Bạn'."]
+Section headers: [Pattern — e.g. "Descriptive, not CTA. 'Ngày tốt tuần này' not 'Chọn ngày tốt tuần này!'"]
+Credit balance: [Pattern — e.g. "{{user.credits}} tín dụng — no 'Bạn còn X! Mua thêm ngay!'"]
+
+### Paywall / Purchase Moment
+Emotional objective: [e.g. "User is at peak wanting-to-know. Don't interrupt that feeling. Paywall is a natural next step, not a gate."]
+Formula override: [e.g. "Show partial result first. Explain what is hidden, not why to buy. No urgency."]
+Example: "[Real copy — e.g. 'Xem lý do và giờ tốt cho ngày {{result.date}} — cần 5 tín dụng.'"]
+
+## Forbidden Patterns
+
+- [Pattern name]: [What it is and why it's forbidden — e.g. "FALSE CERTAINTY: Copy promising outcomes. App provides information, not guarantees."]
+- [Pattern name]: [Description]
+- [Pattern name]: [Description]
+- [Pattern name]: [Description]
+
+## Copy Quality Test
+
+A string passes only if ALL five answer YES. Any NO → rewrite before shipping.
+
+1. [Binary question specific to this product — e.g. "Does this copy mention at least one personal element (mệnh, Dụng Thần, tuổi, Can Chi) — or is this an ambient/background screen that doesn't require personalization?"]
+2. [Binary question — e.g. "If read aloud, does it sound like a [age] year old [city] person talking to family — not like a translated text or system notification?"]
+3. [Binary question — e.g. "Does it end with an action or specific information the user can use immediately — not a sales pitch or open-ended question?"]
+4. [Binary question — e.g. "Is it free of every word in the Forbidden Words and Forbidden Opening Words lists?"]
+5. [Binary question — e.g. "If the user just paid credits to see this, does it feel like the question in their head has been answered — not explained at length or followed by more questions?"]
+
+## Hard Rules
+
+These apply regardless of the per-project voice and tone above.
+
+- All UI text uses real data variables — never lorem ipsum or placeholder strings
+- Copy slots defined in wireframe metadata must be populated before committing
+- Dynamic values use actual variable names: `{{user.display_name}}`, `{{item.title}}`
+- Error messages: state what failed + why + what to do next — three parts, one sentence
+- Copy written in [language] for [market] — follow locale conventions for punctuation, number formatting, and currency

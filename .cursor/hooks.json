@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "hooks": {
+    "stop": [
+      {
+        "command": "bash hooks/on-agent-stop.sh"
+      }
+    ],
+    "preToolUse": [
+      {
+        "tools": ["Shell"],
+        "command": "bash .cursor/hooks/check-destructive.sh",
+        "statusMessage": "Checking for destructive commands..."
+      }
+    ]
+  }
+}

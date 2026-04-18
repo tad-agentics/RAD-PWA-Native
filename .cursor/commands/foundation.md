@@ -54,14 +54,14 @@ Wait for Backend Foundation to commit before dispatching Frontend Foundation.
 After Backend Foundation commits, launch Frontend Developer subagent (foreground):
 
 ```
-Task: Foundation — Make Import + Components + Tailwind + Landing Page + Auth Screens
+Task: Foundation — Claude Design Handoff + Components + Tailwind + Landing Page + Auth Screens
 
 Read:
 - .cursor/agents/frontend-developer.md (your full instructions)
 - .cursor/skills/design-system/SKILL.md (component inventory process)
 - .cursor/rules/copy-rules.mdc (copy quality test for landing page copy validation)
 - agent-workspace/ACTIVE_CONTEXT.md
-- src/make-import/ (Make's code output — read App.tsx + routes.tsx first)
+- src/design-handoff/ (Claude Design handoff bundle — read App.tsx + routes.tsx first)
 - artifacts/docs/emotional-design-system.md — §6 Dopamine Moments (check if motion/react-countup are needed)
 - artifacts/docs/screen-specs-[app]-v1.md — landing page metadata block
 - artifacts/docs/northstar-[app].html — §7b Landing Page Content
@@ -69,12 +69,12 @@ Read:
 
 Mode: Foundation
 
-Step 0: Install Make's dependencies — scan imports across Make's files (not just package.json). Run npm install [packages]. Verify npm run build passes.
-Step 1: Copy src/make-import/components/ui/ → src/components/ui/ as-is. Copy other shared components (ScreenHeader, CreditGate, etc.) → src/components/. Fix import paths. Catalog Make's components and produce artifacts/docs/design-system-spec.md (per design-system SKILL.md). Build any additional shared components Make didn't generate (EmptyState, ErrorBanner, SkeletonCard).
-Step 2: Copy Make's theme.css (CSS custom properties + @theme inline) into src/app.css. Replace Google Fonts CDN imports with self-hosted .woff2. Fix next-themes import in sonner.tsx.
+Step 0: Install Claude Design's dependencies — scan imports across Claude Design's files (not just package.json). Run npm install [packages]. Verify npm run build passes.
+Step 1: Copy src/design-handoff/components/ui/ → src/components/ui/ as-is. Copy other shared components (ScreenHeader, CreditGate, etc.) → src/components/. Fix import paths. Catalog Claude Design's components and produce artifacts/docs/design-system-spec.md (per design-system SKILL.md). Build any additional shared components Claude Design didn't generate (EmptyState, ErrorBanner, SkeletonCard).
+Step 2: Copy Claude Design's theme.css (CSS custom properties + @theme inline) into src/app.css. Replace Google Fonts CDN imports with self-hosted .woff2. Fix next-themes import in sonner.tsx.
 Step 3: Create src/lib/query-client.ts (QueryClient with default staleTime: 60s) and src/lib/query-keys.ts per frontend-data.mdc. Wrap app in QueryClientProvider in src/root.tsx. Create src/hooks/useCredits.ts shared hook.
 Step 4: Create src/hooks/useInstallPrompt.ts (spec in tech-spec §18).
-Step 5: Landing page (src/routes/_index/route.tsx) — if Make has a landing page, COPY the file directly and apply targeted edits. Otherwise build from northstar §7b.
+Step 5: Landing page (src/routes/_index/route.tsx) — if Claude Design has a landing page, COPY the file directly and apply targeted edits. Otherwise build from northstar §7b.
   - Route: / (pre-rendered at build time)
   - Content from northstar §7b — all copy is production-ready, use verbatim
   - Section stack from screen spec metadata: hero, trust bar, benefits, how-it-works, social proof, FAQ, final CTA, sticky bottom bar
@@ -83,9 +83,9 @@ Step 5: Landing page (src/routes/_index/route.tsx) — if Make has a landing pag
   - Hero image with loading="eager" (LCP optimization)
   - FAQ section renders both visible accordion AND FAQ JSON-LD structured data
   - Edge case: already-installed detection → swap install CTA for deep link
-Step 6: Auth screens (src/routes/_auth/) — if Make has auth screens (DangNhap, DangNhapEmail, QuenMatKhau), COPY them directly and apply targeted edits (swap mock auth → real Supabase Auth). Otherwise build from northstar §9.
+Step 6: Auth screens (src/routes/_auth/) — if Claude Design has auth screens (DangNhap, DangNhapEmail, QuenMatKhau), COPY them directly and apply targeted edits (swap mock auth → real Supabase Auth). Otherwise build from northstar §9.
 
-Building the landing page first validates Make's components + Tailwind config on a real screen before feature work begins.
+Building the landing page first validates Claude Design's components + Tailwind config on a real screen before feature work begins.
 
 If EDS §6 lists animation dependencies (motion, react-countup), verify they are installed.
 Signal completion when feat(foundation): shared components + landing page + auth screens complete is committed.

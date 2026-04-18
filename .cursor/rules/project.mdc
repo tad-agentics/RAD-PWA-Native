@@ -9,7 +9,7 @@ alwaysApply: true
 
 App: [App Name]
 Deployment mode: [pwa | native | pwa-then-native]
-Stack: React Router v7 (Vite) · Supabase (DB + Auth + RLS + Edge Functions + Storage) · TanStack React Query · Vercel · Tailwind CSS · Figma Make
+Stack: React Router v7 (Vite) · Supabase (DB + Auth + RLS + Edge Functions + Storage) · TanStack React Query · Vercel · Tailwind CSS · Claude Design
 Mobile stack (if mode ≠ pwa): Expo SDK 55 · Expo Router · NativeWind v4 · react-native-reusables · FlashList · Reanimated
 
 ## Architecture summary
@@ -17,7 +17,7 @@ Mobile stack (if mode ≠ pwa): Expo SDK 55 · Expo Router · NativeWind v4 · r
 - **Frontend:** React SPA deployed on Vercel. Pre-rendered landing page at `/` for SEO. All `/app/*` routes are client-side SPA behind auth guard.
 - **Backend:** Supabase is the sole backend. Frontend talks to Supabase directly via publishable key + JWT. RLS handles authorization.
 - **Server logic:** Supabase Edge Functions only — webhooks, cron, email, service_role operations. No API routes in the frontend.
-- **Design:** Figma Make generates React + Tailwind TSX. Web: copied into route files with hooks, auth, and loading/error/empty states added. Native: 3-phase hybrid translation (see mobile-developer.md).
+- **Design:** Claude Design generates React + Tailwind TSX. Web: copied into route files with hooks, auth, and loading/error/empty states added. Native: 3-phase hybrid translation (see mobile-developer.md).
 - **Shared code (if mode ≠ pwa):** `shared/` contains types, TanStack Query hooks, Zod schemas, utils, Supabase client factory. Both `src/` (web) and `mobile/` (native) import from `shared/`. Import direction enforced — see below.
 
 ## Import direction rules (if mode ≠ pwa)

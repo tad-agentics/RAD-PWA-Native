@@ -93,7 +93,7 @@ On approval, create `artifacts/docs/features/[feature-name].md`:
 [tables, columns, RLS, Edge Functions — or "none"]
 
 ## Frontend Scope
-[screens, Make component names to copy, interactions — or new screens to build from screen specs]
+[screens, Claude Design component names to copy, interactions — or new screens to build from screen specs]
 
 ## Integration Notes
 [links to artifacts/integrations/ docs if applicable, or "none"]

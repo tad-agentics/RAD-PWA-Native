@@ -6,7 +6,7 @@
 
 ## Stack
 
-React Router v7 (Vite) · Supabase (DB + Auth + RLS + Edge Functions + Storage) · TanStack React Query · Vercel · Tailwind CSS · Figma Make
+React Router v7 (Vite) · Supabase (DB + Auth + RLS + Edge Functions + Storage) · TanStack React Query · Vercel · Tailwind CSS · Claude Design
 
 ---
 
@@ -28,10 +28,10 @@ In practice: `.mdc` rules define the code standards. Agent files define the work
 | Agent | Role | Agent file | Invoked via |
 |---|---|---|---|
 | **Tech Lead** | Human-facing orchestrator. Owns architecture, state, and approvals. | _(main Cursor session)_ | Direct |
-| **Product Designer** | Screen planning + Figma Make prompt guidance + visual QA. | `product-designer.md` | `/phase2`, `/visual-audit` |
+| **Product Designer** | Screen planning + Claude Design prompt guidance + visual QA. | `product-designer.md` | `/phase2`, `/visual-audit` |
 | **Backend Developer** | DB schema, migrations, RLS, Edge Functions, webhooks, cron. | `backend-developer.md` | `/foundation`, `/feature` |
-| **Frontend Developer** | Screens (copied from Figma Make TSX), shared components, mobile viewport. | `frontend-developer.md` | `/foundation`, `/feature` |
-| **Mobile Developer** | Native screens (translated from Make TSX via hybrid 3-phase), NativeWind, react-native-reusables, FlashList. | `mobile-developer.md` | `/foundation`, `/feature` (mode ≠ pwa) |
+| **Frontend Developer** | Screens (copied from Claude Design handoff TSX), shared components, mobile viewport. | `frontend-developer.md` | `/foundation`, `/feature` |
+| **Mobile Developer** | Native screens (translated from Claude Design handoff TSX via hybrid 3-phase), NativeWind, react-native-reusables, FlashList. | `mobile-developer.md` | `/foundation`, `/feature` (mode ≠ pwa) |
 | **QA Agent** | Feature validation + pre-handoff safety audit. | `qa-agent.md` | `/feature`, pre-handoff |
 | **DevOps Agent** | Production deploy. Runs once after QA sign-off. | `devops-agent.md` | `/deploy` |
 | **Research Agent** | Technical research — integration docs + implementation pattern research. | `research-agent.md` | `/research`, auto from `/phase4` and `/new-feature` |
@@ -50,7 +50,7 @@ All specialists are used proactively. When choosing which subagent to launch:
 | Any UI work — screens, components, interactions, navigation, styling | `frontend-developer` |
 | Any native mobile UI work — Expo screens, NativeWind, react-native-reusables (mode ≠ pwa) | `mobile-developer` |
 | Validate a completed feature end-to-end | `qa-agent` |
-| Any design work — screen specs, Make prompts, visual audit | `product-designer` |
+| Any design work — screen specs, Claude Design prompts, visual audit | `product-designer` |
 | Any deployment work | `devops-agent` |
 | Research an external integration (API docs, SDK, webhooks) | `research-agent` (Mode 1) |
 | Research implementation patterns for complex features (concurrency, auth, billing) | `research-agent` (Mode 2) |
@@ -66,11 +66,11 @@ All specialists are used proactively. When choosing which subagent to launch:
 | **Phase 1** | _(external)_ | Human (Claude.ai, Gemini, etc.) | Northstar + EDS placed in `artifacts/docs/` |
 | **Office Hours** | `/office-hours` | Tech Lead | Northstar validated — all 12 sections pass + stack fit check |
 | **Init** | `/init` | Tech Lead | Phase 1 artifacts present + validated |
-| **Phase 2** | `/phase2` | Product Designer | Human approves screen specs + Figma Make brief |
-| **Figma Make** | _(human-driven)_ | Human in Figma Make | Make code copied to `src/make-import/` |
+| **Phase 2** | `/phase2` | Product Designer | Human approves screen specs + Claude Design brief |
+| **Claude Design** | _(human-driven)_ | Human in Claude Design | Claude Design handoff copied to `src/design-handoff/` |
 | **Phase 4** | `/phase4` | Tech Lead | Human approves tech spec |
 | **Setup** | `/setup` | Tech Lead | Human approves build plan |
-| **Foundation** | `/foundation` | Backend (infra + SEO/PWA) → Frontend (Make import + component inventory + Tailwind config + landing + auth) | Auto-proceeds after commit |
+| **Foundation** | `/foundation` | Backend (infra + SEO/PWA) → Frontend (Claude Design handoff + component inventory + Tailwind config + landing + auth) | Auto-proceeds after commit |
 | **Features** | `/feature [name]` | Backend → Frontend → QA (per feature, parallel waves) | Human approves each QA PASS |
 | **Visual audit** | `/visual-audit [url]` | Product Designer | Fix all BLOCKING findings |
 | **Dogfood** | `/dogfood` | Human (with Tech Lead) | Fix all BLOCKING findings |
@@ -98,8 +98,8 @@ Blocking gates are enforced — no agent self-proceeds to the next phase.
 | `artifacts/docs/northstar-[app].html` | Phase 1 input |
 | `artifacts/docs/emotional-design-system.md` (or `eds-[app].html`) | Phase 1 input |
 | `artifacts/docs/screen-specs-[app]-v1.md` | Phase 2 output — screen metadata |
-| `artifacts/docs/figma-make-brief.md` | Phase 2 output — Figma Make input brief |
-| `artifacts/docs/design-system-spec.md` | Make component inventory (produced during Foundation) |
+| `artifacts/docs/claude-design-brief.md` | Phase 2 output — Claude Design input brief |
+| `artifacts/docs/design-system-spec.md` | Claude Design component inventory (produced during Foundation) |
 | `artifacts/docs/tech-spec.md` | Phase 4 output |
 | `artifacts/docs/ETHOS.md` | Builder ethos — completeness, search-before-building, user sovereignty |
 | `artifacts/docs/changelog.md` | Ongoing deviations from spec |
@@ -116,15 +116,15 @@ Blocking gates are enforced — no agent self-proceeds to the next phase.
 
 | Path | Purpose |
 |---|---|
-| `src/make-import/` | Figma Make code dump (temporary — human copies here, agent decomposes, deleted after porting) |
+| `src/design-handoff/` | Claude Design handoff bundle (temporary — human copies here, agent decomposes, deleted after porting) |
 | `src/routes/_index/route.tsx` | Landing page (pre-rendered at build time for SEO) |
 | `src/routes/_auth/login/route.tsx` | Login screen |
 | `src/routes/_auth/signup/route.tsx` | Signup screen |
 | `src/routes/_auth/callback/route.tsx` | OAuth callback handler |
 | `src/routes/_app/layout.tsx` | Auth guard layout — checks session, redirects to /login |
-| `src/routes/_app/[feature]/route.tsx` | Feature screen (copied from Figma Make TSX, targeted edits applied) |
+| `src/routes/_app/[feature]/route.tsx` | Feature screen (copied from Claude Design handoff TSX, targeted edits applied) |
 | `src/routes/_app/[feature]/components/` | Route-specific components |
-| `src/components/ui/` | Make's UI primitives (moved from `src/make-import/components/ui/` as-is) |
+| `src/components/ui/` | Claude Design's UI primitives (moved from `src/design-handoff/components/ui/` as-is) |
 | `src/components/` | Shared components (used by 2+ screens) |
 | `src/hooks/` | Shared hooks (`useAuth`, `useProfile`, `useInstallPrompt`) |
 | `src/lib/supabase.ts` | Single Supabase client (publishable key) |
@@ -134,7 +134,7 @@ Blocking gates are enforced — no agent self-proceeds to the next phase.
 | `src/lib/database.types.ts` | Generated types from `supabase gen types` |
 | `src/lib/formatters.ts` | Formatting utilities |
 | `src/lib/constants.ts` | App-wide constants |
-| `src/app.css` | Tailwind directives + @font-face + base styles + brand tokens (CSS custom properties from Make's theme.css) |
+| `src/app.css` | Tailwind directives + @font-face + base styles + brand tokens (CSS custom properties from Claude Design's theme.css) |
 | `react-router.config.ts` | SPA mode, pre-render `/` |
 | `vite.config.ts` | Vite + React Router + Tailwind + PWA |
 | `vercel.json` | SPA rewrite rules |

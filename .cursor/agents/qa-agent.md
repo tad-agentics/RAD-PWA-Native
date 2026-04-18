@@ -63,13 +63,13 @@ Map changed files to affected screens/routes:
 
 Use this scope to prioritize: spend more time on changed areas, less on untouched features. All 5 passes still run, but testing depth scales with change density.
 
-### Pass 1 — Visual Fidelity & Make Integrity
+### Pass 1 — Visual Fidelity & Claude Design Integrity
 
 **Goal:** Catch any code the frontend agent modified that it shouldn't have.
 
-- Compare every route file against its source in `src/make-import/` — diff should show ONLY: import path changes, mock data → Supabase queries, mock auth → useAuth(), navigation path prefixes
+- Compare every route file against its source in `src/design-handoff/` — diff should show ONLY: import path changes, mock data → Supabase queries, mock auth → useAuth(), navigation path prefixes
 - Flag BLOCKING: any Tailwind class changed, any animation timing modified, any layout structure altered, any component hierarchy restructured
-- Verify Make's `components/ui/` files are unmodified copies
+- Verify Claude Design's `components/ui/` files are unmodified copies
 - Verify copy slots match `copy-rules.mdc` — run the 5-question Copy Quality Test on every visible string
 
 ### Pass 2 — Data & Performance
@@ -124,7 +124,7 @@ Use this scope to prioritize: spend more time on changed areas, less on untouche
 ### Adversarial cross-check
 
 After all 5 passes complete, review the findings list and challenge each one:
-- Is this a real bug or a false positive from misunderstanding Make's intent?
+- Is this a real bug or a false positive from misunderstanding Claude Design's intent?
 - Does this BLOCKING item actually block the user, or is it cosmetic?
 - Did any pass assume "looks fine" without verifying? Re-check those spots.
 
@@ -184,7 +184,7 @@ Compute a weighted health score for the feature. This makes quality comparable a
 
 | Category | Weight | What it covers |
 |---|---|---|
-| Visual Fidelity | 15% | Make integrity, Tailwind classes, layout match |
+| Visual Fidelity | 15% | Claude Design integrity, Tailwind classes, layout match |
 | Data & Performance | 20% | Query patterns, caching, waterfalls |
 | Security & RLS | 20% | RLS gaps, auth bypass, secret leakage |
 | Interaction Flows | 20% | Business logic, paywall gates, branch conditions |

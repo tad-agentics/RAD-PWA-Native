@@ -1,12 +1,12 @@
 # /setup
 
-Tech Lead scaffolds the project and generates the build plan. Runs after Phase 4 is approved and Make code is in `src/make-import/`.
+Tech Lead scaffolds the project and generates the build plan. Runs after Phase 4 is approved and Claude Design handoff bundle is in `src/design-handoff/`.
 
 ## Pre-flight checks
 
 Before starting, confirm:
 - [ ] `artifacts/docs/tech-spec.md` exists
-- [ ] `src/make-import/` exists with Make's code output (human has copied from Make's Code tab)
+- [ ] `src/design-handoff/` exists with Claude Design's handoff bundle (human has exported from Claude Design)
 - [ ] `artifacts/docs/screen-specs-[app]-v1.md` exists
 - [ ] `artifacts/plans/build-plan.md` is still the placeholder (not yet generated)
 - [ ] `npm run build` passes (or `package.json` exists with base dependencies installed)
@@ -61,7 +61,7 @@ Produce `artifacts/plans/build-plan.md` with:
    - The landing page is the first screen built — validates tokens, components, and install flow
 3. **Per-feature context packages** — for each feature, extract and compile:
    - Backend context: exact tables, RLS intent, data hooks, Edge Functions (if needed)
-   - Frontend context: exact screens with metadata (components, data vars, states, interaction flows with branch conditions, Make component names for copying)
+   - Frontend context: exact screens with metadata (components, data vars, states, interaction flows with branch conditions, Claude Design component names for copying)
    - Copy: production-ready copy slots from screen spec metadata, tagged with context type
    - Dopamine moments: which screens have D1–D4 flags, reference EDS §6
    - Credit costs: which screens have paywall gates, exact credit amounts

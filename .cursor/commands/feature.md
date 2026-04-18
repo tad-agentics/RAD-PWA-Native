@@ -53,11 +53,11 @@ Read:
 - artifacts/docs/emotional-design-system.md — read §6 if any screen has a dopamine moment flag (D1–D4)
 
 Mode: Feature
-For each screen: COPY the Make screen file from src/make-import/screens/ directly into the route file. Then apply targeted str_replace edits per frontend-make.mdc (fix imports, swap mock data → Supabase queries, swap mock auth → useAuth). Do NOT rewrite any Make file from scratch — 90% of Make's code stays untouched.
+For each screen: COPY the Claude Design screen file from src/design-handoff/screens/ directly into the route file. Then apply targeted str_replace edits per frontend-design.mdc (fix imports, swap mock data → Supabase queries, swap mock auth → useAuth). Do NOT rewrite any Claude Design file from scratch — 90% of Claude Design's handoff stays untouched.
 - Implement interaction flows exactly as specified in screen spec metadata
 - Copy slots are production-ready — use verbatim
-- Add loading/error/empty states below existing JSX (Make output only has happy path)
-- Every Tailwind class, animation, and layout decision from Make must be preserved exactly
+- Add loading/error/empty states below existing JSX (Claude Design handoff output only has happy path)
+- Every Tailwind class, animation, and layout decision from Claude Design must be preserved exactly
 
 Mutation Patterns (mandatory):
 - Every useMutation must invalidate ALL affected query keys in onSuccess. Over-invalidate when in doubt.
@@ -84,10 +84,10 @@ Read:
 - agent-workspace/ACTIVE_CONTEXT.md
 - artifacts/plans/build-plan.md — read the [name] feature context package
 - artifacts/docs/screen-specs-[app]-v1.md — screens for this feature (Mobile Navigation metadata)
-- artifacts/docs/make-reference/ — Make .tsx files for screens in this feature
+- artifacts/docs/design-reference/ — Claude Design .tsx files for screens in this feature
 
 Mode: Feature
-For each screen: run 3-phase hybrid translation from Make's web TSX.
+For each screen: run 3-phase hybrid translation from Claude Design's web TSX.
   Phase A: Extract types, mock data, copy strings → shared/
   Phase B: Element swaps, class filtering, Radix→@rn-primitives
   Phase C: Navigation, scroll, keyboard, safe area, haptics

@@ -134,7 +134,7 @@ OG image generation: if dynamic share cards are needed, create `supabase/functio
 
 Dispatched per feature after Foundation commits. Receives a feature context package from `build-plan.md`.
 
-**Schema must match Make's mock data shapes.** Read `src/make-import/` to find the hardcoded data structures the frontend expects. Column names should match mock object property names where possible. If a mock shape requires transformation (denormalized, computed), document it as a database view or in the data hook.
+**Schema must match Claude Design's mock data shapes.** Read `src/design-handoff/` to find the hardcoded data structures the frontend expects. Column names should match mock object property names where possible. If a mock shape requires transformation (denormalized, computed), document it as a database view or in the data hook.
 
 **For each feature, deliver:**
 

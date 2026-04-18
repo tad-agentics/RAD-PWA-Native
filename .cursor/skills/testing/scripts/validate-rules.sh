@@ -67,7 +67,7 @@ check_zero "framer-motion (use 'motion' package)" \
   "framer-motion" \
   "Do not\|do not\|NOT\|never\|NEVER\|removed\|note intent\|rebuild in"
 
-check_zero "HeroUI (removed — Make components only)" \
+check_zero "HeroUI (removed — Claude Design components only)" \
   "HeroUI" \
   "Do not\|do not\|NOT\|never\|removed"
 
@@ -94,13 +94,13 @@ check_zero "Phase 6 (eliminated from RAD pipeline)" \
   "Phase 6" \
   "Polish\|verification\|screen building"
 
-check_zero "get_design_context (Figma MCP forbidden in web context)" \
-  "get_design_context" \
-  "Do not\|do not\|NOT\|never\|would cause\|optional\|Use MCP when\|delivery mechanism\|returns.*source files"
+check_zero "legacy Figma/Make references (Claude Design replaced Figma Make)" \
+  "Figma Make\|figma-make-brief\|src/make-import\|frontend-make\.mdc" \
+  "^\s*#"
 
 check_zero "stale 'ported into' language (use 'copied into')" \
   "ported into\|Ported into" \
-  "Figma Make Porting\|off-limits during porting"
+  "Claude Design Porting\|off-limits during porting"
 
 echo ""
 
@@ -109,7 +109,7 @@ echo ""
 echo "── Copy-Then-Edit Enforcement ──"
 
 check_positive "COPY / copy file directly" \
-  "COPY\|copy.*file.*direct\|cp src/make-import" 10
+  "COPY\|copy.*file.*direct\|cp src/design-handoff" 10
 
 check_positive "str_replace as edit method" \
   "str_replace" 10
@@ -299,9 +299,9 @@ if [ -f ".cursor/hooks.json" ]; then
 fi
 
 # Agent files reference stale paths — catch references to deleted files
-stale_path_hits=$(grep -rn "src/make-import/" --include="*.md" --include="*.mdc" 2>/dev/null | grep -v "copy\|Copy\|COPY\|make-import.*temporary\|deleted after\|human copies\|Read.*make-import\|cp src\|catalogs\|Source\|dump\|compare\|import/" | wc -l)
+stale_path_hits=$(grep -rn "src/design-handoff/" --include="*.md" --include="*.mdc" 2>/dev/null | grep -v "copy\|Copy\|COPY\|design-handoff.*temporary\|deleted after\|human copies\|Read.*design-handoff\|cp src\|catalogs\|Source\|dump\|compare\|handoff/" | wc -l)
 if [ "$stale_path_hits" -gt 15 ]; then
-  fail "Excessive references to src/make-import/ outside of copy context ($stale_path_hits hits — may be stale after porting)"
+  fail "Excessive references to src/design-handoff/ outside of copy context ($stale_path_hits hits — may be stale after porting)"
 else
   pass
 fi

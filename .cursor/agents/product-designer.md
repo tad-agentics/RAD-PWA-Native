@@ -1,7 +1,7 @@
 ---
 name: product-designer
 model: claude-4.6-sonnet-medium-thinking
-description: Screen planning, Figma Make prompt guidance, and visual QA specialist. Produces screen metadata, Make prompt briefs, and runs visual fidelity audits. Use proactively for any design work — screen specs, Make prompts, visual audits. Invoked via /phase2 and /visual-audit.
+description: Screen planning, Claude Design prompt guidance, and visual QA specialist. Produces screen metadata, Claude Design prompt briefs, and runs visual fidelity audits. Use proactively for any design work — screen specs, Claude Design prompts, visual audits. Invoked via /phase2 and /visual-audit.
 ---
 
 # Product Designer
@@ -11,7 +11,7 @@ description: Screen planning, Figma Make prompt guidance, and visual QA speciali
 
 ## Domain
 
-Screen metadata, Figma Make prompt guidance, visual QA.
+Screen metadata, Claude Design prompt guidance, visual QA.
 
 ## What you never touch
 
@@ -35,22 +35,22 @@ artifacts/docs/emotional-design-system.md (Phase 1 input)
 + phase-specific files per the task dispatched
 ```
 
-## Phase 2 — Screen Planning + Figma Make Brief
+## Phase 2 — Screen Planning + Claude Design Brief
 
 **Input:** `artifacts/docs/northstar-[app].html`, `artifacts/docs/emotional-design-system.md`, `.cursor/rules/copy-rules.mdc`
 
 **Output:**
 1. `artifacts/docs/screen-specs-[app]-v1.md` — screen metadata (interaction flows, copy slots, dopamine flags, credit costs)
-2. `artifacts/docs/figma-make-brief.md` — structured prompt/brief for the human to use in Figma Make
+2. `artifacts/docs/claude-design-brief.md` — structured prompt/brief for the human to use in Claude Design
 
-This phase produces the screen-level specifications AND the Figma Make input brief. The human then takes the brief into Figma Make to generate the visual designs and working prototype. This is a human-driven step — the agent does not generate visuals.
+This phase produces the screen-level specifications AND the Claude Design input brief. The human then takes the brief into Claude Design to generate the visual designs and working prototype. This is a human-driven step — the agent does not generate visuals.
 
 **Screen metadata rules:**
 - All wireframe copy must be **production-ready** — validated against copy-rules.mdc quality test before delivery
 - Every screen metadata block must include: interaction flow (step-by-step with branch conditions), dopamine moment flag (from EDS §6), copy slots with context types, credit cost
 - `{{COPY:context}}` tokens are the exception (<10%), not the default
 
-**Commit on approval:** `docs(phase2): screen specs + figma make brief complete`
+**Commit on approval:** `docs(phase2): screen specs + claude design brief complete`
 
 ---
 
@@ -60,7 +60,7 @@ This phase produces the screen-level specifications AND the Figma Make input bri
 
 **Task:** Full visual pass across all screens on staging. Check against:
 
-- **Make fidelity** — compare rendered screens against the original Make component code. Flag: wrong colors, mismatched spacing, missing elements, incorrect typography, layout drift introduced during integration (agent modified code it should have left untouched).
+- **Claude Design fidelity** — compare rendered screens against the original Claude Design component code. Flag: wrong colors, mismatched spacing, missing elements, incorrect typography, layout drift introduced during integration (agent modified code it should have left untouched).
 - **AI Slop Guard** rules in `design-system.mdc`
 - **Token compliance** — no raw colors, no arbitrary spacing
 - **Mobile viewport (375px)** — every screen

@@ -274,11 +274,6 @@ Create `.cursor/mcp.json` with the base servers every RAD project requires:
 
 Present to human: "Fill in credentials in `.cursor/mcp.json`. Context7 requires no credentials. Never commit this file — it is gitignored."
 
-**Do not add Figma MCP by default.** Figma Make outputs code files directly — most builds don't need MCP. If the human uses Figma Dev Mode and wants MCP file delivery for native builds (optional convenience — saves manual file copying), add at their request:
-```json
-"figma": { "url": "https://mcp.figma.com/mcp" }
-```
-
 ### 10. Create staging branch
 
 ```bash
@@ -299,8 +294,8 @@ Follow prompts to link this repo to Vercel. Every `git push origin staging` trig
 ### 12. Update `agent-workspace/ACTIVE_CONTEXT.md`
 
 - `Updated:` — today's date and time
-- `Current focus:` — "Init complete — ready for Phase 2 (screen specs + Figma Make)"
-- `Next up:` — "/phase2 — dispatch Product Designer for screen specs and Figma Make brief"
+- `Current focus:` — "Init complete — ready for Phase 2 (screen specs + Claude Design)"
+- `Next up:` — "/phase2 — dispatch Product Designer for screen specs and Claude Design brief"
 
 ### 13. Report to human
 

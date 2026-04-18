@@ -123,4 +123,4 @@ Claude Design's handoff bundle is the source of truth. Do not attempt to re-requ
 | **Google Fonts via CDN import** — render-blocking. | Replace with self-hosted `.woff2` + `@font-face`. |
 | **CSS tokens via `@theme inline`** — not in `tailwind.config.ts`. | **Keep as-is** — correct Tailwind v4 pattern. Copy into `src/app.css`. |
 | **`src/app/` prefix** — Claude Design's handoff directory structure. | File copies remap: `screens/` → `src/routes/`, `components/` → `src/components/`. |
-| **`tw-animate-css` (Magic Animator)** — Radix UI transitions. | Install as dep. No code changes needed — classes work automatically. |
+| **`tw-animate-css`** — Radix UI transitions. | Install as dep. No code changes needed — classes work automatically. |

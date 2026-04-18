@@ -13,6 +13,7 @@ This is the step-by-step operating manual for the RAD template. Follow it in ord
 **Accounts:**
 - [ ] [Supabase](https://supabase.com) — create two projects: dev + production
 - [ ] [Vercel](https://vercel.com) — connect your GitHub account
+- [ ] [Claude](https://claude.ai) — Pro/Max/Team/Enterprise plan for access to Claude Design
 - [ ] Payment provider — only if the product monetizes. Stripe, PayOS, or whatever the northstar specifies. Get test mode keys.
 - [ ] [Resend](https://resend.com) — only if the product sends email. Get an API key.
 
@@ -86,7 +87,7 @@ Every RAD project targets one of three modes, decided during Phase 1 and locked 
 
 **`pwa` mode:** Web-only. You can omit mobile workstreams; keep workspaces out of scope unless you plan to migrate later.
 
-**`native` mode:** Same RAD pipeline, plus **`mobile/`** and **`shared/`** npm workspaces. The **Mobile Developer** agent translates Make’s web TSX into Expo screens (NativeWind, FlashList, react-native-reusables patterns). Store builds go through **EAS**. During **`/init`**, the Tech Lead adds `workspaces: ["mobile", "shared"]` after the React Router scaffold (create-react-router overwrites `package.json` once) and runs the Expo scaffold steps documented in `.cursor/commands/init.md`.
+**`native` mode:** Same RAD pipeline, plus **`mobile/`** and **`shared/`** npm workspaces. The **Mobile Developer** agent translates Claude Design’s web TSX handoff into Expo screens (NativeWind, FlashList, react-native-reusables patterns). Store builds go through **EAS**. During **`/init`**, the Tech Lead adds `workspaces: ["mobile", "shared"]` after the React Router scaffold (create-react-router overwrites `package.json` once) and runs the Expo scaffold steps documented in `.cursor/commands/init.md`.
 
 **`pwa-then-native` mode:** Phase **A** — ship the PWA exactly like `pwa`. Phase **B** — run **`/native-init`** after the web app is stable: extract shared types and Supabase helpers into `shared/`, wire the existing `mobile/` workspace, translate screens incrementally. Start **Google Play 14‑day closed testing** during Phase A where possible so Phase B overlaps store review.
 
@@ -128,7 +129,7 @@ Place both in `artifacts/docs/` before running `/office-hours`.
 | 4 | Revenue Model | Payment schema, pricing screens |
 | 5 | Value Proposition | Landing page headline |
 | 6 | Competitive Moat | Architectural decisions |
-| 7 | Build Scope + Landing Content | Feature list, Make brief copy |
+| 7 | Build Scope + Landing Content | Feature list, Claude Design brief copy |
 | 8 | Not Building | Tech spec exclusion list |
 | 9 | Auth Model | Auth screens, RLS policies |
 | 10 | External Integrations | SDK wrappers, env vars |
@@ -201,28 +202,29 @@ If northstar §7c is **`native`** or **`pwa-then-native`**, init also configures
 
 The Product Designer produces:
 1. **Screen specs** — routes, components, data variables, interaction flows, copy slots, loading/error/empty states
-2. **Figma Make brief** — structured prompt with brand context, anti-patterns, and per-screen content hierarchy
+2. **Claude Design brief** — structured prompt with brand context, anti-patterns, and per-screen content hierarchy
 
 **Gate:** Review both files → approve.
 
 ---
 
-## Phase 3 — Design in Figma Make (you do this)
+## Phase 3 — Design in Claude Design (you do this)
 
-Take the Figma Make brief and build the complete app prototype. This is the most important human step.
+Take the Claude Design brief and build the complete app prototype. This is the most important human step.
 
-**What Make produces:** A complete working React + Tailwind app — every button works, every form submits, every list renders, all with hardcoded mock data.
+**What Claude Design produces:** A complete working React + Tailwind app — every button works, every form submits, every list renders, all with hardcoded mock data.
 
 **Tips for good output:**
-- Paste the Brand Context section into Make's custom rules
+- Paste the Brand Context section into Claude Design's custom rules / design system import
+- Point Claude Design at the codebase so it can apply the team's existing design system
 - Use realistic mock data (names, dates, prices from the brief)
 - Use property names that map to database columns (`displayName`, `creditBalance`)
 - Include 3–5 items in lists for visual density
-- Let Make handle all visual decisions — colors, typography, spacing, animations
+- Let Claude Design handle all visual decisions — colors, typography, spacing, animations
 
 **When done:**
-1. Go to Make's Code tab
-2. Copy ALL files into `src/make-import/`
+1. Export the Claude Design handoff bundle
+2. Copy ALL files into `src/design-handoff/`
 3. Tell the Tech Lead to proceed
 
 ---
@@ -275,7 +277,7 @@ The Tech Lead follows this sequence:
 2. Dispatch Research Agent (Mode 2) for features with triggered signals
 3. Read pattern research outputs + architecture reference patterns
 4. Enumerate data invariants from northstar + domain + pattern research
-5. Extract entities from Make mock data + northstar
+5. Extract entities from Claude Design mock data + northstar
 6. Design schema from invariants + entities + access patterns
 7. Run the schema anti-pattern checklist (15 checks against known failure modes)
 8. Document technical decisions using the TD-N template (options considered, research basis, risks, revisit triggers)
@@ -315,15 +317,15 @@ Two agent streams run in sequence (backend first, then frontend; mobile follows 
 - Generate `database.types.ts` (and sync or copy into `shared/types` when native is in scope)
 
 **Frontend Foundation (web):**
-- Move Make's `components/ui/` → `src/components/ui/` (as-is)
+- Move Claude Design's `components/ui/` → `src/components/ui/` (as-is)
 - Catalog components + build missing states (EmptyState, ErrorBanner, SkeletonCard)
-- Port Make's CSS design tokens into `src/app.css`, self-host fonts
+- Port Claude Design's CSS design tokens into `src/app.css`, self-host fonts
 - Build landing page (validates everything works)
 - Build auth screens (login, signup, OAuth callback)
 
 **Mobile Foundation (when §7c is `native`, or after `/native-init` for `pwa-then-native`):**
 - Mobile Developer aligns Expo Router structure, NativeWind, and shared providers with web auth + query patterns
-- Screens are built incrementally from Make reference TSX; see `mobile-developer` agent and `/native-init` command
+- Screens are built incrementally from Claude Design reference TSX; see `mobile-developer` agent and `/native-init` command
 
 **Result:** Landing page live on staging URL. Auth flow working end-to-end on web. Native: dev client runnable and first shell screens wired when that phase is active.
 
@@ -338,15 +340,15 @@ Two agent streams run in sequence (backend first, then frontend; mobile follows 
 
 Each feature runs: **Backend → Frontend → QA**. When deployment mode is **`native`** or you are in Phase B of **`pwa-then-native`**, **`/feature`** adds **Step 2b — Mobile** after web frontend: **Backend → Frontend (web) → Mobile → QA**, waiting for each commit before the next stage. In **`native`** mode, web Step 2 is often **landing-only**; app screens ship on mobile in Step 2b. In **`pwa-then-native`** Phase B, web Step 2 may be skipped — web already exists from Phase A. See `.cursor/commands/feature.md`.
 
-**Make → React Native:** Hybrid translation is **risk-graded** (queue approved per screen), uses an **import audit** before porting, forbids **Make mock data** on device after wiring (only **`shared/`** hooks), and defines **escalation** when mechanical mapping fails — see **`.cursor/agents/mobile-developer.md`** (*Make → RN*).
+**Claude Design → React Native:** Hybrid translation is **risk-graded** (queue approved per screen), uses an **import audit** before porting, forbids **Claude Design mock data** on device after wiring (only **`shared/`** hooks), and defines **escalation** when mechanical mapping fails — see **`.cursor/agents/mobile-developer.md`** (*Claude Design → RN*).
 
 The frontend agent is an integrator, not a builder:
-- Finds the Make component for each screen
+- Finds the Claude Design component for each screen
 - Ports JSX + Tailwind into a route file
 - Swaps hardcoded mock data for real Supabase queries
 - Replaces fake auth/nav/payment with real implementations
 - Adds loading/error/empty states
-- Keeps everything else Make generated — layout, styling, animations
+- Keeps everything else Claude Design generated — layout, styling, animations
 
 ### QA Process
 
@@ -354,7 +356,7 @@ The QA agent scopes testing to changed files using `git diff`, runs acceptance c
 
 | Dimension | Weight |
 |---|---|
-| Visual fidelity (Make spec match) | 15% |
+| Visual fidelity (Claude Design spec match) | 15% |
 | Data integrity + performance | 20% |
 | Security (RLS + auth gates) | 20% |
 | Interaction flow completeness | 20% |
@@ -373,7 +375,7 @@ Bug fixes follow atomic commits — one fix per commit, with a regression test c
 /visual-audit https://[app]-staging.vercel.app
 ```
 
-Product Designer checks every screen against Make's original components, slop guard rules, mobile viewport, interaction states, copy quality, and landing page completeness.
+Product Designer checks every screen against Claude Design's original components, slop guard rules, mobile viewport, interaction states, copy quality, and landing page completeness.
 
 **Gate:** Fix all BLOCKING findings.
 
@@ -520,8 +522,8 @@ flowchart TD
     A["Phase 1\nNorthstar + EDS"]
     OH["/office-hours\nValidate northstar + diagnostic"]
     B["/init\nScaffold · deps · staging · Vercel"]
-    C["/phase2\nScreen Specs + Figma Make Brief"]
-    C2["Figma Make\n(human-driven design)"]
+    C["/phase2\nScreen Specs + Claude Design Brief"]
+    C2["Claude Design\n(human-driven design)"]
     D["/research\n(if integrations detected)"]
     E["/phase4\nComplexity Scan → Research → Invariants → Schema → Decisions"]
     F["/setup\nBuild plan + context packages"]
@@ -535,8 +537,8 @@ flowchart TD
     A -->|"artifacts/docs/"| OH
     OH -->|"all sections validated"| B
     B -->|".env.local + MCP tokens"| C
-    C -->|"design in Make"| C2
-    C2 -->|"src/make-import/"| D
+    C -->|"design in Claude Design"| C2
+    C2 -->|"src/design-handoff/"| D
     D --> E
     C2 -->|"no integrations"| E
     E -->|"approve"| F
@@ -556,7 +558,7 @@ flowchart TD
 |---|---|---|
 | `/office-hours` | Tech Lead | Northstar validation + product diagnostic |
 | `/init` | Tech Lead | Scaffolded workspace |
-| `/phase2` | Product Designer | Screen specs + Make brief |
+| `/phase2` | Product Designer | Screen specs + Claude Design brief |
 | `/phase4` | Tech Lead | Tech spec (complexity scan → research → invariants → schema → decisions → contracts) |
 | `/setup` | Tech Lead | Build plan |
 | `/foundation` | Backend → Frontend | Infra + components + landing + auth |

@@ -40,11 +40,11 @@ yarn-error.log*
 # Dev Workspace
 .local/
 
-# RAD — Figma Make import staging dir (temporary, deleted after porting)
-src/make-import/
+# RAD — Claude Design handoff staging dir (temporary, deleted after porting)
+src/design-handoff/
 
-# RAD — Figma Make reference for native translation (temporary)
-artifacts/docs/make-reference/
+# RAD — Claude Design reference for native translation (temporary)
+artifacts/docs/design-reference/
 
 # RAD — Mobile / Expo
 mobile/android/

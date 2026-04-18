@@ -18,7 +18,7 @@ Diagnostic: report current phase completion, feature status, build health, and o
 
 ### Planning Phases
 Phase 2 (Wireframes):     [✓ complete | in progress | not started]
-Figma Make:            [✓ code copied to src/make-import/ | not started]
+Claude Design:         [✓ handoff bundle copied to src/design-handoff/ | not started]
 Phase 4 (Tech Spec):      [✓ complete | in progress | not started]
 Setup:                    [✓ complete | in progress | not started]
 

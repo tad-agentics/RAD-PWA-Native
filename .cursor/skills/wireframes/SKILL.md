@@ -1,16 +1,16 @@
 ---
 name: wireframes
-description: Complete Phase 2 instructions — scope planning, anti-bloat rules, screen metadata format, Figma Make TC-EBC prompt framework, Guidelines.md structure, and quality checks. Read this when running /phase2.
+description: Complete Phase 2 instructions — scope planning, anti-bloat rules, screen metadata format, Claude Design TC-EBC prompt framework, Guidelines.md structure, and quality checks. Read this when running /phase2.
 disable-model-invocation: true
 ---
 
-# Phase 2 — Screen Planning + Figma Make Brief
+# Phase 2 — Screen Planning + Claude Design Brief
 
 Two jobs, two outputs:
 1. **Screen specs** — scope planning, screen metadata with interaction flows, copy slots, states
-2. **Figma Make brief** — structured input for the human to use in Figma Make to generate visual designs
+2. **Claude Design brief** — structured input for the human to use in Claude Design to generate visual designs
 
-Visual design is human-driven via Figma Make. This phase produces the structured input for that process, not wireframe visuals.
+Visual design is human-driven via Claude Design. This phase produces the structured input for that process, not wireframe visuals.
 
 ---
 
@@ -115,7 +115,7 @@ Would removing this screen break a navigation flow or leave a dead end?
 | Landing page | 1 | 1 | Always |
 | **Total** | **19–40 screens** | **~27** | **30 screens is normal for a complete B2C app** |
 
-**Build-time reality check:** Every screen costs 15–45 minutes during the feature build (faster than before — Make provides the visual layer, agents integrate). At 30 screens × 30 min avg = ~15 hours. This fits a 2-3 day RAD sprint with a 2-person team.
+**Build-time reality check:** Every screen costs 15–45 minutes during the feature build (faster than before — Claude Design provides the visual layer, agents integrate). At 30 screens × 30 min avg = ~15 hours. This fits a 2-3 day RAD sprint with a 2-person team.
 
 **If the total exceeds 35 screens:** Review for genuine anti-bloat violations (below). If none found, the product is correctly scoped — extend the sprint estimate.
 
@@ -274,7 +274,7 @@ Copy this block directly into `project.mdc` and the tech spec Not Building secti
 
 ---
 
-## Part B — Screen Metadata + Figma Make Brief
+## Part B — Screen Metadata + Claude Design Brief
 
 Once the scope plan is confirmed, produce two outputs:
 
@@ -359,9 +359,9 @@ All copy must be validated against `copy-rules.mdc` and the EDS copy formula bef
 
 ### What Goes Where
 
-| Information | In Figma Make brief | In screen metadata |
+| Information | In Claude Design brief | In screen metadata |
 |---|---|---|
-| Layout and visual hierarchy | ✓ (described for Make) | — |
+| Layout and visual hierarchy | ✓ (described for Claude Design) | — |
 | Copy text and labels (production-ready) | ✓ (content hierarchy) | ✓ (copy slots with context types) |
 | Which shared components are used | — | ✓ |
 | Database table.column → variable mappings | — | ✓ |
@@ -395,21 +395,21 @@ All copy must be validated against `copy-rules.mdc` and the EDS copy formula bef
 
 ---
 
-### Output 2 — `artifacts/docs/figma-make-brief.md`
+### Output 2 — `artifacts/docs/claude-design-brief.md`
 
-Structured input for the human to use in Figma Make. This is NOT an agent-executable step — the human takes this brief into Figma Make and generates a complete working React app with mock data.
+Structured input for the human to use in Claude Design. This is NOT an agent-executable step — the human takes this brief into Claude Design and generates a complete working React app with mock data applying the team's design system.
 
-**What Make produces:** A full React + Tailwind app where every button works, every form submits, every list renders — with hardcoded mock data. The frontend agent later swaps these mocks for real Supabase queries.
+**What Claude Design produces:** A full React + Tailwind app where every button works, every form submits, every list renders — with hardcoded mock data. The frontend agent later swaps these mocks for real Supabase queries.
 
-**After Make:** Human copies ALL files from Make's Code tab into `src/make-import/`.
+**After Claude Design:** Human copies ALL files from Claude Design's handoff export into `src/design-handoff/`.
 
 **Output quality depends entirely on prompt + Guidelines.md quality.** Bad prompt = flat divs. Good prompt + guidelines = production-quality component architecture with Radix UI primitives, typed mock data, proper routing, and animations.
 
 ---
 
-#### Section 1 — Guidelines.md (paste into Figma Make custom rules)
+#### Section 1 — Guidelines.md (paste into Claude Design custom rules)
 
-Guidelines.md is a persistent instruction file Make reads before EVERY generation. Set this up ONCE at the start of the Make project — it governs all subsequent prompts.
+Guidelines.md is a persistent instruction file Claude Design reads before EVERY generation. Set this up ONCE at the start of the Claude Design project — it governs all subsequent prompts.
 
 Structure as a routing file pointing to sub-files. Many short files outperform one long file for LLM context.
 
@@ -525,7 +525,7 @@ Never start copy with: [comma-separated list from copy-rules.mdc]
 - No unnamed div nesting — every wrapper must have semantic purpose
 ```
 
-**Native-friendly additions (mode ≠ pwa only):** When the northstar §7c deployment mode is `native` or `pwa-then-native`, append these rules to `components.md`. They don't make Make's output React Native-compatible, but they reduce the hybrid translation rebuild surface:
+**Native-friendly additions (mode ≠ pwa only):** When the northstar §7c deployment mode is `native` or `pwa-then-native`, append these rules to `components.md`. They don't make Claude Design's output React Native-compatible, but they reduce the hybrid translation rebuild surface:
 
 ```markdown
 ## Native-Friendly Layout Rules
@@ -586,7 +586,7 @@ CONSTRAINTS:
 
 #### Section 3 — Revision Prompts (Target / Change / Maintain)
 
-Every follow-up prompt must signal what should and shouldn't change. Without this, Make rewrites large portions unnecessarily.
+Every follow-up prompt must signal what should and shouldn't change. Without this, Claude Design rewrites large portions unnecessarily.
 
 **Template:**
 ```
@@ -606,18 +606,18 @@ CHANGE: Add microcopy below the button: "Không cam kết • Huỷ bất cứ l
 MAINTAIN: Button style, modal layout, blur overlay, all other copy
 ```
 
-**Point and Edit** — for visual tweaks (color, spacing, typography, border radius), use Make's Point and Edit tool instead of re-prompting. Select the element in preview → adjust visually. Saves prompts for structural changes.
+**Point and Edit** — for visual tweaks (color, spacing, typography, border radius), use Claude Design's Point and Edit tool instead of re-prompting. Select the element in preview → adjust visually. Saves prompts for structural changes.
 
 ---
 
-#### Section 4 — Make Brief Output Template
+#### Section 4 — Claude Design Brief Output Template
 
 ```markdown
-# Figma Make Brief — [App Name]
+# Claude Design Brief — [App Name]
 
 ## Guidelines.md Setup
 
-Before the first prompt, create these files in Make's guidelines folder:
+Before the first prompt, create these files in Claude Design's guidelines folder:
 - guidelines/Guidelines.md (routing file — see Section 1 above)
 - guidelines/styles.md
 - guidelines/components.md
@@ -638,20 +638,20 @@ Content for each file is specified below.
 ### anti-patterns.md content:
 [Generated from EDS §8 + design-system.mdc — visual, copy, and code anti-patterns]
 
-## First Prompt (copy-paste into Make)
+## First Prompt (copy-paste into Claude Design)
 
 [TC-EBC formatted prompt with all screens, elements, behaviors, and constraints]
 
 ## Revision Prompts (use after first generation)
 
-After reviewing Make's first output:
+After reviewing Claude Design's first output:
 1. [TARGET/CHANGE/MAINTAIN for first fix]
 2. [TARGET/CHANGE/MAINTAIN for second fix]
 [Add as needed — budget 10-15 revision prompts max per project]
 
 ## Mock Data Guidance
 
-Make will generate mock data for all screens. Structure this mock data to match the real schema shape:
+Claude Design will generate mock data for all screens. Structure this mock data to match the real schema shape:
 - Use realistic Vietnamese names, dates, and values (not "Lorem ipsum")
 - Use property names that map naturally to database columns (e.g. `displayName`, `creditBalance`, `createdAt`)
 - Include 3–5 items in lists to test visual density
@@ -724,7 +724,7 @@ If northstar §13 (User Scenarios) is present, validate: does the wave order all
 - Dopamine moment field set on every screen — `none` or specific D[N] ID from EDS §6
 - Credit cost field set on paywall-gated screens — matches northstar §5 pricing table
 
-### Figma Make brief
+### Claude Design brief
 - Guidelines.md structure defined — styles.md, components.md, copy.md, anti-patterns.md all populated
 - styles.md includes OKLCH/hex brand colors, typography, spacing scale, border radius, dark mode from EDS §5
 - anti-patterns.md includes both EDS §8 and design-system.mdc Slop Guard rules

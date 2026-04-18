@@ -102,4 +102,4 @@ All data via `useSupabase()` from `shared/api/supabase-context` through TanStack
 
 ## MCP (optional)
 
-MCP is an optional delivery mechanism for Make source files. If Figma MCP is configured, agent can read Make files via `file://figma/make/source/...` instead of from `artifacts/docs/make-reference/`. The translation work is identical either way. Never expect `get_design_context` to return structured design data from Make — it returns raw source files.
+Claude Design exports a handoff bundle the agent reads from `artifacts/docs/design-reference/` for native translation. The translation work is identical regardless of how the bundle was placed on disk.

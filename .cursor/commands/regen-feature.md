@@ -15,7 +15,7 @@ Usage: `/regen-feature goal-creation`
 1. Read `artifacts/plans/build-plan.md` — locate the `[name]` feature section
 2. Read the updated spec files:
    - `artifacts/docs/tech-spec.md` — re-extract backend scope
-   - `artifacts/docs/screen-specs-[app]-v1.md` — re-extract frontend scope (interaction flows, copy slots, dopamine flags, credit costs, Make component names)
+   - `artifacts/docs/screen-specs-[app]-v1.md` — re-extract frontend scope (interaction flows, copy slots, dopamine flags, credit costs, Claude Design component names)
    - `artifacts/docs/emotional-design-system.md` — §6 if any screen has a dopamine flag
 3. Rewrite only the `[name]` feature section — do not touch other features
 4. Note what changed

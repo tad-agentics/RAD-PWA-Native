@@ -67,7 +67,9 @@ Read:
 - .cursor/skills/design-system/SKILL.md (component inventory process)
 - .cursor/rules/copy-rules.mdc (copy quality test for landing page copy validation)
 - agent-workspace/ACTIVE_CONTEXT.md
-- src/design-handoff/ (Claude Design handoff bundle — read App.tsx + routes.tsx first)
+- src/design-handoff/ (Claude Design ZIP — read App.tsx + routes.tsx first)
+- artifacts/docs/claude-design-handoff-notes.md (implementation notes, brand tokens, interaction notes captured from the Claude Code handoff bundle — read alongside the ZIP for design intent)
+- artifacts/docs/handoff-contract.md (Required shape + Discard list — delete listed scaffold files in Step 0)
 - artifacts/docs/emotional-design-system.md — §6 Dopamine Moments (check if motion/react-countup are needed)
 - artifacts/docs/screen-specs-[app]-v1.md — landing page metadata block
 - artifacts/docs/northstar-[app].html — §7b Landing Page Content
@@ -75,7 +77,7 @@ Read:
 
 Mode: Foundation
 
-Step 0: Install Claude Design's dependencies — scan imports across Claude Design's files (not just package.json). Run npm install [packages]. Verify npm run build passes.
+Step 0: Delete discard-list files from src/design-handoff/ per artifacts/docs/handoff-contract.md §Discard list (Claude Design scaffold files: index.html, vite.config.*, package.json, tsconfig*.json, tailwind.config.*, postcss.config.*, root README, .gitignore, eslint/prettier configs, *.stories.tsx, default logos). Then install Claude Design's dependencies — scan imports across Claude Design's remaining files (not the deleted package.json). Run npm install [packages]. Verify npm run build passes.
 Step 1: Copy src/design-handoff/components/ui/ → src/components/ui/ as-is. Copy other shared components (ScreenHeader, CreditGate, etc.) → src/components/. Fix import paths. Catalog Claude Design's components and produce artifacts/docs/design-system-spec.md (per design-system SKILL.md). Build any additional shared components Claude Design didn't generate (EmptyState, ErrorBanner, SkeletonCard).
 Step 2: Copy Claude Design's theme.css (CSS custom properties + @theme inline) into src/app.css. Replace Google Fonts CDN imports with self-hosted .woff2. Fix next-themes import in sonner.tsx.
 Step 3: Create src/lib/query-client.ts (QueryClient with default staleTime: 60s) and src/lib/query-keys.ts per frontend-data.mdc. Wrap app in QueryClientProvider in src/root.tsx. Create src/hooks/useCredits.ts shared hook.

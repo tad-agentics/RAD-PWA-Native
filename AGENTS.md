@@ -102,7 +102,8 @@ Blocking gates are enforced — no agent self-proceeds to the next phase.
 | `artifacts/docs/screen-specs-[app]-v1.md` | Phase 2 output — screen metadata |
 | `artifacts/docs/claude-design-brief.md` | Phase 2 output — Claude Design input brief |
 | `artifacts/docs/handoff-contract.md` | File-shape contract for `src/design-handoff/` — `/design verify` enforces it |
-| `artifacts/docs/claude-design-log.md` | Studio log of Claude Design prompt iterations + what worked (compounding asset) |
+| `artifacts/docs/claude-design-handoff-notes.md` | Implementation notes / brand tokens / component structure / interaction notes captured from the Claude Code handoff bundle (the metadata that's NOT in the ZIP) |
+| `artifacts/docs/claude-design-log.md` | Per-app log of Claude Design prompt iterations + what worked (feeds studio log at `/session-end`) |
 | `artifacts/docs/design-system-spec.md` | Claude Design component inventory (produced during Foundation) |
 | `artifacts/templates/email-sequences/` | Onboarding / re-engagement / milestone email templates (locked provider: Resend) |
 | `artifacts/docs/tech-spec.md` | Phase 4 output |

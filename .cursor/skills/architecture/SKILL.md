@@ -63,6 +63,18 @@ When reviewing the northstar or writing the tech spec, scan each feature for the
 | Entity with lifecycle (draft → active → completed → archived) | Invalid transitions. Concurrent status updates. | CHECK constraint with valid transitions. Optimistic locking with `updated_at`. |
 | Multi-step workflow (application → review → approved → rejected) | Branching paths. Notification triggers at each transition. | State machine pattern. Database triggers vs application logic for side effects. |
 
+### AI / LLM Integration
+
+| Signal | Why it's complex | Research needed |
+|---|---|---|
+| Streaming LLM response (chat, generation) | SSE framing, client abort handling, partial-response persistence, rate limits before provider call. | See `ai-patterns/SKILL.md` §1-2. Dispatch Research Agent only if the app has unusual constraints (voice barge-in, tool use with destructive actions). |
+| Per-user cost accounting or credit-metered LLM calls | Token counting, rate limits, monthly cost cap, credit debit/refund on abort. | See `ai-patterns/SKILL.md` §3. |
+| Agentic / tool-use flows | Model invokes app tools (calendar, email, DB). Requires per-tool confirmation, injection mitigation, audit log. | See `ai-patterns/SKILL.md` §5, §7. Dispatch Research Agent for destructive-tool patterns. |
+| RAG / retrieval over user content | Embedding model choice, vector storage, retrieval quality, citation rendering. | See `ai-patterns/SKILL.md` §5. Dispatch Research Agent if >10k documents per user — Postgres pgvector limits may bind. |
+| Multi-model fallback / cost optimization | Provider outages, model deprecation, cheaper-model fallback during rate limits. | See `ai-patterns/SKILL.md` §6. |
+
+**When any AI signal triggers, the tech spec must satisfy the Phase 4 checklist in `ai-patterns/SKILL.md` §10 before approval.**
+
 ---
 
 ## 2. RAD Stack Constraints

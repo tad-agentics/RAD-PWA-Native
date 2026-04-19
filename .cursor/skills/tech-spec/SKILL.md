@@ -470,6 +470,8 @@ Is the input unstructured natural language that templating cannot handle?
 
 Common cases that do NOT need LLM: filtering/sorting structured data → SQL; generating copy from known variables → template; categorisation with a finite set → lookup table.
 
+**For every feature marked "Yes" above, the tech spec must satisfy the AI Phase 4 checklist.** Open `.cursor/skills/ai-patterns/SKILL.md` §10 and answer each item inline in this section: streaming or single-shot, primary + fallback model, rate limit / cost cap values, usage schema changes, credit debit strategy (if monetized), prompt file paths, idempotency key, fallback chain, agent UX (thinking/stop/retry/citations/tool-use), safety posture, cache strategy. Incomplete answers block Phase 4 approval.
+
 *Omit this section if no LLM features.*
 
 ## 14. AI Module Inventory (if AI features)

@@ -16,39 +16,62 @@ Claude Design is the visual design step in RAD. A human drives it. This file doc
 
 | Trigger | Input brief | Output location |
 |---|---|---|
-| Initial build, after `/phase2` | `artifacts/docs/claude-design-brief.md` | `src/design-handoff/` |
-| `/new-feature` requiring new screens | Feature doc + existing codebase | `src/design-handoff/new-feature-[name]/` |
+| Initial build, after `/phase2` | `artifacts/docs/claude-design-brief.md` | `src/design-handoff/` (ZIP) + `artifacts/docs/claude-design-handoff-notes.md` (handoff metadata) |
+| `/new-feature` requiring new screens | Feature doc + linked codebase | `src/design-handoff/new-feature-[name]/` (ZIP) + append to handoff notes |
 | `/visual-audit` flagged drift | Spot-regen for the broken screen only | `src/design-handoff/regen-[screen]/` |
 
-Claude Design can read your existing codebase. After Foundation, always point it at the repo so it matches the already-integrated design system instead of reinventing tokens.
+### Repo link is mandatory before every run
+
+Claude Design supports importing a GitHub repo or local directory via Import. With the link active, Claude Design analyzes existing colors, typography, components, and spacing — output matches the existing system. Without the link, Claude Design invents new tokens and primitives on every run; this is the single largest source of drift.
+
+Verify before generating:
+- Workspace sidebar shows the repo name
+- For incremental runs (`/new-feature`, drift regen), the link is **re-synced** so Claude Design sees the post-Foundation `src/components/ui/` and `src/app.css` as current
+
+### Two artifacts per run
+
+Every Claude Design run produces both:
+1. **ZIP** — code, the source of truth for `src/design-handoff/`
+2. **Claude Code handoff bundle** — implementation notes, brand tokens, component-structure summary, interaction notes. The bundle ships as a URL Claude Code consumes; for RAD's Cursor pipeline, the human pastes the relevant metadata sections into `artifacts/docs/claude-design-handoff-notes.md`. This text isn't in the ZIP and prevents downstream ambiguity.
+
+Capture both. The Frontend agent reads the ZIP for code and the handoff notes for intent.
 
 ---
 
 ## Prompting Patterns
+
+All prompts below assume the repo is linked. If it isn't, stop and link it first.
 
 ### 1. Initial Build
 
 Paste `artifacts/docs/claude-design-brief.md` verbatim. Then add:
 
 ```
+You have access to the linked repository. Use the existing src/components/ui/
+patterns and src/app.css token names where they apply. For any new tokens
+required by the brief, add them in theme.css using the same naming convention
+as src/app.css.
+
 Generate a complete working React + Tailwind app covering every screen in the brief.
 Use hardcoded mock data for all lists, forms, and detail views.
-Export a handoff bundle matching artifacts/docs/handoff-contract.md.
+Export a ZIP matching artifacts/docs/handoff-contract.md AND prepare a Claude
+Code handoff bundle so the human can copy implementation notes into RAD.
 ```
 
 Do not ask Claude Design to skip any screen. Skipped screens become invented later by the Frontend agent — that is where drift starts.
 
 ### 2. Incremental (`/new-feature`)
 
-Point Claude Design at the repo first:
+The repo link is mandatory and must be current. Then prompt:
 
 ```
-Read src/components/ui/, src/app.css, and src/routes/_app/ to match the existing
-design system exactly. Do not regenerate UI primitives — use the ones already in
-src/components/ui/. Use the same typography scale, spacing, and brand tokens.
+Read src/components/ui/, src/app.css, and src/routes/_app/ via the linked
+repository. Match the existing design system exactly — do not regenerate UI
+primitives, use the ones already in src/components/ui/. Use the same typography
+scale, spacing, and brand tokens already present in src/app.css.
 ```
 
-Then paste the feature doc's frontend scope and acceptance criteria. Ask only for the new screens. Export to `src/design-handoff/new-feature-[name]/` — never overwrite the initial `src/design-handoff/`.
+Then paste the feature doc's frontend scope and acceptance criteria. Ask only for the new screens. Export ZIP to `src/design-handoff/new-feature-[name]/` — never overwrite the initial `src/design-handoff/`. Append the handoff bundle's implementation notes for these screens to `artifacts/docs/claude-design-handoff-notes.md`.
 
 ### 2b. Native-targeted brief (HIGH-risk screens only)
 
@@ -94,12 +117,20 @@ Export to `src/design-handoff/regen-[screen]/`. The Frontend agent diffs and re-
 
 Before leaving Claude Design:
 
+**ZIP:**
 - [ ] Every screen in `artifacts/docs/screen-specs-[app]-v1.md` has a file in the export
 - [ ] `App.tsx` or `routes.tsx` wires every screen (navigation is resolvable)
 - [ ] `theme.css` is present with CSS custom properties + `@theme inline`
 - [ ] `components/ui/` has every primitive referenced by screens
 - [ ] Mock data is inline or colocated — no fetch calls, no network requests
 - [ ] No loose `globals.css`, no Next.js-specific files (`app/`, `page.tsx`)
+- [ ] Discard-list files (see `handoff-contract.md` §Discard list) will be deleted on import — flag any present so the Frontend agent expects them
+
+**Claude Code handoff bundle (metadata capture):**
+- [ ] Brand tokens section copied into `artifacts/docs/claude-design-handoff-notes.md` §Tokens
+- [ ] Component-structure summary copied into §Components
+- [ ] Implementation notes copied into §Notes
+- [ ] Interaction notes copied into §Interactions
 
 Full required shape: `artifacts/docs/handoff-contract.md`.
 

@@ -181,6 +181,50 @@ On Vietnam mobile networks (4G, 100-300ms RTT), each unnecessary waterfall adds 
 
 `useState` + `useEffect` for Supabase queries is **forbidden**. Always use `useQuery` from TanStack React Query. Raw state = no cache, no dedup, re-fetches on every mount.
 
+### Trust Boundary Discipline (FE never trusts BE response shapes)
+
+RAD does not wrap every read in an Edge Function (see backend.mdc — Supabase RLS *is* the API for the common case). But the FE still must not blindly trust response shapes, because:
+- Schema drift between deploys silently breaks UI
+- LLM-shaped responses from Edge Functions vary
+- A compromised JWT replay would still pass type assertions
+
+**Rule:** every Edge Function response is parsed through a Zod schema before the hook returns data. RLS-direct reads use the generated `database.types.ts` shape (which is regenerated on every migration via `supabase gen types`).
+
+```typescript
+// src/lib/schemas/interpretation.ts — single file per Edge Function
+import { z } from "zod";
+
+export const InterpretationResponse = z.object({
+  text: z.string().min(1),
+  cost_credits: z.number().int().nonnegative(),
+  cached: z.boolean(),
+});
+export type Interpretation = z.infer<typeof InterpretationResponse>;
+```
+
+```typescript
+// src/hooks/useInterpretation.ts
+import { InterpretationResponse } from "@/lib/schemas/interpretation";
+
+export function useInterpretation(input: unknown) {
+  return useQuery({
+    queryKey: queryKeys.interpretation(input),
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("interpret", {
+        body: { input },
+      });
+      if (error) throw error;
+      return InterpretationResponse.parse(data); // ← throws if shape drifted
+    },
+    staleTime: Infinity,
+  });
+}
+```
+
+For RLS-direct reads, the row type is `Database["public"]["Tables"]["xxx"]["Row"]` — TypeScript-only, no runtime parse needed. If the migration runs but `database.types.ts` wasn't regenerated, `/wire-check` BLOCKs.
+
+**Server side mirrors this:** every Edge Function validates its input with Zod (`backend.mdc` §Edge Functions). Same schema lives in `supabase/functions/[name]/schema.ts`; clients import it (or a parallel `src/lib/schemas/` copy if `shared/` isn't wired). Mismatched schemas = `/wire-check` WARN.
+
 ### Wiring Verification (self-check before signaling done)
 
 Before signaling completion on any frontend work, run the same greps `/wire-check` runs. If any return hits in active code (not `src/design-handoff/`, not `*.test.*`), fix before commit.

@@ -72,9 +72,39 @@ export default function AppLayout() {
 - **RLS required on every table — no exceptions.** Never create a table without RLS policies.
 - Common RLS pattern: `auth.uid() = user_id` for row-level ownership
 - After every MCP `apply_migration` call, write the same SQL to a local file in `supabase/migrations/` named `YYYYMMDDHHmmss_short_description.sql` — remote and local must never drift
-- Use `supabase gen types typescript --project-id <ref> > src/lib/database.types.ts` after schema changes
+- **Regenerate types after every migration:** `supabase gen types typescript --project-id <ref> > src/lib/database.types.ts`. `/wire-check` BLOCKs if the newest migration is newer than `database.types.ts`.
 - Default to SQL for deterministic queries — no LLM for structured data
 - Add indexes on columns used in WHERE clauses and JOIN conditions — especially `user_id` foreign keys
+
+### RLS-as-API Contract
+
+In RAD, **PostgREST + RLS is the API for RLS-direct bindings** (see frontend-data.mdc and tech-spec §10b Trust modes). That makes RLS policies a public contract, not an implementation detail. Document each table's contract in the migration file header so the FE has a single source of truth without reading SQL.
+
+Every migration that creates or alters a user-data table opens with a comment block:
+
+```sql
+-- Contract: entries
+-- Trust mode: RLS-direct
+-- Allowed ops (client, JWT auth):
+--   SELECT  ▸ own rows only (auth.uid() = user_id)
+--   INSERT  ▸ user_id forced to auth.uid() (no client-side override)
+--   UPDATE  ▸ own rows; columns: title, body, updated_at (NOT user_id, NOT created_at)
+--   DELETE  ▸ own rows
+-- Filters expected in the hook:
+--   none required; ORDER BY created_at DESC default
+-- Indexes:
+--   (user_id, created_at DESC) for the home feed query
+-- Realtime: enabled, INSERT + UPDATE only (DELETE not subscribed)
+-- Hook(s) that consume this: useEntries, useCreateEntry, useUpdateEntry, useDeleteEntry
+```
+
+Rules:
+- One contract block per table per migration
+- If the migration changes the contract (new column, different RLS), the block is updated and the consuming hook(s) listed get re-verified by the Backend agent (or escalated to the Tech Lead)
+- The contract block is what the Frontend agent reads to build hooks — not the policy SQL itself
+- For Edge-validated bindings, the contract lives in `supabase/functions/[name]/schema.ts` (Zod input + output), not the migration
+
+This makes "BE doesn't trust FE" a concrete, reviewable surface — the contract block is the trust boundary, written once.
 
 ### RLS Policy Patterns
 

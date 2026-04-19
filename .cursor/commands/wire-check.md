@@ -130,6 +130,65 @@ npm run build 2>&1 | tail -30
 
 Zero TypeScript errors. If any unused-import warnings on files touched in this feature's diff, list them as WARN.
 
+### 10. database.types.ts freshness (BLOCKING if stale)
+
+If any migration in `supabase/migrations/` is newer than `src/lib/database.types.ts`, the FE's row types are stale — silent runtime mismatches.
+
+```bash
+NEWEST_MIGRATION=$(ls -t supabase/migrations/*.sql 2>/dev/null | head -1)
+TYPES_FILE="src/lib/database.types.ts"
+if [ -n "$NEWEST_MIGRATION" ] && [ -f "$TYPES_FILE" ]; then
+  if [ "$NEWEST_MIGRATION" -nt "$TYPES_FILE" ]; then
+    echo "STALE: $NEWEST_MIGRATION is newer than $TYPES_FILE"
+    echo "Run: supabase gen types typescript --project-id <ref> > $TYPES_FILE"
+  fi
+fi
+```
+
+### 11. Edge Function response Zod parse (WARN per missing parse)
+
+Every hook that calls `supabase.functions.invoke` should parse the response through a Zod schema before returning data. Without this, response shape drift breaks the UI silently.
+
+```bash
+# Find invoke calls and check the same file/function for .parse(
+grep -rln "supabase\.functions\.invoke" src/hooks src/lib/data 2>/dev/null | while read f; do
+  grep -q "\.parse(" "$f" || echo "NO ZOD PARSE in $f (Edge Function response not validated)"
+done
+```
+
+### 12. Security greps (BLOCKING per hit)
+
+Cheap preventive checks — `/security-audit` runs the deep scan at pre-deploy; this catches the obvious ones at build time so they don't reach pre-deploy.
+
+```bash
+# 12a. SUPABASE_SERVICE_ROLE_KEY referenced in frontend code
+grep -rn "SUPABASE_SERVICE_ROLE_KEY\|service_role" src/ 2>/dev/null
+
+# 12b. LLM provider secrets referenced in src/ (do not install or read these client-side)
+# All LLM API keys live in Edge Function secrets only — frontend uses supabase.functions.invoke
+grep -rEn "(OPENROUTER|OPENAI|ANTHROPIC)_API_KEY" src/ 2>/dev/null
+
+# 12c. console.log of tokens / secrets / passwords
+grep -rEn "console\.(log|error|debug|warn)\([^)]*(token|secret|password|api[_-]?key|jwt|access_token|refresh_token)" src/ 2>/dev/null
+
+# 12d. dangerouslySetInnerHTML
+grep -rn "dangerouslySetInnerHTML" src/ 2>/dev/null
+
+# 12e. Edge Function CORS wildcard in production code (allow only in _shared/cors.ts dev mode)
+grep -rn "Access-Control-Allow-Origin.*\*" supabase/functions/ 2>/dev/null | grep -v "_shared/cors.ts"
+
+# 12f. Edge Function missing JWT verification when Trust mode is Edge-validated
+# (heuristic: function file must reference auth.getUser() or verifyJWT helper)
+for fn in supabase/functions/*/index.ts; do
+  [ -f "$fn" ] || continue
+  case "$(dirname "$fn")" in
+    *-webhook|*cron*|*-admin) continue ;;  # webhook/cron/admin use service role
+  esac
+  grep -q "auth\.getUser\|verifyJWT\|getUser(" "$fn" || \
+    echo "NO JWT VERIFICATION in $fn (Edge-validated function must verify JWT)"
+done
+```
+
 ---
 
 ## Per-feature scope (when invoked as `/wire-check [feature-name]`)

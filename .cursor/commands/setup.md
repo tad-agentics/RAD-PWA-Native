@@ -54,7 +54,8 @@ This is the most important step. Read:
 - `artifacts/docs/emotional-design-system.md` — copy register, dopamine moment specs
 
 Produce `artifacts/plans/build-plan.md` with:
-1. **Feature Dependency Graph** — **if northstar §12 defines waves, use that structure directly.** Otherwise, derive: Foundation always first → Wave 1: auth + profile → Wave 2+: features requiring authenticated user → Wave 3+: billing, retention, social.
+0. **Timebox table** — fill in the Day/Morning/Afternoon table for the deployment mode from northstar §7c. Use the templates already in `artifacts/plans/build-plan.md`. Every feature below must be assigned to a Day slot. If the slots overflow, cut scope into northstar §8 before proceeding.
+1. **Feature Dependency Graph** — **if northstar §12 defines waves, use that structure directly.** Otherwise, derive: Foundation always first → Wave 1: auth + profile → Wave 2+: features requiring authenticated user → Wave 3+: billing, retention, social. Add a `Day` column assigning each feature to a slot from the timebox table.
 2. **Foundation context package** — always first, includes:
    - Backend: static SEO files (robots.txt, sitemap.xml, manifest.json) + Supabase client, schema, auth provider, Edge Functions (if webhooks/email in scope)
    - Frontend: landing page from screen specs + northstar §7b + auth screens + custom shared components from design-system-spec.md + useInstallPrompt hook

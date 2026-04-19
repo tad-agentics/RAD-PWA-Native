@@ -53,6 +53,19 @@ Landing page specific checks (at `/`):
 - FAQ accordion functional, all items from §7b present
 - Already-installed state handled
 
+Landing SEO + metadata checks (at `/` view-source):
+- `<title>` present, ≤ 60 chars, matches northstar §7b headline intent
+- `<meta name="description">` present, ≤ 160 chars, production copy (no Lorem / placeholder)
+- Open Graph tags: `og:title`, `og:description`, `og:image` (absolute URL), `og:url`, `og:type=website`
+- Twitter Card tags: `twitter:card=summary_large_image`, `twitter:image` (absolute URL)
+- Favicon + apple-touch-icon referenced and resolvable (no 404)
+- `<link rel="manifest" href="/manifest.json">` present; manifest fetches 200 with name, short_name, theme_color, icons
+- FAQ JSON-LD structured data present (`<script type="application/ld+json">` with `@type: FAQPage`) and well-formed per screen spec FAQ items
+- `/robots.txt` fetches 200, allows `/`, disallows `/app/`
+- `/sitemap.xml` fetches 200 and lists at minimum the landing page URL
+- Service worker registers (DevTools → Application → Service Workers shows `/sw.js` active) — only in modes that ship PWA
+- Core Web Vitals spot-check on landing (Lighthouse, mobile): LCP < 2.5s, CLS < 0.1, INP < 200ms. Flag any red metric as BLOCKING.
+
 Signal completion with a findings report.
 ```
 

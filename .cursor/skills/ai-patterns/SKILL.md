@@ -11,7 +11,7 @@ RAD is built for **AI-powered B2C and B2B2C apps** that help people with life an
 **When to read this:**
 - During `/phase4` when the complexity scan flags **AI / LLM integration** (streaming, agent loops, cost metering, or LLM-driven workflows).
 - During `/feature [name]` when a screen shows LLM output (chat, generation, analysis, summarization).
-- When adding a new provider (Anthropic, OpenAI, Google, local model).
+- When adding a new model (Claude, GPT, Gemini, or any OpenRouter-routed model — **the transport is always OpenRouter**, RAD does not install provider SDKs directly).
 
 **What this skill does NOT cover:**
 - Model selection or prompt engineering itself (that's a product question, not an architecture one).
@@ -33,7 +33,7 @@ Browser (React)
   ▼
 Supabase Edge Function (Deno)
   │  2. Verify JWT, check rate limit, load thread context from Postgres
-  │  3. Stream from provider (Anthropic/OpenAI SDK with stream: true)
+  │  3. Stream from OpenRouter (OpenAI-compatible API, stream: true)
   │  4. Write each token to response body as Server-Sent Event
   │  5. On completion: persist assistant message + record usage row
   ▼
@@ -46,8 +46,13 @@ Browser (React)
 
 ```typescript
 // supabase/functions/chat/index.ts
-import Anthropic from 'npm:@anthropic-ai/sdk';
+// All LLM calls route through OpenRouter (OpenAI-compatible API).
+// Do not install @anthropic-ai/sdk or other provider SDKs — one transport, one billing path.
+import OpenAI from 'npm:openai';
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+
+const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+const MODEL = 'anthropic/claude-opus-4-7';  // OpenRouter model slug — provider/model
 
 Deno.serve(async (req) => {
   const { threadId, message } = await req.json();
@@ -61,17 +66,28 @@ Deno.serve(async (req) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return new Response('Unauthorized', { status: 401 });
 
-  // Rate limit BEFORE calling provider — see §3
+  // Rate limit BEFORE calling the model — see §3
   const allowed = await checkRateLimit(supabase, user.id);
   if (!allowed) return new Response('Rate limit exceeded', { status: 429 });
 
-  const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY')! });
+  const client = new OpenAI({
+    apiKey: Deno.env.get('OPENROUTER_API_KEY')!,
+    baseURL: OPENROUTER_BASE_URL,
+    defaultHeaders: {
+      'HTTP-Referer': Deno.env.get('APP_URL') ?? '',  // OpenRouter attribution
+      'X-Title': Deno.env.get('APP_NAME') ?? 'rad-app',
+    },
+  });
 
-  const stream = anthropic.messages.stream({
-    model: 'claude-opus-4-7',
+  const stream = await client.chat.completions.create({
+    model: MODEL,
+    stream: true,
+    stream_options: { include_usage: true },  // usage arrives in final chunk
     max_tokens: 2048,
-    system: SYSTEM_PROMPT,           // loaded from prompts/ — see §4
-    messages: await loadThread(supabase, threadId, user.id),
+    messages: [
+      { role: 'system', content: SYSTEM_PROMPT },  // loaded from prompts/ — see §4
+      ...(await loadThread(supabase, threadId, user.id)),
+    ],
   });
 
   const encoder = new TextEncoder();
@@ -82,22 +98,21 @@ Deno.serve(async (req) => {
       let outputTokens = 0;
 
       try {
-        for await (const event of stream) {
-          if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-            fullText += event.delta.text;
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: event.delta.text })}\n\n`));
+        for await (const chunk of stream) {
+          const delta = chunk.choices[0]?.delta?.content;
+          if (delta) {
+            fullText += delta;
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: delta })}\n\n`));
           }
-          if (event.type === 'message_delta' && event.usage) {
-            outputTokens = event.usage.output_tokens;
-          }
-          if (event.type === 'message_start' && event.message.usage) {
-            inputTokens = event.message.usage.input_tokens;
+          if (chunk.usage) {
+            inputTokens = chunk.usage.prompt_tokens ?? 0;
+            outputTokens = chunk.usage.completion_tokens ?? 0;
           }
         }
 
         // Persist + record usage AFTER stream completes — see §3
         await persistAssistantMessage(supabase, threadId, user.id, fullText);
-        await recordUsage(supabase, user.id, 'claude-opus-4-7', inputTokens, outputTokens);
+        await recordUsage(supabase, user.id, MODEL, inputTokens, outputTokens);
 
         controller.enqueue(encoder.encode(`data: ${JSON.stringify({ done: true })}\n\n`));
       } catch (err) {
@@ -218,8 +233,8 @@ LLM calls cost money. Unmetered usage in a B2C app kills margin fast. RAD apps m
 CREATE TABLE llm_usage (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  provider text NOT NULL,              -- 'anthropic', 'openai'
-  model text NOT NULL,                 -- 'claude-opus-4-7', 'gpt-4o'
+  provider text NOT NULL DEFAULT 'openrouter',  -- transport — always 'openrouter' in RAD
+  model text NOT NULL,                           -- OpenRouter slug: 'anthropic/claude-opus-4-7', 'openai/gpt-4o', 'google/gemini-2.5-pro'
   input_tokens int NOT NULL,
   output_tokens int NOT NULL,
   cost_usd numeric(10, 6) NOT NULL,    -- computed server-side from a rate table
@@ -411,7 +426,7 @@ Don't cache creative/variable prompts — it defeats the point.
 
 ### Content moderation
 
-- **Input moderation:** cheap pre-filter (banned words, obvious prompt-injection patterns) in the Edge Function. If the provider has a moderation endpoint (OpenAI Moderation API), call it before the main LLM call for user-generated content.
+- **Input moderation:** cheap pre-filter (banned words, obvious prompt-injection patterns) in the Edge Function. For user-generated content, call a moderation model via OpenRouter (e.g. `openai/omni-moderation-latest`) before the main call — same transport, same billing path.
 - **Output moderation:** relevant only for public-facing content (shared pages, generated images). For private chat, skip.
 
 ### PII in logs
@@ -431,17 +446,18 @@ For RAD's typical app class (consumer life/work), prompt injection is **low risk
 
 | Concern | Where it lives |
 |---|---|
-| LLM provider SDK | `supabase/functions/[feature]/index.ts` (Deno) |
+| LLM transport | `openai` npm package pointed at `https://openrouter.ai/api/v1` inside Edge Functions (Deno). Do not install provider SDKs (`@anthropic-ai/sdk`, `@google/generative-ai`, etc.) — one transport, one billing path. |
 | System prompts | `supabase/functions/[feature]/prompts/*.md` |
-| Secrets | Edge Function env: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY` — never in the client bundle |
+| Secrets | Edge Function env: `OPENROUTER_API_KEY` — never in the client bundle. No per-provider keys. |
+| Model selection | OpenRouter model slug (`anthropic/claude-opus-4-7`, `openai/gpt-4o`, `google/gemini-2.5-pro`) passed to `client.chat.completions.create({ model })` |
 | Streaming transport | SSE via `ReadableStream` in Edge Function response |
 | In-flight tokens (UI) | `useState` in a custom hook (not TanStack Query) |
 | Persisted thread history | Supabase table + `useQuery(['thread', id])` — invalidated on stream done |
-| Usage tracking | `llm_usage` table, written by Edge Function service-role client |
-| Rate limits | Edge Function check against `llm_usage` before provider call |
+| Usage tracking | `llm_usage` table, written by Edge Function service-role client; `provider` always `openrouter`, `model` is the OpenRouter slug |
+| Rate limits | Edge Function check against `llm_usage` before the OpenRouter call |
 | Cost cap | Edge Function monthly cost SUM check, returns 402 Payment Required when hit |
 | Cache | `llm_cache` table for deterministic calls |
-| Fallback chain | Array of models in Edge Function; logged in `llm_usage.model` |
+| Fallback chain | Array of OpenRouter model slugs in Edge Function; logged in `llm_usage.model` |
 
 ---
 

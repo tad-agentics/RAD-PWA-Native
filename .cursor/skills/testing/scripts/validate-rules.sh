@@ -63,44 +63,54 @@ echo ""
 
 echo "── Banned Patterns ──"
 
+# Common exclusion pattern — lines that mention a banned pattern INTENTIONALLY
+# to warn against it (discard lists, risk tables, forbidden sections, "Do not"
+# prose, validator comments referring to itself).
+NEGATION_CONTEXT="Do not\|do not\|DO NOT\|NOT\|never\|NEVER\|removed\|note intent\|rebuild in\|legacy\|forbidden\|discard\|validator guards\|RAD uses\|escalation\|Usually needs judgment\|\*\*HIGH\*\*\|coordinated motion\|] No \|] No loose"
+
 check_zero "framer-motion (use 'motion' package)" \
   "framer-motion" \
-  "Do not\|do not\|NOT\|never\|NEVER\|removed\|note intent\|rebuild in"
+  "$NEGATION_CONTEXT"
 
 check_zero "HeroUI (removed — Claude Design components only)" \
   "HeroUI" \
-  "Do not\|do not\|NOT\|never\|removed"
+  "$NEGATION_CONTEXT"
 
 check_zero "ANTHROPIC_API_KEY (use OPENROUTER_API_KEY)" \
   "ANTHROPIC_API_KEY" \
-  "Do not install"
+  "$NEGATION_CONTEXT"
 
 check_zero "NEXT_PUBLIC env vars (use VITE_ prefix)" \
-  "NEXT_PUBLIC"
+  "NEXT_PUBLIC" \
+  "$NEGATION_CONTEXT"
 
 check_zero "@supabase/ssr (use @supabase/supabase-js)" \
-  "@supabase/ssr"
+  "@supabase/ssr" \
+  "$NEGATION_CONTEXT"
 
 check_zero "create-next-app (use create-react-router)" \
-  "create-next-app"
+  "create-next-app" \
+  "$NEGATION_CONTEXT"
 
 check_zero "next build (use vite build)" \
-  "next build"
+  "next build" \
+  "$NEGATION_CONTEXT"
 
 check_zero "globals.css (use app.css)" \
-  "globals\.css"
+  "globals\.css" \
+  "$NEGATION_CONTEXT"
 
 check_zero "Phase 6 (eliminated from RAD pipeline)" \
   "Phase 6" \
-  "Polish\|verification\|screen building"
+  "Polish\|verification\|screen building\|$NEGATION_CONTEXT"
 
 check_zero "legacy Figma/Make references (Claude Design replaced Figma Make)" \
   "Figma Make\|figma-make-brief\|src/make-import\|frontend-make\.mdc" \
-  "^\s*#"
+  "^\s*#\|$NEGATION_CONTEXT"
 
 check_zero "stale 'ported into' language (use 'copied into')" \
   "ported into\|Ported into" \
-  "Claude Design Porting\|off-limits during porting"
+  "Claude Design Porting\|off-limits during porting\|$NEGATION_CONTEXT"
 
 echo ""
 

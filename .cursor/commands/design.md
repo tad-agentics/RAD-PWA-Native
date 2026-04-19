@@ -18,6 +18,11 @@ Confirm, then report any misses to the human:
 - [ ] `src/design-handoff/` does NOT yet exist (or is empty)
 - [ ] Human has access to Claude Design (Pro/Max/Team/Enterprise plan)
 - [ ] **Repo is linked in Claude Design** — human has connected the GitHub repo or attached the local directory via Claude Design's Import button. Without the link, Claude Design invents tokens and primitives instead of matching the existing system. This is the single biggest quality lever — never skip.
+- [ ] **Prompt-budget guard (H1):**
+  ```bash
+  bash .cursor/skills/claude-design/scripts/rollup-prompt-budget.sh --machine
+  ```
+  Exit 0 → proceed. Exit 2 (WARN, ≥ 40 turns / 30 days) → surface the warning to the human; planning bigger briefs / fewer iterations is advised but proceed. Exit 1 (BLOCK, ≥ 50 turns OR ≥ 3 consecutive `shape_mismatch: yes`) → halt and report. For BLOCK on budget: wait for window to roll forward or get Tech Lead override. For BLOCK on drift: open `artifacts/issues/handoff-contract-v3.md` per the script's guidance — Anthropic likely changed Claude Design's export schema and the contract needs bumping.
 
 ### Instructions to the human
 
@@ -51,7 +56,16 @@ Run the contract check:
 - [ ] No `globals.css`, no `app/` (Next.js), no `page.tsx` files
 - [ ] None of the discard-list files in `artifacts/docs/handoff-contract.md` §Discard list are present (delete on sight)
 - [ ] Every screen listed in `screen-specs-[app]-v1.md` has a matching file in the handoff
-- [ ] `artifacts/docs/claude-design-handoff-notes.md` is populated with implementation notes / token metadata from the Claude Code handoff bundle (not blank)
+- [ ] **Handoff-notes capture (C3 — machine-checked):**
+  ```bash
+  bash .cursor/skills/claude-design/scripts/verify-handoff-notes.sh initial
+  ```
+  `artifacts/docs/claude-design-handoff-notes.md` must have an `## Initial Build` entry with four `### ` subsections — Tokens, Components, Notes, Interactions — each ≥ 20 real-content lines. Placeholder text from the template does not count. Exit 0 → pass. Exit 1 → BLOCKING: paste the missing sections from Claude Code's handoff bundle and re-run (budget ~5 minutes).
+- [ ] **Token freshness (C2 — enforces the repo-link mandate):**
+  ```bash
+  bash .cursor/skills/claude-design/scripts/verify-handoff-tokens.sh initial src/design-handoff
+  ```
+  Exit 0 → pass. Exit 1 → BLOCKING: tokens don't match EDS §5 roles, meaning the repo/EDS wasn't linked in Claude Design. Re-link, regenerate, re-run verify.
 
 Report file-by-file. On any miss, point the human at the relevant fix in `.cursor/skills/claude-design/SKILL.md` §Failure Modes. On all-pass, record:
 
@@ -95,8 +109,17 @@ When done, run /design verify new-feature [name].
 
 - [ ] Export is in `src/design-handoff/new-feature-[name]/`, not overwriting the root handoff
 - [ ] No new files in `components/ui/` (Claude Design must reuse existing primitives)
-- [ ] No new CSS tokens invented — `theme.css` if present matches `src/app.css`
 - [ ] Every screen listed in feature doc's Frontend Scope has a file
+- [ ] **Handoff-notes capture (C3 — machine-checked):**
+  ```bash
+  bash .cursor/skills/claude-design/scripts/verify-handoff-notes.sh new-feature [name]
+  ```
+  `artifacts/docs/claude-design-handoff-notes.md` must have a `## Feature: [name]` appendix with the same four `### ` subsections, each ≥ 20 real-content lines (new additions only — do not repeat initial-build tokens/components). Exit 1 → BLOCKING.
+- [ ] **Token freshness (C2 — enforces the repo-link mandate):**
+  ```bash
+  bash .cursor/skills/claude-design/scripts/verify-handoff-tokens.sh new-feature src/design-handoff/new-feature-[name]
+  ```
+  Exit 0 → pass (no theme.css, or every token already in `src/app.css`). Exit 1 → BLOCKING: the handoff invents tokens, meaning the repo link was stale/absent. Re-sync the link in Claude Design, regenerate, re-run.
 
 Report, and on pass: "Incremental handoff verified. Run `/feature [name]` to dispatch."
 
@@ -126,6 +149,16 @@ Export to src/design-handoff/regen-[screen]/ — a single file is fine.
 
 - [ ] Export is in `src/design-handoff/regen-[screen]/`
 - [ ] Mock data shape matches the current mock shape in `src/design-handoff/` (so Supabase wiring still applies)
+- [ ] **Regen shape (H3 — single file, no invented primitives):**
+  ```bash
+  bash .cursor/skills/claude-design/scripts/verify-regen-shape.sh [screen]
+  ```
+  Asserts: exactly one `.tsx` file at `src/design-handoff/regen-[screen]/<screen>.tsx`, no other files (no `.css`, `.ts`, `.json`, no `components/` or `ui/` subdirs), and every `@/components/ui/*` import in the regen file resolves to a primitive that already exists in `src/components/ui/`. Exit 1 → BLOCKING: Claude Design invented files or primitives under prompt pressure. Re-prompt with the §3 Drift Regen template emphasizing "exactly one file, no new primitives." If a new primitive is genuinely needed, switch to `/design new-feature [name]` instead — regen is not the right path for new shared code.
+- [ ] **Token freshness (C2 — enforces the repo-link mandate):**
+  ```bash
+  bash .cursor/skills/claude-design/scripts/verify-handoff-tokens.sh regen src/design-handoff/regen-[screen]
+  ```
+  Exit 0 → pass. Exit 1 → BLOCKING: regen invents tokens (repo link stale). Re-sync link, regenerate, re-run.
 
 On pass: "Regen verified. Dispatch Frontend Developer to diff and re-copy the affected route file."
 

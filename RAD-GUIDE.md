@@ -2,6 +2,8 @@
 
 This is the step-by-step operating manual for the RAD template. Follow it in order. Every step has a clear completion signal before you move on.
 
+**What RAD is built for:** AI-powered B2C and B2B2C apps that help people with life and work — chat, journaling, coaching, habit tracking, personal finance, learning, creative tools. The stack (RR7 SPA + Supabase + PWA + optional Expo) is tuned for that app class. If you're building a SaaS dashboard with heavy SSR, an ecommerce storefront, or a content/marketing site, use a different starter. See **Who RAD Is For** in `README.md`.
+
 **Native-capable template:** This repo includes `mobile/` (Expo) and `shared/` (cross-platform package) so you can ship **PWA-only**, **web + native from day one**, or **PWA first then native** (`pwa-then-native`). The main web application is finalized when you run **`/init`** after Phase 1: that command scaffolds React Router v7 + Vite at the repo root, installs dependencies, links npm workspaces when your northstar §7c mode requires it, and (for `native` mode) prepares the Expo app. Until then, treat the root as **agent-orchestrated** — do not assume a hand-written `package.json` exists before init.
 
 ---
@@ -480,6 +482,7 @@ If an agent has attempted a task 3 times without success, is uncertain about a s
 | `testing` | 66 automated rule checks | Runs on agent stop via hooks |
 | `expo-native-reference` | Official RN + Expo doc map, env/EAS/Router pointers, RAD native wiring | Mobile Developer session warm-up; Tech Lead debugging native tooling; SDK or `create-expo-app` alignment |
 | `caching-strategies` | Cache-aside mental model for RAD — TanStack tiers, invalidation, Edge/optional Redis, stampede notes | Tuning `staleTime` / invalidation, stale UI bugs, adding Edge or Redis caches in tech spec |
+| `ai-patterns` | LLM integration patterns on the RAD stack — streaming, cost accounting, prompt management, agent UX, idempotency and fallback | Phase 4 (any feature with LLM calls), `/feature` for LLM-backed screens, adding a new provider |
 
 **Native Phase B:** Use the **`/native-init`** command (not a skill file) after Phase A when mode is `pwa-then-native`. It owns the extraction map from `src/lib` → `shared/` and Expo wiring; see `.cursor/commands/native-init.md`.
 

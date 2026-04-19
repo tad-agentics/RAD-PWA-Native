@@ -8,6 +8,8 @@
 
 React Router v7 (Vite) · Supabase (DB + Auth + RLS + Edge Functions + Storage) · TanStack React Query · Vercel · Tailwind CSS · Claude Design
 
+RAD is tuned for **AI-powered B2C / B2B2C apps that help people with life and work** (chat, journaling, coaching, habits, productivity, learning, creative tools). The SPA + pre-rendered landing + PWA + Expo-interop shape fits auth-gated, LLM-streaming, mobile-primary apps. See `README.md` → **Who RAD Is For**. AI integration patterns (streaming, cost accounting, prompt management, agent UX) live in `.cursor/skills/ai-patterns/SKILL.md`.
+
 ---
 
 ## Rule Authority (when files conflict)

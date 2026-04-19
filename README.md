@@ -1,10 +1,22 @@
 # RAD — Rapid App Development (PWA + Native)
 
-RAD is a multi-agent development template for Cursor that ships production-ready **web apps (React Router v7 + Vite)** and, when your northstar calls for it, **Expo native clients** that share types and API code with the web app. You define the product. Claude Design designs it. A coordinated team of AI agents builds it — backend, frontend, mobile (when applicable), QA, design, devops, and research — each with narrow boundaries, structured handoffs, and human approval gates.
+RAD is a multi-agent development template for Cursor that ships production-ready **AI-powered B2C and B2B2C apps that help people with life and work** — consumer web apps (React Router v7 + Vite) with optional Expo native clients that share types and API code. You define the product. Claude Design designs it. A coordinated team of AI agents builds it — backend, frontend, mobile (when applicable), QA, design, devops, and research — each with narrow boundaries, structured handoffs, and human approval gates.
 
 RAD is not a framework or a library. It is a set of agent instructions, slash commands, skills, and quality checks that turn Cursor into a managed development team. The human acts as Tech Lead — making architectural decisions, approving gates, and steering the product. The agents do the construction.
 
 **This repository** is the native-capable template: it includes `mobile/` (Expo) and `shared/` (cross-platform types, validation, Supabase factory) so monorepo wiring stays consistent. The main web app (`src/routes`, root `package.json`, full Vite setup) is completed when you run **`/init`** after Phase 1 — see `RAD-GUIDE.md` for the full sequence.
+
+## Who RAD Is For
+
+RAD is opinionated. It targets **AI-powered consumer apps** — chat, journaling, coaching, habit tracking, personal finance, productivity, creative tools, learning. Apps where:
+
+- The landing page needs SEO but the logged-in app does not (auth-gated SPA).
+- LLM streaming UX is core (chat, generation, analysis) and perceived latency matters.
+- Mobile use is primary; PWA + optional Expo native is the delivery model.
+- Payment is usually subscription or credit-based, not marketplace/storefront.
+- A small Supabase backend (Postgres + RLS + Edge Functions + Storage) is sufficient.
+
+**RAD is NOT the right template for:** SaaS dashboards with heavy SSR, ecommerce storefronts, content/marketing sites (Astro territory), real-time collaborative editors (Partykit/Liveblocks territory), or data-pipeline products. Pick a different starter for those.
 
 ## What RAD Solves
 
@@ -21,6 +33,15 @@ Building an app with AI agents without structure produces inconsistent, fragile 
 **Web:** React Router v7 (Vite) · Supabase · TanStack React Query · Vercel · Tailwind CSS · Claude Design  
 
 **Native (when deployment mode is `native` or `pwa-then-native`):** Expo · Expo Router · NativeWind · FlashList · react-native-reusables patterns · workspace packages `mobile` + `shared`
+
+**Why this stack for AI-powered consumer apps:**
+
+- **React Router v7 + Vite (SPA with pre-rendered landing).** The app is auth-gated once you're in — SSR gives nothing but bundle weight. Vite's HMR is excellent for iterating on chat and streaming UIs. RR7's `prerender: ['/']` gives the landing page SEO without dragging SSR into the app.
+- **Supabase (Postgres + RLS + Edge Functions + Storage).** Edge Functions (Deno) stream LLM responses natively via `ReadableStream` — the cleanest home for provider SDK calls, rate limits, and usage accounting. RLS is the single authorization boundary for per-user data (threads, entries, goals).
+- **TanStack React Query.** Correct for persisted resource state (thread lists, history, profile). For in-flight LLM streams, RAD uses `useState` in a dedicated hook — see `.cursor/skills/ai-patterns/SKILL.md` §1.
+- **Vercel.** Static SPA hosting at SGN POPs — 50-80ms TTFB from SEA, imperceptible for the target app class. No server runtime; all server logic lives in Edge Functions.
+- **Tailwind + Claude Design.** Claude Design reads the codebase, extracts the design system, and packages a handoff bundle the Frontend Developer integrates via copy-then-edit. 90% of handoff code stays untouched.
+- **Expo (+ `shared/` workspace).** Native is almost always on the roadmap for this app class. `shared/` holds types, validation, and a Supabase factory usable from web and native, so features extend to native with minimal rework.
 
 This matches how [React Native documents getting started today](https://reactnative.dev/docs/getting-started): they steer new apps toward a **framework** path, and the official [environment setup](https://reactnative.dev/docs/environment-setup) recommends **Expo**. Use the **[Expo documentation](https://docs.expo.dev/)** as the day-to-day reference ([Expo Router](https://docs.expo.dev/router/introduction/), [EAS Build & Submit](https://docs.expo.dev/eas/), [environment setup](https://docs.expo.dev/get-started/set-up-your-environment)). **Prerequisites and link tables** for humans are in `RAD-GUIDE.md` → **React Native and Expo**.
 

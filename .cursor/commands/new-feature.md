@@ -119,7 +119,19 @@ Update `artifacts/plans/project-plan.md` to add this feature to the tracker.
 
 ---
 
-## Step 5 — Dispatch
+## Step 5 — Design (if new screens)
+
+If the feature adds or materially changes screens:
+
+```
+/design new-feature [feature-name]
+```
+
+The human runs Claude Design pointing at the existing repo (do not regenerate primitives), exports to `src/design-handoff/new-feature-[name]/`, and runs `/design verify new-feature [name]`. Full prompting patterns: `.cursor/skills/claude-design/SKILL.md` §2.
+
+Skip this step if the feature is backend-only or reuses existing screens with minor edits.
+
+## Step 6 — Dispatch
 
 Add this feature to `artifacts/plans/build-plan.md` under a new wave or append to the current wave, with a full context package (backend scope, frontend scope, acceptance criteria).
 
@@ -129,11 +141,11 @@ Then dispatch:
 /feature [feature-name]
 ```
 
-The standard Backend → Frontend → QA pipeline runs. Each agent reads the feature doc as part of its context package in `build-plan.md`.
+The standard Backend → Frontend → QA pipeline runs. Each agent reads the feature doc as part of its context package in `build-plan.md`. Frontend agent reads `src/design-handoff/new-feature-[name]/` if Step 5 was run.
 
 ---
 
-## Step 6 — Report + Update
+## Step 7 — Report + Update
 
 When QA signals PASS or BLOCKING:
 

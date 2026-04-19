@@ -37,6 +37,6 @@ Signal completion by confirming both files are written.
 ## After completion
 
 1. Update `agent-workspace/ACTIVE_CONTEXT.md`
-2. Present to human: "Screen specs + Claude Design brief complete. Next steps: (1) Use the Claude Design brief to generate visual designs in Claude Design. (2) Export Claude Design's handoff bundle into `src/design-handoff/`. (3) Approve to proceed to Phase 4."
-3. Wait for human to complete Claude Design prototypes, export handoff bundle to `src/design-handoff/`, AND approve before dispatching `/phase4`
+2. Present to human: "Screen specs + Claude Design brief complete. Run `/design` to enter Claude Design with pre-flight checks, export the handoff bundle, then `/design verify` before approving Phase 4."
+3. Wait for human to run `/design` → export to `src/design-handoff/` → `/design verify` passes → approval, before dispatching `/phase4`
 4. On approval: commit `docs(phase2): screen specs + claude design brief complete`

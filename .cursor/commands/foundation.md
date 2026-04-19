@@ -37,12 +37,18 @@ Foundation backend includes:
 - Storage buckets + helpers (if applicable)
 - Edge Functions: payment webhook, send-email (if applicable), LLM interpret/reason functions (all RAD apps)
 - LLM cache table (llm_cache) in initial migration
+- email_events table (if retention email sequences are in scope — see artifacts/templates/email-sequences/README.md)
 - Set Edge Function secrets: `supabase secrets set OPENROUTER_API_KEY=...` (+ payment/email keys if applicable)
 - Static SEO/PWA files:
   - public/robots.txt — allow /, disallow /app/
   - public/sitemap.xml — landing page at priority 1
   - public/manifest.json — name/short_name from northstar, theme_color from EDS §5, icons, screenshots
   - OG image solution (static PNG or Edge Function — per tech-spec §18)
+- Enable VitePWA plugin in vite.config.ts (mode ∈ pwa | pwa-then-native):
+  - `npm i -D vite-plugin-pwa`
+  - Uncomment `import { VitePWA } from "vite-plugin-pwa"` and the `VitePWA({...})` block
+  - Verify `npm run build` produces `dist/sw.js` and `dist/manifest.webmanifest` (or references public/manifest.json)
+  - See artifacts/docs/handoff-contract.md for the locked config; do not deviate
 
 Signal completion when feat(foundation): backend infrastructure complete is committed.
 ```

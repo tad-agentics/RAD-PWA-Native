@@ -25,11 +25,10 @@ function manualChunks(id: string) {
   return "vendor";
 }
 
-// PWA — uncomment ONE of these after evaluating during /init:
-// Option A: vite-plugin-pwa (Workbox — more battle-tested for Vite)
+// PWA — locked to vite-plugin-pwa (Workbox-based, battle-tested for Vite).
+// /foundation wires the plugin into the plugins array below based on deployment mode.
+// See artifacts/docs/handoff-contract.md and .cursor/commands/foundation.md Step 0.
 // import { VitePWA } from "vite-plugin-pwa";
-// Option B: @serwist/vite (if Serwist Vite plugin is mature enough at build time)
-// import { serwist } from "@serwist/vite";
 
 export default defineConfig({
   build: {
@@ -44,10 +43,11 @@ export default defineConfig({
     reactRouter(),
     tsconfigPaths(),
 
-    // PWA plugin goes here — configured during /init based on evaluation
+    // PWA plugin — uncomment during /foundation (mode ∈ pwa | pwa-then-native).
+    // Locked config; do not change without updating handoff-contract.md + foundation.md.
     // VitePWA({
     //   registerType: "autoUpdate",
-    //   manifest: false, // Use static public/manifest.json
+    //   manifest: false, // Use static public/manifest.json (written by Backend Foundation)
     //   workbox: {
     //     globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
     //     navigateFallback: "/index.html",

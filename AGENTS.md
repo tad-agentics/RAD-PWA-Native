@@ -69,7 +69,7 @@ All specialists are used proactively. When choosing which subagent to launch:
 | **Office Hours** | `/office-hours` | Tech Lead | Northstar validated — all 12 sections pass + stack fit check |
 | **Init** | `/init` | Tech Lead | Phase 1 artifacts present + validated |
 | **Phase 2** | `/phase2` | Product Designer | Human approves screen specs + Claude Design brief |
-| **Claude Design** | _(human-driven)_ | Human in Claude Design | Claude Design handoff copied to `src/design-handoff/` |
+| **Design** | `/design` | Human in Claude Design (wrapper runs pre/post-flight) | `/design verify` passes against `artifacts/docs/handoff-contract.md` |
 | **Phase 4** | `/phase4` | Tech Lead | Human approves tech spec |
 | **Setup** | `/setup` | Tech Lead | Human approves build plan |
 | **Foundation** | `/foundation` | Backend (infra + SEO/PWA) → Frontend (Claude Design handoff + component inventory + Tailwind config + landing + auth) | Auto-proceeds after commit |
@@ -101,7 +101,10 @@ Blocking gates are enforced — no agent self-proceeds to the next phase.
 | `artifacts/docs/emotional-design-system.md` (or `eds-[app].html`) | Phase 1 input |
 | `artifacts/docs/screen-specs-[app]-v1.md` | Phase 2 output — screen metadata |
 | `artifacts/docs/claude-design-brief.md` | Phase 2 output — Claude Design input brief |
+| `artifacts/docs/handoff-contract.md` | File-shape contract for `src/design-handoff/` — `/design verify` enforces it |
+| `artifacts/docs/claude-design-log.md` | Studio log of Claude Design prompt iterations + what worked (compounding asset) |
 | `artifacts/docs/design-system-spec.md` | Claude Design component inventory (produced during Foundation) |
+| `artifacts/templates/email-sequences/` | Onboarding / re-engagement / milestone email templates (locked provider: Resend) |
 | `artifacts/docs/tech-spec.md` | Phase 4 output |
 | `artifacts/docs/ETHOS.md` | Builder ethos — completeness, search-before-building, user sovereignty |
 | `artifacts/docs/changelog.md` | Ongoing deviations from spec |

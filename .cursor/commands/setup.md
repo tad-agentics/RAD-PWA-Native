@@ -63,10 +63,11 @@ Produce `artifacts/plans/build-plan.md` with:
 3. **Per-feature context packages** — for each feature, extract and compile:
    - Backend context: exact tables, RLS intent, data hooks, Edge Functions (if needed)
    - Frontend context: exact screens with metadata (components, data vars, states, interaction flows with branch conditions, Claude Design component names for copying)
+   - **Wiring Map (mandatory)** — copy the feature's Wiring Map subsection from `tech-spec.md` §10b into the context package verbatim. This is the single source of truth for BE↔FE bindings: tables, hooks, mutations, invalidations, Edge Function shapes, round-trip checks. Without this section in the context package, the Frontend agent invents bindings and ships shells. `/wire-check` reasons against this map; QA Pass 0 enforces it.
    - Copy: production-ready copy slots from screen spec metadata, tagged with context type
    - Dopamine moments: which screens have D1–D4 flags, reference EDS §6
    - Credit costs: which screens have paywall gates, exact credit amounts
-   - Acceptance criteria
+   - Acceptance criteria — phrased as observable round-trips (not "user can see X" but "after [action], [table] row exists with [field]")
 
 Each context package must be self-contained.
 

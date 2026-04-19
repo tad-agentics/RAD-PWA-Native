@@ -181,6 +181,41 @@ On Vietnam mobile networks (4G, 100-300ms RTT), each unnecessary waterfall adds 
 
 `useState` + `useEffect` for Supabase queries is **forbidden**. Always use `useQuery` from TanStack React Query. Raw state = no cache, no dedup, re-fetches on every mount.
 
+### Wiring Verification (self-check before signaling done)
+
+Before signaling completion on any frontend work, run the same greps `/wire-check` runs. If any return hits in active code (not `src/design-handoff/`, not `*.test.*`), fix before commit.
+
+```bash
+# 1. No design-handoff imports in active code
+grep -rn "from ['\"].*design-handoff" src/routes src/components src/hooks src/lib
+
+# 2. No mock-shaped local data
+grep -rEn "(mock|fake|sample|dummy|stub)(Data|Items|Users|Entries)\s*=" \
+  src/routes src/components src/hooks src/lib
+
+# 3. No "wire later" markers
+grep -rEn "TODO.*?(wire|backend|replace.*mock|hook.*up)" \
+  src/routes src/components src/hooks src/lib
+
+# 4. Every supabase.functions.invoke target has a deployed function
+grep -rEho "supabase\.functions\.invoke\(['\"]([^'\"]+)['\"]" src/ | \
+  sed -E "s/.*invoke\(['\"]([^'\"]+).*/\1/" | sort -u | \
+  while read fn; do [ -d "supabase/functions/$fn" ] || echo "ORPHAN: $fn"; done
+
+# 5. Every useMutation block in a file contains invalidateQueries somewhere
+grep -rln "useMutation" src/ | while read f; do
+  grep -q "invalidateQueries" "$f" || echo "NO INVALIDATION in $f"
+done
+
+# 6. No direct supabase.from() calls in route files (route screens read via hooks)
+grep -rEn "supabase\.from\(" src/routes/
+
+# 7. Every queryKey: [...] uses queryKeys.* (not inline literals)
+grep -rEn "queryKey:\s*\[" src/ | grep -v "queryKeys\." | grep -v "src/lib/query-keys.ts"
+```
+
+If any of these surface hits, the feature is shipping as a shell. Fix before commit. Full per-feature audit: `/wire-check [feature-name]`.
+
 ---
 
 ## LLM Data — Calling Edge Functions for Interpretation/Reasoning

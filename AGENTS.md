@@ -73,7 +73,8 @@ All specialists are used proactively. When choosing which subagent to launch:
 | **Phase 4** | `/phase4` | Tech Lead | Human approves tech spec |
 | **Setup** | `/setup` | Tech Lead | Human approves build plan |
 | **Foundation** | `/foundation` | Backend (infra + SEO/PWA) → Frontend (Claude Design handoff + component inventory + Tailwind config + landing + auth) | Auto-proceeds after commit |
-| **Features** | `/feature [name]` | Backend → Frontend → QA (per feature, parallel waves) | Human approves each QA PASS |
+| **Features** | `/feature [name]` | Backend → Frontend (+ `/wire-check`) → QA Pass 0 wiring smoke test → QA Passes 1–5 | Human approves each QA PASS (no shells) |
+| **Wire check** | `/wire-check [name?]` | Scripted (greps + build) | BLOCKING halts QA / dogfood — fix before re-running |
 | **Visual audit** | `/visual-audit [url]` | Product Designer | Fix all BLOCKING findings |
 | **Dogfood** | `/dogfood` | Human (with Tech Lead) | Fix all BLOCKING findings |
 | **Pre-handoff** | `/pre-handoff` | QA Agent | Human approves |

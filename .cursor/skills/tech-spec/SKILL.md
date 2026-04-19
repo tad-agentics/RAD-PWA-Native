@@ -407,6 +407,50 @@ All API error responses use this shape:
 }
 ```
 
+## 10b. Wiring Map (Mandatory — per feature)
+
+This is the single source of truth for Backend ↔ Frontend bindings. Without this section, the Frontend agent guesses which hook reads which table, and shipped features become "shells" — UI without real data flow.
+
+For **every feature** in the Build Scope (§7), produce one Wiring Map subsection. The `/wire-check` command reasons against this map; QA Pass 0 enforces it.
+
+### [Feature name] — Wiring Map
+
+```
+Backend primitives:
+- Table: [name] — RLS: [intent — e.g. "owner-only"] — Indexes: [columns]
+- Table: [name] — ...
+- Edge Function: [name] — Trigger: [client | webhook | cron] — Auth: [JWT | service_role]
+
+Frontend consumers:
+- Hook: useXxx() — File: src/hooks/useXxx.ts — Reads: [table.column list]
+  - Used by screens: [ScreenA, ScreenB]
+  - Query key: queryKeys.xxx(...) — staleTime: [seconds | Infinity]
+- Mutation: useCreateXxx() — File: src/hooks/useCreateXxx.ts — Writes: [table]
+  - Invalidates on success: [queryKeys.xxx, queryKeys.credits, ...]
+  - Optimistic: yes | no (no for credit/payment)
+- Edge Function call: supabase.functions.invoke('[name]', { body: {...exact shape...} })
+  - Called from hook: useXxx
+  - Expected response shape: { ...exact shape... }
+  - Error handling: ErrorBanner with code → user message mapping
+
+Round-trip for QA Pass 4:
+- "Sign in as seed user → navigate to ScreenA → confirm row N from seed.sql visible"
+- "Tap [button] → confirm row inserted in [table] (Supabase Studio) → refresh → still visible"
+- "[Edge Function] fires → confirm side effect: [credit++ | email row in email_events | webhook idempotency log]"
+
+Realtime (if applicable):
+- Channel: supabase.channel('[name]') — Table: [name] — Event: [INSERT|UPDATE|DELETE]
+- On event: queryClient.invalidateQueries({ queryKey: queryKeys.xxx(...) })
+```
+
+**Coverage rules:**
+- Every backend primitive in §6 (Schema), §10 (API Contracts) appears in exactly one feature's Wiring Map (or is explicitly assigned to Foundation)
+- Every screen in `screen-specs-[app]-v1.md` has at least one Wiring Map line ("reads from useXxx") in some feature
+- Every `useMutation` listed has its full invalidation set spelled out — agents do not get to invent invalidation rules at build time
+- Round-trip lines are imperative and observable — they read like a test script, not a sentence
+
+**The Tech Lead writes this during `/phase4`. The /setup command copies the Wiring Map for each feature into that feature's context package in `build-plan.md`.** The Frontend Developer reads the Wiring Map alongside the screen spec when building the feature.
+
 Common codes: `UNAUTHORIZED`, `NOT_FOUND`, `VALIDATION_ERROR`, `RATE_LIMITED`, `SERVER_ERROR`. The `message` field is user-visible copy — write it as copy, not a developer log.
 
 ## 11. Auth & Security Model

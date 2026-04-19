@@ -7,6 +7,24 @@ description: Structured dogfooding session — the builder uses the staging app 
 
 > Run after `/visual-audit` and before `/pre-handoff`. The builder (human) uses the staging app as a real user for 30–60 minutes. This step catches problems that specs and agents cannot anticipate — confusing flows, wrong defaults, missing affordances, awkward copy in context.
 
+## Step 0 — Wire-check pre-flight (gate)
+
+Run `/wire-check` (whole-repo mode) before generating the task list. There is no point dogfooding a shell — find wiring gaps via grep in 30 seconds, not via 60 minutes of confused tapping.
+
+- **PASS** (or PASS with annotated WARNs) → continue to Step 1
+- **BLOCKING** → halt. Output:
+
+  ```
+  Dogfooding HALTED at pre-flight.
+
+  /wire-check found [N] BLOCKING issues across the build (mock leaks, missing
+  invalidations, orphan Edge Function calls, auth boundary leaks).
+
+  See artifacts/qa-reports/wire-check-repo-[date].md for file:line references.
+
+  Tech Lead: dispatch fixes for each BLOCKING item, then re-run /dogfood.
+  ```
+
 ## Step 1 — Generate the task list
 
 Read these files to generate a task list the human will execute:

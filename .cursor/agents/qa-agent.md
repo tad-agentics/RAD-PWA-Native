@@ -43,7 +43,28 @@ Task-specific skills are loaded within each mode below — not at warm-up time.
 
 ## Feature Mode
 
-Dispatched after Frontend commits for a feature. Runs 5 focused verification passes — each designed to catch what the others miss. A feature ships only when ALL 5 passes return PASS.
+Dispatched after Frontend commits for a feature. Runs **Pass 0 (wiring smoke test) followed by 5 focused verification passes** — each designed to catch what the others miss. A feature ships only when Pass 0 + ALL 5 passes return PASS.
+
+### Pass 0 — Wiring Smoke Test (gate)
+
+**Goal:** Catch "shell of an app" symptoms before any other pass runs. There is no point validating visual fidelity, RLS, or interaction flows on a feature where mocks were never swapped, mutations don't invalidate, or Edge Function calls hit nothing.
+
+Run `/wire-check [feature-name]` and read the report at `artifacts/qa-reports/wire-check-[feature]-[date].md`.
+
+- **PASS** (or PASS with annotated WARNs) → proceed to Step 0 (diff-aware scoping)
+- **BLOCKING** → halt. Do not run Passes 1–5. Output:
+
+  ```
+  BLOCKING (Pass 0 — wiring smoke test failed; halted before visual / data / security passes)
+
+  Findings: [N] mock leaks · [N] missing invalidations · [N] orphan function calls · [N] auth boundary leaks · [N] build errors
+
+  See artifacts/qa-reports/wire-check-[feature]-[date].md for file:line references.
+
+  Tech Lead: dispatch Frontend Developer (or Backend, if function-side mismatch) to fix all BLOCKING items, then re-run /feature [name] from Step 3 (QA only).
+  ```
+
+  No health score is computed when Pass 0 BLOCKs — the feature is not in a state where scoring is meaningful.
 
 ### Step 0 — Diff-aware scoping
 
@@ -96,10 +117,18 @@ Use this scope to prioritize: spend more time on changed areas, less on untouche
 - Edge Functions: CORS headers present, OPTIONS handler present, no leaked secrets in responses
 - Edge Functions deploy cleanly: `supabase functions serve` for each function
 
-### Pass 4 — Interaction Flows & Business Logic
+### Pass 4 — Interaction Flows & Business Logic (with real data round-trip)
 
-**Goal:** Catch broken user journeys and payment/credit bugs.
+**Goal:** Catch broken user journeys and payment/credit bugs. Pass 0 confirmed the wiring exists; this pass confirms it actually works against a real backend.
 
+For each screen in the feature, with the dev server (or staging) running and signed in as a seed user:
+
+- **Real data round-trip (mandatory):**
+  - Trigger the read — confirm data appears AND matches a row visible via Supabase Studio (not mock-shaped)
+  - Trigger a mutation — refresh the screen — confirm the change persists (rules out optimistic-only updates)
+  - Trigger the same mutation again — confirm idempotency where expected, conflict handling where not
+  - Disconnect network mid-action — confirm error state fires (not silent failure)
+  - Sign out, sign back in — confirm data still there (rules out client-only state)
 - Walk every step in each screen's interaction flow from screen specs — does implementation match?
 - Test every branch condition (IF credit ≥ cost → result, ELSE → paywall)
 - Paywall gates show correct credit cost and partial result
@@ -107,6 +136,7 @@ Use this scope to prioritize: spend more time on changed areas, less on untouche
 - Dopamine moments (D1–D4): verify animation timing, easing, sequence match EDS §6 spec
 - Post-dopamine behavior: no popup or upsell for the specified delay period
 - Auth guard: unauthenticated → redirect, expired session → redirect (not white screen)
+- **Edge Function side effects:** for any function that writes (webhooks, send-email, credit grants), trigger it and confirm the side effect in Supabase Studio (row inserted, email logged in `email_events`, credit balance updated)
 
 ### Pass 5 — Build & Test Suite
 

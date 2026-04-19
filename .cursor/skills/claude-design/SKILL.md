@@ -126,11 +126,12 @@ Before leaving Claude Design:
 - [ ] No loose `globals.css`, no Next.js-specific files (`app/`, `page.tsx`)
 - [ ] Discard-list files (see `handoff-contract.md` §Discard list) will be deleted on import — flag any present so the Frontend agent expects them
 
-**Claude Code handoff bundle (metadata capture):**
-- [ ] Brand tokens section copied into `artifacts/docs/claude-design-handoff-notes.md` §Tokens
-- [ ] Component-structure summary copied into §Components
-- [ ] Implementation notes copied into §Notes
-- [ ] Interaction notes copied into §Interactions
+**Claude Code handoff bundle (metadata capture — C3 machine-checked):**
+- [ ] Brand tokens section copied into `artifacts/docs/claude-design-handoff-notes.md` `### Tokens`
+- [ ] Component-structure summary copied into `### Components`
+- [ ] Implementation notes copied into `### Notes`
+- [ ] Interaction notes copied into `### Interactions`
+- [ ] `bash .cursor/skills/claude-design/scripts/verify-handoff-notes.sh <initial|new-feature [name]>` exits 0. Each of the four `### ` subsections must have ≥ 20 real-content lines (blank lines and default-template placeholder prose do not count). Budget ~5 minutes of paste per entry — under-populated metadata forces the Frontend agent to invent design intent during integration.
 
 **Repo-link enforcement (C2 — machine-checked):**
 - [ ] `bash .cursor/skills/claude-design/scripts/verify-handoff-tokens.sh <mode> <handoff-dir>` exits 0. This script catches the single most common drift: exports produced without an active repo link. Initial builds must match EDS §5 role keywords; incremental builds must not invent tokens outside `src/app.css`. If this fails, re-link the repo in Claude Design and regenerate — the handoff is rejected before it reaches Foundation or `/feature`.

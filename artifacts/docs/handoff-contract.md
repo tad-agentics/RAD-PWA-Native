@@ -19,6 +19,23 @@ The ZIP is what RAD's pipeline runs on. The handoff metadata is captured because
 
 The other Claude Design exports (HTML, PPTX, PDF, Canva) are not used by RAD.
 
+### Handoff-notes substance is mandatory — enforced by section + line-count check (C3)
+
+`claude-design-handoff-notes.md` population was previously a manual paste with a gameable check ("file not blank"). A single word passed. Frontend agents received sparse metadata and silently invented design intent.
+
+**Enforcement (C3):** `/design verify` runs `.cursor/skills/claude-design/scripts/verify-handoff-notes.sh` as a post-flight check. The script requires, under the current entry's `## ` heading, four `### ` subsections each with ≥ 20 real-content lines:
+
+| Subsection | What goes here |
+|---|---|
+| `### Tokens` | Brand-token table: token name, value, where it's used. One row per token Claude Design generated. |
+| `### Components` | Component-structure summary: variants, composition, padding/spacing tokens per primitive. |
+| `### Notes` | Implementation notes from the bundle — subtle behaviors, padding intents, structural hints that aren't obvious from the code. Free-form bullets. |
+| `### Interactions` | Interaction notes — keyboard shortcuts, gesture semantics, timing rules, focus management, submit-vs-newline distinctions. |
+
+Blank lines and the default template's placeholder prose ("Paste the brand-token table here", etc.) are excluded from the count. Exit 0 = PASS. Exit 1 = BLOCKING with per-section line counts and remediation. Budget ~5 minutes of paste per entry (initial build or new-feature appendix).
+
+This converts the metadata-capture step from "trust the human to paste real content" into a scripted gate, same pattern as C2 (repo-link token diff).
+
 ### Repo link is mandatory — enforced by token diff
 
 Before generating either artifact, the human must connect the repo to Claude Design via Import → GitHub or Local Directory. Without the link:

@@ -51,8 +51,12 @@ Run the contract check:
 - [ ] No `globals.css`, no `app/` (Next.js), no `page.tsx` files
 - [ ] None of the discard-list files in `artifacts/docs/handoff-contract.md` §Discard list are present (delete on sight)
 - [ ] Every screen listed in `screen-specs-[app]-v1.md` has a matching file in the handoff
-- [ ] `artifacts/docs/claude-design-handoff-notes.md` is populated with implementation notes / token metadata from the Claude Code handoff bundle (not blank)
-- [ ] **Token freshness (enforces the repo-link mandate):**
+- [ ] **Handoff-notes capture (C3 — machine-checked):**
+  ```bash
+  bash .cursor/skills/claude-design/scripts/verify-handoff-notes.sh initial
+  ```
+  `artifacts/docs/claude-design-handoff-notes.md` must have an `## Initial Build` entry with four `### ` subsections — Tokens, Components, Notes, Interactions — each ≥ 20 real-content lines. Placeholder text from the template does not count. Exit 0 → pass. Exit 1 → BLOCKING: paste the missing sections from Claude Code's handoff bundle and re-run (budget ~5 minutes).
+- [ ] **Token freshness (C2 — enforces the repo-link mandate):**
   ```bash
   bash .cursor/skills/claude-design/scripts/verify-handoff-tokens.sh initial src/design-handoff
   ```
@@ -101,7 +105,12 @@ When done, run /design verify new-feature [name].
 - [ ] Export is in `src/design-handoff/new-feature-[name]/`, not overwriting the root handoff
 - [ ] No new files in `components/ui/` (Claude Design must reuse existing primitives)
 - [ ] Every screen listed in feature doc's Frontend Scope has a file
-- [ ] **Token freshness (enforces the repo-link mandate):**
+- [ ] **Handoff-notes capture (C3 — machine-checked):**
+  ```bash
+  bash .cursor/skills/claude-design/scripts/verify-handoff-notes.sh new-feature [name]
+  ```
+  `artifacts/docs/claude-design-handoff-notes.md` must have a `## Feature: [name]` appendix with the same four `### ` subsections, each ≥ 20 real-content lines (new additions only — do not repeat initial-build tokens/components). Exit 1 → BLOCKING.
+- [ ] **Token freshness (C2 — enforces the repo-link mandate):**
   ```bash
   bash .cursor/skills/claude-design/scripts/verify-handoff-tokens.sh new-feature src/design-handoff/new-feature-[name]
   ```

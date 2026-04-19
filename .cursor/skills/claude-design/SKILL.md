@@ -50,6 +50,22 @@ src/components/ui/. Use the same typography scale, spacing, and brand tokens.
 
 Then paste the feature doc's frontend scope and acceptance criteria. Ask only for the new screens. Export to `src/design-handoff/new-feature-[name]/` — never overwrite the initial `src/design-handoff/`.
 
+### 2b. Native-targeted brief (HIGH-risk screens only)
+
+When the mobile-developer risk queue flags a screen as HIGH (grid-heavy layout, motion sequences — do not use framer-motion on native — rich interactions), ask Claude Design to emit RN-shaped output directly instead of translating from web TSX:
+
+```
+Generate this screen for React Native + Expo Router + NativeWind.
+- Use View / Pressable / Text / TextInput / FlashList — no DOM primitives.
+- Do not use framer-motion; use Animated or Reanimated if motion is needed.
+- Match the existing NativeWind tokens in mobile/global.css.
+- Output a single file at [screen-name].tsx. Do not invent new UI primitives — use the existing ones in mobile/src/components/.
+```
+
+Export to `artifacts/docs/design-reference/native/[screen-name]/`. The mobile-developer's translation queue uses this as the source for that screen instead of the web TSX.
+
+Use only when HIGH-risk — each extra Claude Design run burns time and cost. If more than 3 HIGH-risk screens appear, escalate the whole native build back to the Tech Lead.
+
 ### 3. Drift Regen (`/visual-audit`)
 
 When QA flags a screen as drifted from the original Claude Design output:

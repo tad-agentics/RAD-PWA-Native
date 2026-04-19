@@ -121,6 +121,8 @@ Dispatched per feature after that feature's Backend commits. For native mode, th
 
 Hybrid translation preserves **layout intent, copy, and types** while **mechanically** swapping DOM for RN primitives. It is **not** parity-by-default for every pattern.
 
+**Optional pre-step — Native-targeted brief:** For screens flagged HIGH risk in the table below, the Tech Lead may send the human back to Claude Design with a native-targeted brief *before* translation starts. Claude Design can emit RN-flavored JSX (Pressable, FlashList, NativeWind classes) when prompted explicitly — cheaper than translating from a web-shaped tree and escalating. See `.cursor/skills/claude-design/SKILL.md` §2b for the prompt pattern (do not use web-only motion libraries on native). The export goes to `artifacts/docs/design-reference/native/[screen]/` and replaces the web source for that screen in the translation queue. Use sparingly — only when the risk/rewrite ratio justifies another Claude Design run.
+
 | Usually safe (mechanical + rules) | Usually needs judgment or escalation |
 | --- | --- |
 | `div`/`span`/`Text` tree, flex spacing, semantic Tailwind kept in Phase B | CSS Grid, `position: fixed/sticky`, complex `aspect-ratio` hacks |

@@ -100,6 +100,16 @@ CREATE POLICY "Users delete own goals"
   USING (auth.uid() = user_id);
 ```
 
+## Payment Provider
+
+The payment provider is **locked by northstar §11** — never default to Stripe. The Tech Lead writes `artifacts/integrations/[provider].md` during `/research` or `/setup`. All webhook signatures, API calls, and env var names come from that integration doc — not from general knowledge.
+
+- Webhook function name: `supabase/functions/payment-webhook/` regardless of provider
+- Signature verification uses the provider's library (per integration doc)
+- Subscription / credit state is written under `service_role` after signature verification — never trust webhook payloads
+- Local copy of subscription/credit state is a cache; the provider is source of truth (see `architecture/SKILL.md`)
+- If the northstar changes provider mid-build, run `/research [new-provider]` first, then update the Edge Function + env vars — do not half-swap
+
 ## Edge Functions
 
 All server-side logic lives in `supabase/functions/`. Each function is a Deno module with a single `index.ts`.

@@ -47,7 +47,9 @@ Run the contract check:
 Report file-by-file. On any miss, point the human at the relevant fix in `.cursor/skills/claude-design/SKILL.md` §Failure Modes. On all-pass, record:
 
 ```
-Append to artifacts/docs/claude-design-log.md — initial-build entry per SKILL.md §Logging Usage.
+Append an entry to artifacts/docs/claude-design-log.md using the template in that file.
+If the pattern is likely to repeat across apps, also flag it for promotion to
+artifacts/studio/claude-design-log.md at /session-end.
 ```
 
 Then: "Handoff verified. Proceed to `/phase4`."

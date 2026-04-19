@@ -65,7 +65,17 @@ Mutation Patterns (mandatory):
 - NO optimistic UI for credit deductions or payment actions — wait for server confirmation.
 - See frontend-data.mdc "Mutation Cache Invalidation" and frontend.mdc "Common Agent Mistakes" for full patterns.
 
-Signal completion when feat([name]): screens complete is committed.
+Wiring Map (mandatory):
+- The build-plan's [name] context package contains a Wiring Map (from tech-spec §10b). It is the binding contract for this feature.
+- Every hook, mutation, and Edge Function call you build must match the Wiring Map exactly — same hook name, same query key, same invalidation set, same Edge Function name and body shape.
+- If the Wiring Map is wrong or missing, escalate to Tech Lead with NEEDS_CONTEXT — do not invent bindings.
+
+Wire-check gate (mandatory before signaling done):
+- After committing screens, run /wire-check [name] and read artifacts/qa-reports/wire-check-[name]-[date].md.
+- BLOCKING findings → fix all before signaling. Do not commit "done" with mock data still in active routes, missing invalidations, or orphan Edge Function calls.
+- WARN findings → annotate each in the report with a one-line justification, then signal.
+
+Signal completion when feat([name]): screens complete is committed AND /wire-check report is PASS (or PASS-with-annotated-WARNs).
 ```
 
 Wait for `feat([name]): screens complete` commit before proceeding.
@@ -119,9 +129,10 @@ Read:
 - artifacts/docs/emotional-design-system.md — §6 dopamine specs if any screen has a D1–D4 flag
 
 Mode: Feature
-Run all 5 verification passes (Visual Fidelity, Data & Performance, Security & RLS, Interaction Flows, Build & Test).
+Run Pass 0 (wiring smoke test via /wire-check [name]) FIRST. If Pass 0 BLOCKs, halt and signal BLOCKING — do not run Passes 1–5 on a feature that isn't wired.
+If Pass 0 passes: run all 5 verification passes (Visual Fidelity, Data & Performance, Security & RLS, Interaction Flows with real data round-trip, Build & Test).
 After all passes: run the adversarial cross-check to strip false positives.
-Signal PASS (all 5 clean) or BLOCKING (items grouped by pass number).
+Signal PASS (Pass 0 + all 5 clean) or BLOCKING (items grouped by pass number).
 ```
 
 ## After completion

@@ -74,7 +74,9 @@ All specialists are used proactively. When choosing which subagent to launch:
 | **Setup** | `/setup` | Tech Lead | Human approves build plan |
 | **Foundation** | `/foundation` | Backend (infra + SEO/PWA) → Frontend (Claude Design handoff + component inventory + Tailwind config + landing + auth) | Auto-proceeds after commit |
 | **Features** | `/feature [name]` | Backend → Frontend (+ `/wire-check`) → QA Pass 0 wiring smoke test → QA Passes 1–5 | Human approves each QA PASS (no shells) |
-| **Wire check** | `/wire-check [name?]` | Scripted (greps + build) | BLOCKING halts QA / dogfood — fix before re-running |
+| **Wire check** | `/wire-check [name?]` | Scripted (greps + build + types-freshness + security greps) | BLOCKING halts QA / dogfood — fix before re-running |
+| **Security (preventive)** | `.cursor/rules/security.mdc` (always-on for relevant globs) | All agents follow | Trust modes declared per binding; secure-by-default Edge Function template |
+| **Security (audit)** | `/security-audit` skill | QA Agent at pre-handoff | 10 phases (secrets / deps / RLS / Edge Functions / OWASP / headers / PII / storage / rate limit / audit log) |
 | **Visual audit** | `/visual-audit [url]` | Product Designer | Fix all BLOCKING findings |
 | **Dogfood** | `/dogfood` | Human (with Tech Lead) | Fix all BLOCKING findings |
 | **Pre-handoff** | `/pre-handoff` | QA Agent | Human approves |

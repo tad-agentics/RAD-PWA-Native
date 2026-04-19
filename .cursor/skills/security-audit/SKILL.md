@@ -68,12 +68,16 @@ Manual checks:
 For each Edge Function in `supabase/functions/`:
 
 1. **CORS check** — imports `corsHeaders` from `_shared/cors.ts`, handles OPTIONS preflight
-2. **Input validation** — uses zod or equivalent for all request body parsing
-3. **No secrets in response** — grep function code for any pattern that returns API keys, service role keys, or internal URLs
-4. **Webhook signature verification** — any function named `*-webhook` must verify signatures before processing
-5. **Error handling** — no raw exception stack traces returned to caller
+2. **CORS production origin** — `_shared/cors.ts` exports `corsHeadersProd` with explicit `ALLOWED_ORIGINS` (no `*` in prod). Functions auto-select based on `Deno.env.get("ENV")`. Verify production deploy uses the prod headers.
+3. **JWT verification** — Edge-validated functions (client-callable, not webhook/cron/admin) must call `auth.getUser()` against a JWT-scoped client before any business logic. See `.cursor/rules/security.mdc` template.
+4. **Input validation** — uses Zod for all request body parsing. Reject with 400 + `{ code: "VALIDATION_ERROR" }` on parse failure.
+5. **Rate limiting** — Edge-validated functions reference `_shared/rate-limit.ts`. Default 30/min/user. LLM functions ≤ 10/min. Payment functions ≤ 5/min.
+6. **No secrets in response** — grep function code for any pattern that returns API keys, service role keys, internal URLs, or stack traces.
+7. **Webhook signature verification** — any function named `*-webhook` must verify signatures before processing AND insert into `webhook_events` for idempotency.
+8. **Service-role guard** — functions named `*-cron`, `*-admin`, or marked Service-role-only must reject client invocation (check trigger source).
+9. **Error handling** — no raw exception stack traces, no internal IDs in error responses. Use the standard `{ error: { code, message } }` shape.
 
-**BLOCKING** if missing CORS, missing input validation, or secrets in response.
+**BLOCKING** if missing CORS, missing JWT verification on Edge-validated functions, missing input validation, missing rate limit on Edge-validated functions, secrets in response, missing webhook signature verification, or production CORS using wildcard.
 
 ## Phase 5 — OWASP Top 10 (Web Application)
 
@@ -98,6 +102,90 @@ grep -rn "debug.*true\|NODE_ENV.*development" --include="*.ts" --include="*.tsx"
 # A09 — Check for sensitive data logging
 grep -rn "console\.log.*password\|console\.log.*token\|console\.log.*secret\|console\.log.*key" --include="*.ts" --include="*.tsx" src/ 2>/dev/null | grep -v node_modules
 ```
+
+## Section 6 — Web Headers (vercel.json)
+
+```bash
+# Required security headers must be present in vercel.json
+for header in "Strict-Transport-Security" "X-Content-Type-Options" "Referrer-Policy" "Content-Security-Policy" "Permissions-Policy"; do
+  grep -q "$header" vercel.json || echo "MISSING: $header in vercel.json"
+done
+
+# CSP must not allow unsafe-inline for scripts (styles can if Tailwind needs)
+grep -E "script-src[^;]*unsafe-inline" vercel.json && echo "BLOCKING: CSP allows unsafe-inline for scripts"
+
+# CSP must not allow unsafe-eval
+grep -E "unsafe-eval" vercel.json && echo "BLOCKING: CSP allows unsafe-eval"
+```
+
+**BLOCKING** if any required header missing, or CSP allows `unsafe-inline` scripts / `unsafe-eval`.
+
+## Section 7 — PII & Data Hygiene
+
+```bash
+# No PII in URLs (route params should be opaque IDs, not email)
+grep -rEn "/:email|/:phone|/:full_name" src/routes/ 2>/dev/null
+
+# No PII in console statements (extends Phase 5 A09)
+grep -rEn "console\.(log|error|debug|warn).*\b(email|phone|birth_date|full_name|address)\b" src/ 2>/dev/null
+
+# Account-deletion path exists if profile data is collected
+PROFILE_FIELDS=$(grep -rE "(email|phone|birth_date)" supabase/migrations/ 2>/dev/null | wc -l)
+if [ "$PROFILE_FIELDS" -gt 0 ]; then
+  ls supabase/functions/delete-account/index.ts 2>/dev/null || echo "MISSING: delete-account Edge Function (right-to-delete)"
+fi
+
+# All user-data foreign keys cascade on user delete
+grep -rEn "REFERENCES auth\.users" supabase/migrations/ | grep -v "ON DELETE CASCADE" | grep -v "ON DELETE SET NULL"
+```
+
+**BLOCKING** if PII appears in URLs or console statements, or if profile data is collected without a `delete-account` flow.
+
+## Section 8 — Storage Buckets
+
+```bash
+# Buckets must declare allowed_mime_types and file_size_limit
+grep -rE "create_bucket\(" supabase/migrations/ -A 5 2>/dev/null | grep -L "allowed_mime_types\|file_size_limit"
+
+# Public buckets only with explicit Tech Lead annotation
+grep -rE "public.*=.*true" supabase/migrations/ 2>/dev/null | grep -v "-- approved-public:"
+```
+
+**BLOCKING** if any bucket missing MIME / size limits, or public bucket without `-- approved-public:` annotation in the migration.
+
+## Section 9 — Rate Limiting Coverage
+
+```bash
+# Every Edge-validated function (client-callable, non-webhook, non-cron, non-admin)
+# must reference rate-limit helper
+for fn in supabase/functions/*/index.ts; do
+  [ -f "$fn" ] || continue
+  case "$(dirname "$fn")" in
+    *-webhook|*cron*|*-admin|*_shared*) continue ;;
+  esac
+  grep -q "rateLimit\|rate_limits" "$fn" || \
+    echo "MISSING rate limit in $fn"
+done
+```
+
+**BLOCKING** if any Edge-validated function missing rate limit. (LLM functions especially — abuse cost is real.)
+
+## Section 10 — Audit Log Coverage
+
+```bash
+# If sensitive operations exist (account deletion, payment events, credit grants),
+# audit_log table must exist and these ops must write to it
+SENSITIVE_OPS=$(ls supabase/functions/ 2>/dev/null | grep -E "delete-account|payment|credit|admin" | wc -l)
+if [ "$SENSITIVE_OPS" -gt 0 ]; then
+  grep -q "CREATE TABLE audit_log" supabase/migrations/*.sql || echo "MISSING: audit_log table"
+  for op in $(ls supabase/functions/ 2>/dev/null | grep -E "delete-account|payment|credit|admin"); do
+    grep -q "audit_log" "supabase/functions/$op/index.ts" 2>/dev/null || \
+      echo "MISSING audit_log insert in $op"
+  done
+fi
+```
+
+**BLOCKING** if sensitive ops exist without `audit_log` writes.
 
 ## Final — Report
 

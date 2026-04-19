@@ -415,33 +415,63 @@ For **every feature** in the Build Scope (§7), produce one Wiring Map subsectio
 
 ### [Feature name] — Wiring Map
 
+Each binding declares an explicit **Trust mode**. RAD does not adopt the "everything through API endpoints" pattern (see backend.mdc §Architecture for why) — but every binding declares which trust boundary protects it, so the choice is conscious.
+
+| Trust mode | Used for | Server-side enforcement |
+|---|---|---|
+| `RLS-direct` | User-scoped reads/writes the user is allowed to make | RLS policy on the table (`auth.uid() = user_id` or equivalent) |
+| `Edge-validated` | Server-only logic, cross-user reads, anything where the client must not be authoritative (credit grants, LLM calls, paid actions) | Edge Function with Zod input validation + JWT verification + business-rule checks before any write |
+| `Webhook` | External service callbacks (payments, email events) | Edge Function with signature verification + idempotency check |
+| `Service-role-only` | Cron, admin operations, never client-callable | Edge Function with `SUPABASE_SERVICE_ROLE_KEY`; route guard prevents client invocation |
+
 ```
 Backend primitives:
-- Table: [name] — RLS: [intent — e.g. "owner-only"] — Indexes: [columns]
-- Table: [name] — ...
-- Edge Function: [name] — Trigger: [client | webhook | cron] — Auth: [JWT | service_role]
+- Table: [name] — Trust: RLS-direct — RLS: [intent — e.g. "owner-only"] — Indexes: [columns]
+- Table: [name] — Trust: RLS-direct (read-only public) — ...
+- Edge Function: [name] — Trust: Edge-validated — Trigger: client — Auth: JWT — Input Zod: [schema name]
+- Edge Function: [name] — Trust: Webhook — Trigger: webhook — Auth: signature — Idempotency: [key]
+- Edge Function: [name] — Trust: Service-role-only — Trigger: cron — Schedule: [pg_cron expr]
 
 Frontend consumers:
 - Hook: useXxx() — File: src/hooks/useXxx.ts — Reads: [table.column list]
+  - Trust mode: RLS-direct
   - Used by screens: [ScreenA, ScreenB]
   - Query key: queryKeys.xxx(...) — staleTime: [seconds | Infinity]
+  - Response Zod: [schema name from src/lib/schemas/] — parse before returning data
 - Mutation: useCreateXxx() — File: src/hooks/useCreateXxx.ts — Writes: [table]
+  - Trust mode: RLS-direct (or Edge-validated if money/credits/cross-user)
   - Invalidates on success: [queryKeys.xxx, queryKeys.credits, ...]
   - Optimistic: yes | no (no for credit/payment)
 - Edge Function call: supabase.functions.invoke('[name]', { body: {...exact shape...} })
+  - Trust mode: Edge-validated
   - Called from hook: useXxx
-  - Expected response shape: { ...exact shape... }
+  - Request Zod (server): [schema name in supabase/functions/[name]/schema.ts]
+  - Response Zod (client): [same schema imported via shared/ or duplicated]
   - Error handling: ErrorBanner with code → user message mapping
 
 Round-trip for QA Pass 4:
 - "Sign in as seed user → navigate to ScreenA → confirm row N from seed.sql visible"
 - "Tap [button] → confirm row inserted in [table] (Supabase Studio) → refresh → still visible"
 - "[Edge Function] fires → confirm side effect: [credit++ | email row in email_events | webhook idempotency log]"
+- "Tamper test: open DevTools → modify request body → confirm Zod rejects with 400 (Edge-validated) or RLS rejects with empty/403 (RLS-direct)"
 
 Realtime (if applicable):
 - Channel: supabase.channel('[name]') — Table: [name] — Event: [INSERT|UPDATE|DELETE]
+- Trust mode: RLS-direct (Realtime respects RLS — no extra check)
 - On event: queryClient.invalidateQueries({ queryKey: queryKeys.xxx(...) })
 ```
+
+**Trust-mode selection rule (Tech Lead applies during /phase4):**
+
+| If the binding involves… | Use |
+|---|---|
+| User reads/writes their own data | `RLS-direct` |
+| Reading public/static reference data | `RLS-direct` (read-only policy) |
+| Money, credits, paid features, granting paid resources | `Edge-validated` (server checks balance, server grants) |
+| Calling an LLM or other paid external API | `Edge-validated` (server holds the key) |
+| Cross-user reads (leaderboards, social feeds) | `Edge-validated` (RLS allows the read; Edge validates filters/limits) |
+| External webhooks (payments, email events) | `Webhook` |
+| Cron, admin, batch jobs | `Service-role-only` |
 
 **Coverage rules:**
 - Every backend primitive in §6 (Schema), §10 (API Contracts) appears in exactly one feature's Wiring Map (or is explicitly assigned to Foundation)

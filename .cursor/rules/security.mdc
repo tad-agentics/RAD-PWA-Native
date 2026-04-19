@@ -1,0 +1,243 @@
+---
+description: Preventive security rules — applied at build time, not just at /security-audit. Secure-by-default patterns every agent (backend, frontend, mobile, devops) follows.
+globs:
+  - src/**/*
+  - supabase/**/*
+  - mobile/**/*
+  - vercel.json
+  - vite.config.ts
+alwaysApply: false
+---
+
+## Why preventive
+
+`/security-audit` runs at pre-handoff and catches bad patterns before deploy — but by then the bad patterns are baked in across the codebase. These rules apply *during* development so violations are rare to begin with. Each rule is enforced by either a `/wire-check` grep, an Edge Function helper, or a Tech Lead review point.
+
+---
+
+## Trust boundaries (companion to backend.mdc + tech-spec §10b)
+
+Every binding in the Wiring Map declares a Trust mode: `RLS-direct`, `Edge-validated`, `Webhook`, `Service-role-only`. The selection rule:
+
+| Concern | Mode |
+|---|---|
+| User reads/writes their own data | `RLS-direct` |
+| Money, credits, paid features | `Edge-validated` (server checks balance, server grants) |
+| LLM / paid external API | `Edge-validated` (key is server-only) |
+| Cross-user reads (feeds, leaderboards) | `Edge-validated` (Edge applies row limits / safe filters) |
+| External callbacks (payments, email events) | `Webhook` (signature + idempotency) |
+| Cron / batch / admin | `Service-role-only` (never client-callable) |
+
+A binding without a declared Trust mode is a security defect — `/wire-check` flags it.
+
+---
+
+## Secrets
+
+- **Never commit secrets.** `.env*` (except `.env.example`) is gitignored. If a secret hits git history, escalate to Tech Lead immediately — `git filter-repo` cleanup is not optional.
+- **Server-only keys never appear in the frontend bundle.** This includes: `SUPABASE_SERVICE_ROLE_KEY`, `OPENROUTER_API_KEY`, `RESEND_API_KEY`, all payment provider secrets. Set via `supabase secrets set` for Edge Functions or Vercel project env (server scope) for build-time use.
+- **Client-safe keys use the `VITE_` prefix.** Anything else is a leak.
+- **No secret in a `console.log`.** Includes tokens, JWTs, API keys, password fields, refresh tokens. `/wire-check` greps for this.
+- **Secrets rotated on suspected exposure.** If a key was logged, screenshotted, pasted into chat with a third-party, or appears in a screen recording, rotate immediately and commit the env-var change.
+
+---
+
+## Edge Function security defaults
+
+Every Edge Function follows this template:
+
+```typescript
+// supabase/functions/[name]/index.ts
+import { corsHeaders } from "../_shared/cors.ts";
+import { z } from "https://esm.sh/zod@3";
+
+const Body = z.object({ /* explicit shape per request */ });
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  // 1. JWT verification (Edge-validated mode only — webhooks/cron use service role)
+  const auth = req.headers.get("Authorization");
+  if (!auth?.startsWith("Bearer ")) {
+    return json({ error: { code: "UNAUTHORIZED", message: "Sign in required" } }, 401);
+  }
+  const userClient = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    global: { headers: { Authorization: auth } },
+  });
+  const { data: { user }, error: authErr } = await userClient.auth.getUser();
+  if (authErr || !user) {
+    return json({ error: { code: "UNAUTHORIZED", message: "Sign in required" } }, 401);
+  }
+
+  // 2. Input validation
+  let body;
+  try { body = Body.parse(await req.json()); }
+  catch { return json({ error: { code: "VALIDATION_ERROR", message: "Bad request" } }, 400); }
+
+  // 3. Rate limit (per-user, per-function — see _shared/rate-limit.ts)
+  const limited = await rateLimit({ userId: user.id, key: "[name]", windowSec: 60, max: 30 });
+  if (limited) return json({ error: { code: "RATE_LIMITED", message: "Slow down" } }, 429);
+
+  // 4. Business logic (use service-role client only after auth + validation pass)
+  // ...
+
+  // 5. Response — no stack traces, no internal IDs, no provider tokens
+  return json({ /* domain payload only */ }, 200);
+});
+
+function json(body: unknown, status: number) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+```
+
+Per-mode requirements:
+- **Edge-validated (client-callable):** all 5 steps above
+- **Webhook:** skip step 1 (no JWT); add **signature verification** (step 0) + **idempotency check** (step 2.5) using `payment_idempotency` table
+- **Service-role-only (cron):** skip step 1; add **invocation guard** — reject if `req.headers.get("X-Supabase-Source") !== "cron"` (or equivalent for the trigger source)
+
+**CORS:** `_shared/cors.ts` exports two configs — `corsHeaders` (dev: wildcard) and `corsHeadersProd` (prod: explicit allowed origins from `ALLOWED_ORIGINS` env). Functions auto-select based on `Deno.env.get("ENV")`. Never ship wildcard CORS to production.
+
+---
+
+## Rate limiting
+
+Every Edge-validated function has a rate limit. Default: **30 req/min per user per function**. Lower for expensive ops (LLM: 10/min; payments: 5/min). Implement via a `rate_limits` table keyed `(user_id, function_name, window_start)` or via Supabase Edge Function KV when available.
+
+```typescript
+// supabase/functions/_shared/rate-limit.ts — sketch
+export async function rateLimit({ userId, key, windowSec, max }: {
+  userId: string; key: string; windowSec: number; max: number;
+}) {
+  const window = Math.floor(Date.now() / 1000 / windowSec);
+  const { data, error } = await serviceRoleClient
+    .from("rate_limits")
+    .upsert({ user_id: userId, key, window, count: 1 }, {
+      onConflict: "user_id,key,window",
+      ignoreDuplicates: false,
+    })
+    .select("count")
+    .single();
+  if (error) return false; // fail-open on infra errors; Sentry/log this
+  return (data?.count ?? 0) > max;
+}
+```
+
+The `rate_limits` table is part of Foundation backend. RLS denies all client access (server-role only).
+
+---
+
+## Webhook hardening
+
+- **Always verify signatures** before reading the body. Use the provider's library (Stripe SDK `constructEvent`, PayOS verify, Resend HMAC, etc.). Never trust the body of an unverified webhook.
+- **Idempotency:** insert the provider's event ID into `webhook_events (provider, event_id, processed_at)` with a unique constraint before any side effect. If the insert conflicts, return 200 OK without re-processing.
+- **Signature secret rotation:** `[PROVIDER]_WEBHOOK_SECRET` is a server-only key. Rotate quarterly or on suspected exposure.
+- **No PII in webhook responses** — return 200 with empty body or `{ "ok": true }`.
+
+---
+
+## Auth hardening
+
+- **Session timeout:** Supabase Auth defaults are reasonable. Do not extend session lifetime beyond 7 days for consumer apps without a clear retention reason.
+- **Refresh token rotation:** enabled by default in Supabase Auth. Do not disable.
+- **Sign-out clears local state:** `AuthProvider`'s `signOut()` clears React Query cache via `queryClient.clear()` after `supabase.auth.signOut()`. Otherwise a subsequent login sees the previous user's cached data for one render.
+- **Auth callback validation:** OAuth callback at `src/routes/_auth/callback/route.tsx` verifies the `state` parameter and uses `supabase.auth.exchangeCodeForSession`. No custom JWT decoding.
+- **Password rules** (if email+password is used): min 12 chars, no max, no character-class requirements (NIST SP 800-63B). Supabase Auth enforces via project config — set during `/init`.
+- **MFA:** offered as opt-in for any app handling money or sensitive PII. Use Supabase Auth's MFA via TOTP.
+
+---
+
+## PII handling
+
+- **Classify on capture.** Northstar §9 (Auth Model) lists profile fields. Tag each as **public**, **internal**, or **sensitive** in the schema migration's contract block. Examples: `email = internal`, `birth_date = sensitive`, `display_name = public`.
+- **Sensitive fields never leave the server in cross-user reads.** Use Postgres views or Edge Functions to project to safe columns when serving leaderboards / social feeds.
+- **No PII in logs.** Log user IDs (UUIDs), not emails / names / birth dates. Console statements that include `user.email` or similar are a defect.
+- **No PII in URLs.** Route params use opaque IDs, never email or full name.
+- **Right-to-delete:** every user-data table has a `user_id` foreign key with `ON DELETE CASCADE` to `auth.users`. Sign-out + delete-account flow lives behind a confirm modal; the actual delete runs through an Edge Function (`delete-account`) that double-checks identity before cascading.
+
+---
+
+## Storage
+
+- **No public buckets** for user content by default. Use **signed URLs** with short expiry (≤ 60 minutes for downloads, ≤ 5 minutes for uploads).
+- **MIME validation server-side.** Buckets enforce `allowed_mime_types`; Edge Functions that initiate uploads double-check.
+- **Max file size declared per bucket.** Default 10 MB; raise only with Tech Lead approval.
+- **Content disposition `attachment`** for downloads of user-uploaded content (prevents browser-rendered XSS via SVG, etc.).
+- **Owner-scoped paths:** `{bucket}/{user_id}/{filename}`. RLS policy on `storage.objects`: `(storage.foldername(name))[1] = auth.uid()::text`.
+
+---
+
+## Frontend security
+
+- **No `dangerouslySetInnerHTML`.** If you absolutely need HTML rendering (Markdown, rich text), pass through DOMPurify first. `/wire-check` flags any direct usage.
+- **All external links** in user-generated content: `target="_blank" rel="noopener noreferrer"`.
+- **No `eval`, `new Function`, `setTimeout(string, ...)`.** TypeScript/lint catches these by default; do not disable.
+- **CSP** is configured in `vercel.json`. If a page needs an inline script, use a nonce — never `unsafe-inline`. See `vercel.json` for the current policy.
+- **localStorage is for non-sensitive data only.** Auth tokens go through Supabase's storage adapter (which Supabase manages). Never store API keys, refresh tokens, or PII in `localStorage`.
+
+---
+
+## Audit logging (sensitive operations)
+
+Operations that must be auditable: account deletion, payment events, credit grants/spends, role changes (if RBAC), admin operations.
+
+`audit_log` table (created in Foundation if any audit-worthy op exists in the build):
+
+```sql
+CREATE TABLE audit_log (
+  id BIGSERIAL PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id),
+  actor_id UUID REFERENCES auth.users(id), -- null = system; differs from user_id for admin actions
+  action TEXT NOT NULL,
+  target_type TEXT,
+  target_id TEXT,
+  metadata JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;
+-- Users see their own audit entries; no inserts/updates/deletes from client
+CREATE POLICY "users read own audit" ON audit_log FOR SELECT
+  USING (auth.uid() = user_id);
+```
+
+Insert via Edge Function only (service-role). Do not expose insert/update/delete to clients. Retention: 12 months default; longer if regulatory.
+
+---
+
+## Dependency hygiene
+
+- **`npm audit` runs in `/wire-check`.** Critical or high severity = BLOCKING. Moderate/low = WARN with a note in `artifacts/qa-reports/`.
+- **No `--force` installs** to bypass peer-dep conflicts unless Tech Lead approves and documents in `artifacts/docs/changelog.md`.
+- **Lockfile committed.** `package-lock.json` (or `pnpm-lock.yaml` if pnpm) is part of every change. CI must use `npm ci`, not `npm install`, to guarantee lockfile fidelity.
+- **No script-running install hooks** from unfamiliar packages. Review `postinstall` scripts in `npm ls --all --json` if anything looks unfamiliar.
+
+---
+
+## Headers (web)
+
+Configured in `vercel.json`:
+
+- `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY` (or `frame-ancestors 'none'` in CSP)
+- `Referrer-Policy: strict-origin-when-cross-origin`
+- `Permissions-Policy: camera=(), microphone=(), geolocation=()` — extend per app
+- `Content-Security-Policy:` see `vercel.json` — locks scripts to self + Supabase + analytics; styles to self + inline (Tailwind); connects to self + Supabase project URL + Edge Function URL
+
+CSP is per-app — Backend Foundation customizes the `connect-src` and `img-src` based on northstar §10 (External Integrations).
+
+---
+
+## What `/security-audit` adds on top
+
+This file is preventive (every commit). `/security-audit` is the deep audit at pre-deploy:
+- Repo-wide secret history scan (`git log --all --diff-filter=D`)
+- `npm audit --production`
+- Per-table RLS verification against migrations
+- OWASP Top 10 checklist
+- Build-output scan (`dist/`) for leaked secrets
+
+Both are required: prevention + audit. Skipping either ships insecure software.

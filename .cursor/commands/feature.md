@@ -12,6 +12,11 @@ Before dispatching, confirm:
 - [ ] Foundation is committed (`feat(foundation): backend infrastructure complete` + `feat(foundation): shared components + landing page + auth screens complete`)
 - [ ] All features this one depends on are committed and QA-passed (check build-plan.md dependency graph)
 - [ ] `npm run build` passes on current state
+- [ ] **Design handoff present for new screens (M4):** if the feature's Frontend Scope in `artifacts/docs/features/[name].md` (or its build-plan context package) names any screen NOT already present in `src/design-handoff/screens/` (or equivalent path from the initial handoff), then `src/design-handoff/new-feature-[name]/` MUST exist and have passed `/design verify new-feature [name]`. Run this scripted check:
+  ```bash
+  bash .cursor/skills/claude-design/scripts/check-feature-design-prereq.sh [name]
+  ```
+  Exit 0 → proceed. Exit 1 → BLOCKING with message: "Feature [name] adds new screens but `src/design-handoff/new-feature-[name]/` is missing. Run `/design new-feature [name]` first, then `/design verify new-feature [name]`, then re-run `/feature [name]`." This prevents the soft-condition skip from `/new-feature` Step 5 — Frontend agent will not be dispatched without design handoff in place.
 
 If any check fails: report to human, do not dispatch.
 

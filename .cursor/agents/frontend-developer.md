@@ -47,13 +47,19 @@ Dispatched once, after Backend Foundation commits. Catalogs Claude Design's comp
 
 **Step 0 — Install Claude Design's dependencies:**
 
-Read `src/design-handoff/package.json` (if present) or scan import statements across Claude Design's files. Install all packages Claude Design depends on (`@radix-ui/react-*`, `lucide-react`, `clsx`, `tailwind-merge`, etc.):
+**Strict order (M3) — these substeps run sequentially, no shortcuts:**
 
-```bash
-npm install [packages from Claude Design]
-```
-
-Verify `npm run build` passes before proceeding. If Claude Design imports packages not yet installed, the build will fail.
+1. **Delete every file on the discard list FIRST** (per `artifacts/docs/handoff-contract.md` §Discard list). This includes `src/design-handoff/package.json`, `tsconfig*.json`, `vite.config.*`, `tailwind.config.*`, `postcss.config.*`, root `index.html`, root `README.md`, `.gitignore`, `.eslintrc*`, `.prettierrc*`, `*.stories.tsx`, default React/Tailwind logo assets, and any Claude Design preview/stage scaffold files. **Do not read Claude Design's `package.json`** — it pins wrong versions and includes its own dev deps that conflict with RAD's locked toolchain. The root `package.json` is the source of truth.
+2. **Then scan imports** across the remaining `src/design-handoff/**/*.tsx` files to determine what to install:
+   ```bash
+   grep -rhE 'from ["'\''](@radix-ui|lucide-react|clsx|tailwind-merge|class-variance-authority|@hookform|react-hook-form|zod|date-fns|sonner)' src/design-handoff/ \
+     | sed -E 's/.*from ["'\'']([^"'\'']+).*/\1/' | sort -u
+   ```
+3. **Install only what's actually imported.** Do not pre-install a fixed list — Claude Design varies its dependency selection per export.
+   ```bash
+   npm install [packages from the scan]
+   ```
+4. Verify `npm run build` passes before proceeding. If Claude Design imports packages not yet installed, the build will fail — install the missing one and re-run. If the build fails for a non-import reason (TypeScript error, syntax issue), check whether a discard-list file slipped through (Step 1) or whether the deps Claude Design uses are obviously misaligned with RAD's stack — escalate to Tech Lead before proceeding.
 
 **Step 1 — Copy Claude Design's components:**
 

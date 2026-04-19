@@ -66,7 +66,20 @@ echo "── Banned Patterns ──"
 # Common exclusion pattern — lines that mention a banned pattern INTENTIONALLY
 # to warn against it (discard lists, risk tables, forbidden sections, "Do not"
 # prose, validator comments referring to itself).
-NEGATION_CONTEXT="Do not\|do not\|DO NOT\|NOT\|never\|NEVER\|removed\|note intent\|rebuild in\|legacy\|forbidden\|discard\|validator guards\|RAD uses\|escalation\|Usually needs judgment\|\*\*HIGH\*\*\|coordinated motion\|] No \|] No loose"
+#
+# Coverage notes (when adding a new check, audit against these false-positive
+# classes from the M1 review):
+#   - Risk tables in agent files use "**HIGH**" / "Usually needs judgment" /
+#     "coordinated motion" / "escalation" to mark risk signals (mobile-developer.md)
+#   - Discard / forbidden / legacy callouts use those exact words
+#     (handoff-contract.md, claude-design/SKILL.md)
+#   - Checklist items like "- [ ] No `globals.css`" use "] No " / "] No loose"
+#     (design.md, claude-design/SKILL.md)
+#   - Self-referential prose like "RAD uses src/app.css instead of globals.css"
+#     (handoff-contract.md)
+# If you add a new check below, ensure your prose either matches one of these
+# exclusion phrases or extend NEGATION_CONTEXT — do not introduce false positives.
+NEGATION_CONTEXT="Do not\|do not\|DO NOT\|NOT\|never\|NEVER\|removed\|note intent\|rebuild in\|legacy\|forbidden\|discard\|validator guards\|RAD uses\|escalation\|Usually needs judgment\|\*\*HIGH\*\*\|coordinated motion\|sequences\|multi-step\|] No \|] No loose"
 
 check_zero "framer-motion (use 'motion' package)" \
   "framer-motion" \

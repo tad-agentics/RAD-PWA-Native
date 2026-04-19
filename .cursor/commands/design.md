@@ -52,6 +52,11 @@ Run the contract check:
 - [ ] None of the discard-list files in `artifacts/docs/handoff-contract.md` §Discard list are present (delete on sight)
 - [ ] Every screen listed in `screen-specs-[app]-v1.md` has a matching file in the handoff
 - [ ] `artifacts/docs/claude-design-handoff-notes.md` is populated with implementation notes / token metadata from the Claude Code handoff bundle (not blank)
+- [ ] **Token freshness (enforces the repo-link mandate):**
+  ```bash
+  bash .cursor/skills/claude-design/scripts/verify-handoff-tokens.sh initial src/design-handoff
+  ```
+  Exit 0 → pass. Exit 1 → BLOCKING: tokens don't match EDS §5 roles, meaning the repo/EDS wasn't linked in Claude Design. Re-link, regenerate, re-run verify.
 
 Report file-by-file. On any miss, point the human at the relevant fix in `.cursor/skills/claude-design/SKILL.md` §Failure Modes. On all-pass, record:
 
@@ -95,8 +100,12 @@ When done, run /design verify new-feature [name].
 
 - [ ] Export is in `src/design-handoff/new-feature-[name]/`, not overwriting the root handoff
 - [ ] No new files in `components/ui/` (Claude Design must reuse existing primitives)
-- [ ] No new CSS tokens invented — `theme.css` if present matches `src/app.css`
 - [ ] Every screen listed in feature doc's Frontend Scope has a file
+- [ ] **Token freshness (enforces the repo-link mandate):**
+  ```bash
+  bash .cursor/skills/claude-design/scripts/verify-handoff-tokens.sh new-feature src/design-handoff/new-feature-[name]
+  ```
+  Exit 0 → pass (no theme.css, or every token already in `src/app.css`). Exit 1 → BLOCKING: the handoff invents tokens, meaning the repo link was stale/absent. Re-sync the link in Claude Design, regenerate, re-run.
 
 Report, and on pass: "Incremental handoff verified. Run `/feature [name]` to dispatch."
 
@@ -126,6 +135,11 @@ Export to src/design-handoff/regen-[screen]/ — a single file is fine.
 
 - [ ] Export is in `src/design-handoff/regen-[screen]/`
 - [ ] Mock data shape matches the current mock shape in `src/design-handoff/` (so Supabase wiring still applies)
+- [ ] **Token freshness (enforces the repo-link mandate):**
+  ```bash
+  bash .cursor/skills/claude-design/scripts/verify-handoff-tokens.sh regen src/design-handoff/regen-[screen]
+  ```
+  Exit 0 → pass. Exit 1 → BLOCKING: regen invents tokens (repo link stale). Re-sync link, regenerate, re-run.
 
 On pass: "Regen verified. Dispatch Frontend Developer to diff and re-copy the affected route file."
 

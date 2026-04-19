@@ -19,14 +19,23 @@ The ZIP is what RAD's pipeline runs on. The handoff metadata is captured because
 
 The other Claude Design exports (HTML, PPTX, PDF, Canva) are not used by RAD.
 
-### Repo link is mandatory
+### Repo link is mandatory — enforced by token diff
 
 Before generating either artifact, the human must connect the repo to Claude Design via Import → GitHub or Local Directory. Without the link:
 - Claude Design invents new brand tokens instead of matching `src/app.css`
 - Primitives in `src/components/ui/` get duplicated under different names
 - Output drifts further from the existing system on every run
 
-`/design` pre-flight rejects an export that was generated without a linked repo. The Product Designer can verify by spot-checking that token names in `theme.css` match `src/app.css` token names exactly (post-Foundation only).
+**Enforcement (C2):** `/design verify` runs `.cursor/skills/claude-design/scripts/verify-handoff-tokens.sh` as a post-flight check. This script makes the link mandate machine-checkable, not just a checkbox a human eyeballs:
+
+| Mode | What the script checks |
+|---|---|
+| `initial` | `theme.css` must contain ≥ 3 tokens keyed by canonical roles (primary / background / foreground / surface / muted / accent / success / danger / warning). If fewer than 3 match, the repo/EDS wasn't linked — the tokens were invented. |
+| `new-feature` / `regen` | Every CSS custom property in the incremental `theme.css` must already exist in `src/app.css`. Any unknown token is an invented token, which only happens when the link is stale or absent. No `theme.css` at all is fine — it means Claude Design reused existing tokens (the desired behavior). |
+
+Exit 0 = PASS. Exit 1 = BLOCKING with a remediation message. Exit 2 = WARN (e.g., Foundation hasn't copied tokens into `src/app.css` yet — resolve manually).
+
+This converts the largest quality lever in the RAD/Claude Design workflow from "trust the human to check a box" into a scripted gate.
 
 ---
 

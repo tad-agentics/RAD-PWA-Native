@@ -132,6 +132,9 @@ Before leaving Claude Design:
 - [ ] Implementation notes copied into §Notes
 - [ ] Interaction notes copied into §Interactions
 
+**Repo-link enforcement (C2 — machine-checked):**
+- [ ] `bash .cursor/skills/claude-design/scripts/verify-handoff-tokens.sh <mode> <handoff-dir>` exits 0. This script catches the single most common drift: exports produced without an active repo link. Initial builds must match EDS §5 role keywords; incremental builds must not invent tokens outside `src/app.css`. If this fails, re-link the repo in Claude Design and regenerate — the handoff is rejected before it reaches Foundation or `/feature`.
+
 Full required shape: `artifacts/docs/handoff-contract.md`.
 
 ---

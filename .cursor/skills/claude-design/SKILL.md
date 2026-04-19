@@ -87,7 +87,7 @@ Generate this screen for React Native + Expo Router + NativeWind.
 
 Export to `artifacts/docs/design-reference/native/[screen-name]/`. The mobile-developer's translation queue uses this as the source for that screen instead of the web TSX.
 
-Use only when HIGH-risk — each extra Claude Design run burns time and cost. If more than 3 HIGH-risk screens appear, escalate the whole native build back to the Tech Lead.
+**Hard cap (H2): 3 native briefs per feature.** Tracked as `native_brief_count` in the feature doc (`artifacts/docs/features/[feature-name].md` → §Native Brief Tracking, see `.cursor/commands/new-feature.md` template). The mobile-developer agent refuses to request a 4th brief unless the Tech Lead logs `native_brief_override: yes — approved by Tech Lead on YYYY-MM-DD: <reason>` in the feature doc. Vague reasons are invalid; "just one more" is not an override. If you hit the cap without a clear path forward, escalate — the screen-set likely needs scope reduction, not more Claude Design runs.
 
 ### 3. Drift Regen (`/visual-audit`)
 

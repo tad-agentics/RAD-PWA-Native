@@ -36,6 +36,31 @@ Blank lines and the default template's placeholder prose ("Paste the brand-token
 
 This converts the metadata-capture step from "trust the human to paste real content" into a scripted gate, same pattern as C2 (repo-link token diff).
 
+### Regen path is single-file, reuse-only — enforced by shape check (H3)
+
+`/design regen [screen]` is intended as a one-screen drift fix. Under prompt pressure, Claude Design can emit additional files (helper modules, "improved" primitives, alternate stylesheets) and the previous verify only asserted directory shape and mock-data match. Frontend agent then copied invented files into `src/`, silently forking the design system.
+
+**Enforcement (H3):** `/design verify regen [screen]` runs `.cursor/skills/claude-design/scripts/verify-regen-shape.sh` and asserts:
+
+1. Exactly **one** `.tsx` file in `src/design-handoff/regen-[screen]/` (the screen file).
+2. **No** other files: no `.css`, `.ts`, `.js`, `.json`, no nested `components/`, `ui/`, `hooks/`, or `lib/` subdirectories.
+3. Every `@/components/ui/*` import in the regen file resolves to a primitive that **already exists** in `src/components/ui/`. New primitive imports = invented primitives = BLOCKING.
+
+If Claude Design genuinely needs a new shared primitive, the right path is `/design new-feature [name]` (which has a feature-doc-tracked budget for new primitives), **not** a regen.
+
+### Prompt-budget telemetry + version anchor (H1 + H4)
+
+`artifacts/docs/claude-design-log.md` carries machine-parseable header fields per entry: `prompts_consumed`, `claude_design_version`, `shape_mismatch`. The rollup script `.cursor/skills/claude-design/scripts/rollup-prompt-budget.sh` reads these and:
+
+- **H1 — Budget guard:** sums `prompts_consumed` across the 30-day window. WARN at ≥ 40 turns, BLOCK at ≥ 50 turns. `/design` pre-flight refuses new runs when BLOCKed (Tech Lead override path documented in the script). `/session-end` surfaces the rolling count every session so the studio sees the curve before hitting the wall.
+- **H4 — Version-drift anchor:** counts consecutive `shape_mismatch: yes` entries from the most recent. At 3 consecutive, the script directs the human to open `artifacts/issues/handoff-contract-v3.md` and bump the contract version. This catches Anthropic schema changes before silent breakage propagates across the studio's portfolio.
+
+Without these mechanisms the studio discovers Claude Design's quota mid-build (H1) and discovers schema changes only after multiple shipped projects fail QA (H4) — both compounding gaps over a 5+ apps/month cadence.
+
+### Native-targeted brief budget (H2)
+
+For mobile screens the mobile-developer may request native-targeted Claude Design briefs (see `.cursor/skills/claude-design/SKILL.md` §2b). Each feature doc tracks `native_brief_count` with a hard cap of 3. The mobile-developer agent refuses to request a 4th brief unless the Tech Lead writes `native_brief_override: yes — approved by Tech Lead on YYYY-MM-DD: <reason>` into the feature doc. Vague reasons are invalid. This converts "use sparingly" guidance into a logged budget, same pattern as the prompt-budget guard.
+
 ### Repo link is mandatory — enforced by token diff
 
 Before generating either artifact, the human must connect the repo to Claude Design via Import → GitHub or Local Directory. Without the link:

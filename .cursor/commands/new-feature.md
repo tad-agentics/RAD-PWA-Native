@@ -101,6 +101,17 @@ On approval, create `artifacts/docs/features/[feature-name].md`:
 ## Implementation Notes
 [any architectural decisions, constraints, or gotchas]
 
+## Native Brief Tracking (H2 — mode ≠ pwa only)
+
+`native_brief_count: 0`         <!-- incremented by mobile-developer for each native-targeted Claude Design brief requested for this feature; see .cursor/skills/claude-design/SKILL.md §2b -->
+`native_brief_override: no`     <!-- set to "yes — approved by Tech Lead on YYYY-MM-DD: <reason>" only if a 4th+ brief is justified -->
+
+Hard cap: **3 native briefs per feature**. The mobile-developer agent must
+refuse to request a 4th brief unless `native_brief_override` is set to
+`yes` with a Tech Lead justification logged here. If the cap is reached
+without a clear path forward, escalate to the Tech Lead — the screen-set
+likely needs scope reduction, not more Claude Design runs.
+
 ---
 
 ## Progress

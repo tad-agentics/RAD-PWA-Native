@@ -123,6 +123,14 @@ Hybrid translation preserves **layout intent, copy, and types** while **mechanic
 
 **Optional pre-step — Native-targeted brief:** For screens flagged HIGH risk in the table below, the Tech Lead may send the human back to Claude Design with a native-targeted brief *before* translation starts. Claude Design can emit RN-flavored JSX (Pressable, FlashList, NativeWind classes) when prompted explicitly — cheaper than translating from a web-shaped tree and escalating. See `.cursor/skills/claude-design/SKILL.md` §2b for the prompt pattern (do not use web-only motion libraries on native). The export goes to `artifacts/docs/design-reference/native/[screen]/` and replaces the web source for that screen in the translation queue. Use sparingly — only when the risk/rewrite ratio justifies another Claude Design run.
 
+**Hard cap (H2): 3 native briefs per feature.** Before requesting any native brief, read the current `native_brief_count` from the feature doc (`artifacts/docs/features/[feature-name].md` → §Native Brief Tracking). Increment the count after each brief is exported and verified.
+
+- If `native_brief_count < 3`: proceed, request the brief, log the increment in the feature doc.
+- If `native_brief_count == 3`: **refuse to request a 4th brief.** Signal `BLOCKED` to the Tech Lead. The screen-set has exceeded the budget — either (a) cut scope, (b) accept rougher translation on the remaining HIGH-risk screens, or (c) Tech Lead approves an explicit override.
+- Override path: only if the Tech Lead writes `native_brief_override: yes — approved by Tech Lead on YYYY-MM-DD: <reason>` into the feature doc, the agent may request additional briefs. The reason must be specific (e.g., "carousel screen needs Reanimated-specific gesture spec; bias toward correctness over budget"). Vague justifications ("just one more") are not valid overrides.
+
+This converts the soft "use sparingly" guidance into a logged, enforceable budget — the same pattern as C2/C3 and H1.
+
 | Usually safe (mechanical + rules) | Usually needs judgment or escalation |
 | --- | --- |
 | `div`/`span`/`Text` tree, flex spacing, semantic Tailwind kept in Phase B | CSS Grid, `position: fixed/sticky`, complex `aspect-ratio` hacks |

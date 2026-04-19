@@ -8,12 +8,15 @@ Read this before writing any new `claude-design-brief.md`.
 
 ## Entry format
 
+Promoted from per-app entries (`artifacts/docs/claude-design-log.md`) at `/session-end` once a pattern is observed across 2+ apps. Header block is machine-parseable — same field names as the per-app log so the rollup script can ingest both for monthly studio review.
+
 ```
 ### [YYYY-MM-DD] [app-slug] — [phase/feature]
 
-**Prompt iterations:** [count]
-**Screens generated:** [count]
-**Result:** [clean / required-regen / failed]
+prompts_consumed: [N]            # H1 — sum across this app's run for the entry context
+claude_design_version: [version | YYYY-MM-DD ship date | unknown]   # H4
+shape_mismatch: [yes | no]       # H4 — set yes if /design verify or Foundation flagged any handoff-shape deviation during this app
+result: [clean | required-regen | failed]
 
 **What worked:**
 - [One-line pattern. Example: "Listing mock entities at top of brief produced consistent data shapes across all screens."]

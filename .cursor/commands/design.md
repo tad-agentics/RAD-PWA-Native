@@ -18,6 +18,11 @@ Confirm, then report any misses to the human:
 - [ ] `src/design-handoff/` does NOT yet exist (or is empty)
 - [ ] Human has access to Claude Design (Pro/Max/Team/Enterprise plan)
 - [ ] **Repo is linked in Claude Design** — human has connected the GitHub repo or attached the local directory via Claude Design's Import button. Without the link, Claude Design invents tokens and primitives instead of matching the existing system. This is the single biggest quality lever — never skip.
+- [ ] **Prompt-budget guard (H1):**
+  ```bash
+  bash .cursor/skills/claude-design/scripts/rollup-prompt-budget.sh --machine
+  ```
+  Exit 0 → proceed. Exit 2 (WARN, ≥ 40 turns / 30 days) → surface the warning to the human; planning bigger briefs / fewer iterations is advised but proceed. Exit 1 (BLOCK, ≥ 50 turns OR ≥ 3 consecutive `shape_mismatch: yes`) → halt and report. For BLOCK on budget: wait for window to roll forward or get Tech Lead override. For BLOCK on drift: open `artifacts/issues/handoff-contract-v3.md` per the script's guidance — Anthropic likely changed Claude Design's export schema and the contract needs bumping.
 
 ### Instructions to the human
 
@@ -144,7 +149,12 @@ Export to src/design-handoff/regen-[screen]/ — a single file is fine.
 
 - [ ] Export is in `src/design-handoff/regen-[screen]/`
 - [ ] Mock data shape matches the current mock shape in `src/design-handoff/` (so Supabase wiring still applies)
-- [ ] **Token freshness (enforces the repo-link mandate):**
+- [ ] **Regen shape (H3 — single file, no invented primitives):**
+  ```bash
+  bash .cursor/skills/claude-design/scripts/verify-regen-shape.sh [screen]
+  ```
+  Asserts: exactly one `.tsx` file at `src/design-handoff/regen-[screen]/<screen>.tsx`, no other files (no `.css`, `.ts`, `.json`, no `components/` or `ui/` subdirs), and every `@/components/ui/*` import in the regen file resolves to a primitive that already exists in `src/components/ui/`. Exit 1 → BLOCKING: Claude Design invented files or primitives under prompt pressure. Re-prompt with the §3 Drift Regen template emphasizing "exactly one file, no new primitives." If a new primitive is genuinely needed, switch to `/design new-feature [name]` instead — regen is not the right path for new shared code.
+- [ ] **Token freshness (C2 — enforces the repo-link mandate):**
   ```bash
   bash .cursor/skills/claude-design/scripts/verify-handoff-tokens.sh regen src/design-handoff/regen-[screen]
   ```

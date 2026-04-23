@@ -6,16 +6,16 @@ globs:
 alwaysApply: false
 ---
 
-## Design system contract (Claude Design + EDS)
+## Design system contract (Design handoff + EDS)
 
-This section encodes where design-system assets live, what to reuse, and what never to hardcode. RAD's source of truth is Claude Design's handoff bundle exports + EDS. Claude Design reads the codebase directly to apply the team's design system to every project.
+This section encodes where design-system assets live, what to reuse, and what never to hardcode. RAD's source of truth is the canonical design handoff (`src/design-handoff/`) + EDS. The configured design tool, via its adapter, reads the codebase and produces a handoff matching `artifacts/docs/handoff-contract.md`.
 
 | Design-system rule | RAD equivalent |
 | --- | --- |
-| Read structured design before coding | **Read** Claude Design handoff TSX in `src/design-handoff/` or `artifacts/docs/design-reference/`, **plus** `artifacts/docs/screen-specs-*-v1.md` and **`artifacts/docs/design-system-spec.md`** after Foundation catalogs the Claude Design handoff |
-| Token / component discovery | **`design-system-spec.md`** (inventory + gaps); live primitives in **`src/components/ui/`**; tokens in **`src/app.css`** (Claude Design theme) |
-| Do not bolt on duplicate libraries | **IMPORTANT:** Claude Design's `components/ui` **is** the library — same as elsewhere in this file |
-| Asset discipline | Use images/icons **from the Claude Design handoff bundle**; self-host fonts per `frontend-design.mdc`; do **not** add icon packages to replicate glyphs Claude Design already ships |
+| Read structured design before coding | **Read** the handoff TSX in `src/design-handoff/` or `artifacts/docs/design-reference/`, **plus** `artifacts/docs/screen-specs-*-v1.md` and **`artifacts/docs/design-system-spec.md`** after Foundation catalogs the handoff |
+| Token / component discovery | **`design-system-spec.md`** (inventory + gaps); live primitives in **`src/components/ui/`**; tokens in **`src/app.css`** (from the handoff's `theme.css`) |
+| Do not bolt on duplicate libraries | **IMPORTANT:** the adapter's `components/ui` **is** the library — same as elsewhere in this file |
+| Asset discipline | Use images/icons **from the handoff bundle**; self-host fonts per `frontend-design.mdc`; do **not** add icon packages to replicate glyphs the adapter already ships |
 
 **Before changing layout, colors, or adding a "new" UI primitive:** Check `design-system-spec.md` and existing `src/components/ui/` — extend or compose; do not introduce a parallel component set.
 
@@ -23,21 +23,21 @@ When **native** mode is active, brand colors/types that land in **`shared/colors
 
 ---
 
-## Design Tokens (Claude Design → Tailwind)
+## Design Tokens (Design handoff → Tailwind)
 
-- Claude Design's handoff output defines the visual design. Claude Design uses CSS custom properties with Tailwind v4's `@theme inline` syntax for design tokens — keep this CSS-based approach during Foundation. Do not migrate tokens to `tailwind.config.ts`. Copy Claude Design's theme CSS into `src/app.css`.
+- The adapter's handoff output defines the visual design. The handoff uses CSS custom properties with Tailwind v4's `@theme inline` syntax for design tokens — keep this CSS-based approach during Foundation. Do not migrate tokens to `tailwind.config.ts`. Copy the handoff's theme CSS into `src/app.css`.
 - All components use Tailwind utility classes referencing semantic tokens (`bg-primary`, `text-foreground`, `border-default`) — never raw hex codes, pixel sizes, or raw font sizes
 - Never use `style={{}}` for token values — only `className` with Tailwind classes
 - `style={{}}` is only permitted for genuinely dynamic values that can't be expressed as a token (e.g. `style={{ width: dynamicWidth + 'px' }}`)
 
 ## Component Rules
 
-- Claude Design's UI components (`src/components/ui/`) are the app's component library — do not add shadcn/ui, Radix, HeroUI, or any other library
+- The adapter's UI components (`src/components/ui/`) are the app's component library — do not add shadcn/ui, Radix, HeroUI, or any other library
 - Additional shared components (EmptyState, ErrorBanner, SkeletonCard) built during Foundation live in `src/components/`
 - Every component must implement all applicable states: default / loading / error / empty
 - Custom component interfaces must match the spec in `artifacts/docs/design-system-spec.md`
 - Import shared components from `src/components/` — never recreate one that already exists there
-- Claude Design's handoff TSX is copied directly into route files. Do not modify visual structure — every Tailwind class, spacing, and layout stays as Claude Design wrote it
+- The adapter's handoff TSX is copied directly into route files. Do not modify visual structure — every Tailwind class, spacing, and layout stays as the adapter wrote it
 
 ## AI Slop Guard — Never ship these patterns
 

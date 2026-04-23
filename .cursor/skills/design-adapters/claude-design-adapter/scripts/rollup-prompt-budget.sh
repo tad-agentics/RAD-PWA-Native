@@ -1,7 +1,7 @@
 #!/bin/bash
 # Claude Design Prompt-Budget + Version-Drift Rollup — H1 + H4
 #
-# Reads structured header blocks from artifacts/docs/claude-design-log.md
+# Reads structured header blocks from artifacts/docs/design-tool-log.md
 # (and optionally the studio log) and reports:
 #
 #   H1 — Prompt budget:
@@ -15,7 +15,7 @@
 #     - At 3 consecutive: prompts opening a contract-v3 issue
 #     - Lists `claude_design_version` values seen so the human can correlate
 #
-# Header block format (set by claude-design-log.md template):
+# Header block format (set by design-tool-log.md template):
 #
 #   ## YYYY-MM-DD HH:mm  [optional context]
 #
@@ -45,7 +45,7 @@ DRIFT_STREAK_TRIGGER=3
 WINDOW_DAYS=30
 
 MACHINE=0
-LOG_FILE="artifacts/docs/claude-design-log.md"
+LOG_FILE="artifacts/docs/design-tool-log.md"
 
 for arg in "$@"; do
   case "$arg" in
@@ -192,8 +192,8 @@ rate-limiting mid-build.
 
 Options:
   1. Wait for the 30-day window to roll forward (oldest entries age out).
-  2. Tech Lead override: log a justification in claude-design-log.md and
-     reset by archiving older entries to artifacts/studio/claude-design-log.md.
+  2. Tech Lead override: log a justification in design-tool-log.md and
+     reset by archiving older entries to artifacts/studio/design-tool-log.md.
   3. Split the next sprint across two studio accounts if quota is hard.
 EOF
 elif [ "$TOTAL_PROMPTS" -ge "$WARN_THRESHOLD" ]; then
@@ -220,7 +220,7 @@ Action:
   1. Open an issue: artifacts/issues/handoff-contract-v3.md
   2. Document the new shape vs. handoff-contract.md v2
   3. Update artifacts/docs/handoff-contract.md → bump to v3
-  4. Update .cursor/skills/claude-design/scripts/verify-handoff-tokens.sh
+  4. Update .cursor/skills/design-adapters/claude-design-adapter/scripts/verify-handoff-tokens.sh
      and verify-handoff-notes.sh as needed
   5. Re-run /design verify on the affected handoffs
 EOF

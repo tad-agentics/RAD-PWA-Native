@@ -138,7 +138,7 @@ pressure — copying them into src/ would silently fork the design system.
 
 Fix path:
   1. In Claude Design, re-prompt with the §3 Drift Regen template from
-     .cursor/skills/claude-design/SKILL.md, emphasizing:
+     .cursor/skills/design-adapters/claude-design-adapter/SKILL.md, emphasizing:
        "Output exactly one file. Do not extract any new components.
         Only import primitives that already exist in src/components/ui/."
   2. Re-export and re-run /design verify regen $SCREEN.

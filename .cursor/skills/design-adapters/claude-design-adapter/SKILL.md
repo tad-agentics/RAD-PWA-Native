@@ -16,7 +16,7 @@ Claude Design is the visual design step in RAD. A human drives it. This file doc
 
 | Trigger | Input brief | Output location |
 |---|---|---|
-| Initial build, after `/phase2` | `artifacts/docs/claude-design-brief.md` | `src/design-handoff/` (ZIP) + `artifacts/docs/claude-design-handoff-notes.md` (handoff metadata) |
+| Initial build, after `/phase2` | `artifacts/docs/design-brief.md` | `src/design-handoff/` (ZIP) + `artifacts/docs/design-context.md` (handoff metadata) |
 | `/new-feature` requiring new screens | Feature doc + linked codebase | `src/design-handoff/new-feature-[name]/` (ZIP) + append to handoff notes |
 | `/visual-audit` flagged drift | Spot-regen for the broken screen only | `src/design-handoff/regen-[screen]/` |
 
@@ -32,7 +32,7 @@ Verify before generating:
 
 Every Claude Design run produces both:
 1. **ZIP** — code, the source of truth for `src/design-handoff/`
-2. **Claude Code handoff bundle** — implementation notes, brand tokens, component-structure summary, interaction notes. The bundle ships as a URL Claude Code consumes; for RAD's Cursor pipeline, the human pastes the relevant metadata sections into `artifacts/docs/claude-design-handoff-notes.md`. This text isn't in the ZIP and prevents downstream ambiguity.
+2. **Claude Code handoff bundle** — implementation notes, brand tokens, component-structure summary, interaction notes. The bundle ships as a URL Claude Code consumes; for RAD's Cursor pipeline, the human pastes the relevant metadata sections into `artifacts/docs/design-context.md`. This text isn't in the ZIP and prevents downstream ambiguity.
 
 Capture both. The Frontend agent reads the ZIP for code and the handoff notes for intent.
 
@@ -44,7 +44,7 @@ All prompts below assume the repo is linked. If it isn't, stop and link it first
 
 ### 1. Initial Build
 
-Paste `artifacts/docs/claude-design-brief.md` verbatim. Then add:
+Paste `artifacts/docs/design-brief.md` verbatim. Then add:
 
 ```
 You have access to the linked repository. Use the existing src/components/ui/
@@ -71,7 +71,7 @@ primitives, use the ones already in src/components/ui/. Use the same typography
 scale, spacing, and brand tokens already present in src/app.css.
 ```
 
-Then paste the feature doc's frontend scope and acceptance criteria. Ask only for the new screens. Export ZIP to `src/design-handoff/new-feature-[name]/` — never overwrite the initial `src/design-handoff/`. Append the handoff bundle's implementation notes for these screens to `artifacts/docs/claude-design-handoff-notes.md`.
+Then paste the feature doc's frontend scope and acceptance criteria. Ask only for the new screens. Export ZIP to `src/design-handoff/new-feature-[name]/` — never overwrite the initial `src/design-handoff/`. Append the handoff bundle's implementation notes for these screens to `artifacts/docs/design-context.md`.
 
 ### 2b. Native-targeted brief (HIGH-risk screens only)
 
@@ -127,14 +127,14 @@ Before leaving Claude Design:
 - [ ] Discard-list files (see `handoff-contract.md` §Discard list) will be deleted on import — flag any present so the Frontend agent expects them
 
 **Claude Code handoff bundle (metadata capture — C3 machine-checked):**
-- [ ] Brand tokens section copied into `artifacts/docs/claude-design-handoff-notes.md` `### Tokens`
+- [ ] Brand tokens section copied into `artifacts/docs/design-context.md` `### Tokens`
 - [ ] Component-structure summary copied into `### Components`
 - [ ] Implementation notes copied into `### Notes`
 - [ ] Interaction notes copied into `### Interactions`
-- [ ] `bash .cursor/skills/claude-design/scripts/verify-handoff-notes.sh <initial|new-feature [name]>` exits 0. Each of the four `### ` subsections must have ≥ 20 real-content lines (blank lines and default-template placeholder prose do not count). Budget ~5 minutes of paste per entry — under-populated metadata forces the Frontend agent to invent design intent during integration.
+- [ ] `bash .cursor/skills/design-adapters/claude-design-adapter/scripts/verify-handoff-notes.sh <initial|new-feature [name]>` exits 0. Each of the four `### ` subsections must have ≥ 20 real-content lines (blank lines and default-template placeholder prose do not count). Budget ~5 minutes of paste per entry — under-populated metadata forces the Frontend agent to invent design intent during integration.
 
 **Repo-link enforcement (C2 — machine-checked):**
-- [ ] `bash .cursor/skills/claude-design/scripts/verify-handoff-tokens.sh <mode> <handoff-dir>` exits 0. This script catches the single most common drift: exports produced without an active repo link. Initial builds must match EDS §5 role keywords; incremental builds must not invent tokens outside `src/app.css`. If this fails, re-link the repo in Claude Design and regenerate — the handoff is rejected before it reaches Foundation or `/feature`.
+- [ ] `bash .cursor/skills/design-adapters/claude-design-adapter/scripts/verify-handoff-tokens.sh <mode> <handoff-dir>` exits 0. This script catches the single most common drift: exports produced without an active repo link. Initial builds must match EDS §5 role keywords; incremental builds must not invent tokens outside `src/app.css`. If this fails, re-link the repo in Claude Design and regenerate — the handoff is rejected before it reaches Foundation or `/feature`.
 
 Full required shape: `artifacts/docs/handoff-contract.md`.
 
@@ -142,7 +142,7 @@ Full required shape: `artifacts/docs/handoff-contract.md`.
 
 ## Logging Usage (for the studio)
 
-After each Claude Design session, append to `artifacts/docs/claude-design-log.md`:
+After each Claude Design session, append to `artifacts/docs/design-tool-log.md`:
 
 ```
 ## [YYYY-MM-DD] [phase/feature]

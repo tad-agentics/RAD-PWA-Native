@@ -85,7 +85,7 @@ check_zero "framer-motion (use 'motion' package)" \
   "framer-motion" \
   "$NEGATION_CONTEXT"
 
-check_zero "HeroUI (removed — Claude Design components only)" \
+check_zero "HeroUI (removed — adapter-produced components only)" \
   "HeroUI" \
   "$NEGATION_CONTEXT"
 
@@ -117,13 +117,17 @@ check_zero "Phase 6 (eliminated from RAD pipeline)" \
   "Phase 6" \
   "Polish\|verification\|screen building\|$NEGATION_CONTEXT"
 
-check_zero "legacy Figma/Make references (Claude Design replaced Figma Make)" \
+check_zero "legacy Figma/Make references (now handled via adapters)" \
   "Figma Make\|figma-make-brief\|src/make-import\|frontend-make\.mdc" \
-  "^\s*#\|$NEGATION_CONTEXT"
+  "^\s*#\|$NEGATION_CONTEXT\|Planned\|planned adapters\|handoff-contract"
+
+check_zero "Claude Design vocabulary in pipeline (should be tool-agnostic post-v3)" \
+  "Claude Design" \
+  "handoff-contract\|claude-design-adapter\|Design Tool Selection\|Anthropic Claude Design\|Planned\|changelog\|skills/claude-design\|commands/design\.md\|claude-design-log\|claude-design-handoff-notes\|example-claude-design"
 
 check_zero "stale 'ported into' language (use 'copied into')" \
   "ported into\|Ported into" \
-  "Claude Design Porting\|off-limits during porting\|$NEGATION_CONTEXT"
+  "Design Adapter Porting\|off-limits during porting\|$NEGATION_CONTEXT"
 
 echo ""
 
@@ -142,6 +146,18 @@ check_positive "'90% untouched' rule" \
 
 check_positive "'Never rewrite' enforcement" \
   "Never rewrite\|Do NOT rewrite" 3
+
+echo ""
+echo "── v3 Canonical Artifacts ──"
+
+check_positive "handoff-manifest.json referenced in pipeline" \
+  "handoff-manifest\.json" 3
+
+check_positive "design-context.md referenced in pipeline" \
+  "design-context\.md" 3
+
+check_positive "design-tool.config.json referenced in pipeline" \
+  "design-tool\.config\.json" 2
 
 echo ""
 echo "── TanStack React Query ──"

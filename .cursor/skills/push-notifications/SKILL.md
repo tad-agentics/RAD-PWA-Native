@@ -14,7 +14,7 @@ Push notifications are core to RAD's target app class (habits, journaling, coach
 - When adding a new notification type or migrating between providers.
 
 **What this skill does NOT cover:**
-- In-app toast / banner notifications (use `sonner` — Claude Design's default).
+- In-app toast / banner notifications (use `sonner` — the adapter's default).
 - Email notifications (see `.cursor/skills/architecture/SKILL.md` §3 domain patterns for transactional email).
 - SMS (use the payment/comms provider's SMS API directly from an Edge Function; usually too narrow to warrant its own skill).
 

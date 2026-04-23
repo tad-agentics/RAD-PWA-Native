@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RAD Handoff Manifest",
+  "description": "Schema for handoff-manifest.json — the metadata file every adapter writes at the root of src/design-handoff/. See artifacts/docs/handoff-contract.md §Handoff manifest.",
+  "type": "object",
+  "required": [
+    "contract_version",
+    "source_tool",
+    "generated_at",
+    "adapter",
+    "mode",
+    "screens_exported",
+    "canonical"
+  ],
+  "properties": {
+    "contract_version": {
+      "type": "string",
+      "enum": ["3"],
+      "description": "Pinned to the handoff-contract.md version this manifest targets."
+    },
+    "source_tool": {
+      "type": "string",
+      "enum": ["claude-design", "figma-make", "stitch", "figma-mcp", "manual"],
+      "description": "Which AI design tool (or 'manual') produced the underlying output."
+    },
+    "tool_version": {
+      "type": "string",
+      "description": "Tool version or ship date. Use 'unknown' if the tool does not expose a version."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp when the adapter completed normalization."
+    },
+    "adapter": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+-adapter@\\d+\\.\\d+\\.\\d+$",
+      "description": "Adapter name and semver, e.g. 'claude-design-adapter@1.0.0'."
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["initial", "new-feature", "regen"]
+    },
+    "feature_name": {
+      "type": ["string", "null"],
+      "description": "Required when mode is 'new-feature' or 'regen'. Null otherwise."
+    },
+    "screens_exported": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "primitives_exported": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "canonical": {
+      "type": "object",
+      "required": ["repo_linked_at_generation", "tokens_match_app_css"],
+      "properties": {
+        "repo_linked_at_generation": {
+          "type": "boolean",
+          "description": "Did the source tool have repo context at generation time? Some adapters record this to feed the C2 gate or equivalent."
+        },
+        "tokens_match_app_css": {
+          "type": ["boolean", "null"],
+          "description": "Null for initial builds (no app.css exists yet). Boolean for new-feature/regen modes."
+        }
+      }
+    },
+    "tool_specific": {
+      "type": "object",
+      "description": "Free-form adapter-scoped fields. The pipeline never reads this. Examples: claude_design_bundle_url, figma_node_ids, stitch_design_md_hash."
+    },
+    "notes": {
+      "type": "string",
+      "description": "Free-text notes from the adapter — human-readable context."
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "mode": { "enum": ["new-feature", "regen"] } } },
+      "then": { "required": ["feature_name"] }
+    }
+  ]
+}

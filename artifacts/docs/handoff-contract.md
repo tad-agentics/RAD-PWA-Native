@@ -18,41 +18,40 @@ See `.cursor/skills/design-adapters/README.md` for the adapter authoring contrac
 
 ---
 
-## Required shape
+## Canonical handoff shape
+
+Every adapter produces `src/design-handoff/` matching this shape, regardless of source tool.
 
 ### Initial build — `src/design-handoff/`
-
-```
 src/design-handoff/
-├── App.tsx                     (or routes.tsx) — entrypoint wiring every screen
+├── handoff-manifest.json       — adapter-written metadata (schema below)
+├── design-context.md           — universal design system doc (structure below)
 ├── theme.css                   — CSS custom properties + @theme inline (Tailwind v4)
 ├── components/
-│   └── ui/                     — shared UI primitives (Button, Card, Dialog, …)
-│       └── [≥ 5 primitive files]
-├── components/
+│   ├── ui/                     — shared UI primitives (Button, Card, Dialog, …)
+│   │   └── [≥ 5 primitive files]
 │   └── [app-level shared components, optional — e.g. ScreenHeader, CreditGate]
 ├── routes/ or screens/         — one file per screen in screen-specs-[app]-v1.md
 │   └── [screen].tsx
-└── mock-data/                  (optional, or inline) — hardcoded entity mocks
-```
+├── mock-data/ (optional)       — hardcoded entity mocks (or inline)
+└── assets/ (optional)          — images/fonts the adapter produces
+
+An entrypoint file (`App.tsx` or `routes.tsx`) is **optional** in v3. When present, it wires every screen with resolvable routes. The Frontend agent uses it as a reference map only; never copies it into `src/`.
 
 ### Incremental — `src/design-handoff/new-feature-[name]/`
-
-```
 src/design-handoff/new-feature-[name]/
+├── handoff-manifest.json       — mode: "new-feature", feature_name: "[name]"
+├── design-context.md           — appendix for new components/tokens, if any
 ├── routes/ or screens/
 │   └── [screen].tsx            — only the new screens for this feature
 └── mock-data/                  — only mocks for new entities, if any
-```
 
 **Must not contain** `components/ui/` — primitives are locked after Foundation.
 
 ### Drift regen — `src/design-handoff/regen-[screen]/`
-
-```
 src/design-handoff/regen-[screen]/
+├── handoff-manifest.json       — mode: "regen", feature_name: "[screen]"
 └── [screen].tsx                — single-file regen, mock-data shape preserved
-```
 
 ---
 

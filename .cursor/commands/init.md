@@ -215,6 +215,10 @@ Present to human: "Place PWA icons in `public/icons/` (192×192 and 512×512, bo
 chmod +x .cursor/skills/*/scripts/*.sh
 ```
 
+### 7c. Confirm design adapter config
+
+Ensure `artifacts/design-tool.config.json` exists at the project root. Default adapter is `claude-design`. Edit this file to switch adapters mid-project (e.g. if the primary tool is down). See `.cursor/skills/design-adapters/` for available adapters.
+
 ### 8. Set up environment variables
 
 Ensure `src/lib/env.ts` exists and validates every required `VITE_*` key the app reads (minimum: `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`). Extend the Zod schema when adding new client env vars — see `backend.mdc` / `frontend.mdc`.
@@ -294,8 +298,8 @@ Follow prompts to link this repo to Vercel. Every `git push origin staging` trig
 ### 12. Update `agent-workspace/ACTIVE_CONTEXT.md`
 
 - `Updated:` — today's date and time
-- `Current focus:` — "Init complete — ready for Phase 2 (screen specs + Claude Design)"
-- `Next up:` — "/phase2 — dispatch Product Designer for screen specs and Claude Design brief"
+- `Current focus:` — "Init complete — ready for Phase 2 (screen specs + design brief)"
+- `Next up:` — "/phase2 — dispatch Product Designer for screen specs and design brief"
 
 ### 13. Report to human
 

@@ -357,19 +357,21 @@ fi
 pass "No Claude Design references in commands/ outside design.md"
 
 # Skills outside the adapter scope
-# Exempt: claude-design-adapter (scoped), validate-rules.sh (contains "Claude Design" as grep search patterns)
+# Exempt:
+#   - .cursor/skills/design-adapters/ (whole dir — adapter SKILLs + README legitimately name adapters/tools)
+#   - validate-rules.sh (contains "Claude Design" as grep search patterns, not stale vocabulary)
 hits=$({ grep -rln "Claude Design" \
   --include="*.md" --include="*.sh" \
   .cursor/skills/ 2>/dev/null || true; } \
-  | { grep -vE "\.cursor/skills/design-adapters/claude-design-adapter|\.cursor/skills/testing/scripts/validate-rules\.sh" || true; } \
+  | { grep -vE "\.cursor/skills/design-adapters/|\.cursor/skills/testing/scripts/validate-rules\.sh" || true; } \
   | wc -l | tr -d ' ')
 
 if [[ "$hits" -gt 0 ]]; then
-  echo "  ✗ Found Claude Design references in skills/ outside claude-design-adapter scope:"
-  { grep -rln "Claude Design" --include="*.md" --include="*.sh" .cursor/skills/ 2>/dev/null || true; } | { grep -vE "\.cursor/skills/design-adapters/claude-design-adapter|\.cursor/skills/testing/scripts/validate-rules\.sh" || true; }
+  echo "  ✗ Found Claude Design references in skills/ outside design-adapters/ scope:"
+  { grep -rln "Claude Design" --include="*.md" --include="*.sh" .cursor/skills/ 2>/dev/null || true; } | { grep -vE "\.cursor/skills/design-adapters/|\.cursor/skills/testing/scripts/validate-rules\.sh" || true; }
   exit 1
 fi
-pass "No Claude Design references in skills/ outside claude-design-adapter scope (validator source exempt)"
+pass "No Claude Design references in skills/ outside design-adapters/ scope (validator source exempt)"
 
 # ---------- Test 4: Prove adapter config is switchable ----------
 

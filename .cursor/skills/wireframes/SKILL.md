@@ -405,6 +405,8 @@ Structured input for the human to paste into the configured AI design tool (see 
 
 **Output quality depends entirely on prompt + Guidelines.md quality.** Bad prompt = flat divs. Good prompt + guidelines = production-quality component architecture with Radix UI primitives, typed mock data, proper routing, and animations.
 
+See [artifacts/docs/design-principles/craft.md](../../artifacts/docs/design-principles/craft.md) for the shape-then-build philosophy these briefs support.
+
 ---
 
 #### Section 1 — Guidelines.md (paste into the design tool's custom-rules/guidelines feature — see the active adapter's SKILL for the exact location)
@@ -658,6 +660,25 @@ The design tool will generate mock data for all screens. Structure this mock dat
 - Include realistic prices and credit costs matching northstar §4
 
 The tech spec agent reads these mock structures to derive the database schema. Better mocks = smoother integration.
+
+## Recommended References (for the design tool to consult)
+
+The configured design adapter will consult these RAD-specific references when normalizing tool output. Paste the relevant ones into the design tool's brief (claude-design's Guidelines.md, or — for Planned adapters — equivalents like Figma Make's component briefs or Stitch's DESIGN.md) to lift the tool's output quality.
+
+Always consult:
+- [artifacts/docs/design-principles/typography.md](../../artifacts/docs/design-principles/typography.md) — type selection procedure, scales, hierarchy
+- [artifacts/docs/design-principles/color-and-contrast.md](../../artifacts/docs/design-principles/color-and-contrast.md) — OKLCH, palette construction
+- [artifacts/docs/design-principles/spatial-design.md](../../artifacts/docs/design-principles/spatial-design.md) — layout, rhythm, density
+- [artifacts/docs/design-principles/responsive-design.md](../../artifacts/docs/design-principles/responsive-design.md) — breakpoints, mobile-first (critical for RAD's B2C mobile target)
+
+Feature-conditional:
+- [interaction-design.md](../../artifacts/docs/design-principles/interaction-design.md) — consult if the feature has forms, multi-step flows, or complex state machines
+- [motion-design.md](../../artifacts/docs/design-principles/motion-design.md) — consult if the northstar §7 flags motion or the feature involves transitions
+- [ux-writing.md](../../artifacts/docs/design-principles/ux-writing.md) — consult if the feature is copy-heavy or has error-prone forms
+
+For post-design phases:
+- [craft.md](../../artifacts/docs/design-principles/craft.md) — the design build philosophy this brief supports
+- [extract.md](../../artifacts/docs/design-principles/extract.md) — when deciding primitive promotions during Foundation
 
 ## Prompt Budget
 

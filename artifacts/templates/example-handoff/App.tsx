@@ -1,4 +1,4 @@
-// Example Claude Design entrypoint.
+// Example handoff entrypoint (produced by the claude-design adapter in this example; any adapter may emit this file).
 // In a real handoff this file wires every screen into the routes available
 // at preview time. RAD's Foundation step copies the screens from screens/*
 // into src/routes/_app/* and re-wires routing via React Router v7.

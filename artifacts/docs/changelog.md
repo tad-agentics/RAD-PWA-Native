@@ -16,6 +16,8 @@ Refactored the design tool integration from a Claude Design–specific pipeline 
 
 **Migration:** Existing projects work unchanged if they stay on `claude-design`. To switch tools mid-project, edit `artifacts/design-tool.config.json` and re-run `/design`.
 
+**Refactor landed:** 2026-04-23. All 5 milestones (M1 contract, M2 pipeline decoupling, M3 adapter refactor, M4 renames + dispatcher, M5 tests + docs) complete. Integration test at `scripts/test-adapter-switch.sh` validates adapter switching. Active adapters: `claude-design-adapter@1.0.0`, `manual-adapter@1.0.0`.
+
 ---
 
 ## How to use

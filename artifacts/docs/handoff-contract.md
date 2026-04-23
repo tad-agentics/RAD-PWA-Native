@@ -55,6 +55,52 @@ src/design-handoff/regen-[screen]/
 
 ---
 
+## Handoff manifest
+
+Every canonical handoff has a `handoff-manifest.json` at its root. Adapters write this file as part of their normalization step. The pipeline reads only canonical fields; adapters may add tool-specific fields under `tool_specific` without affecting downstream consumers.
+
+### Schema
+
+```json
+{
+  "contract_version": "3",
+  "source_tool": "claude-design | figma-make | stitch | figma-mcp | manual",
+  "tool_version": "string — e.g. 'beta-2026-04' or 'unknown'",
+  "generated_at": "ISO-8601 timestamp",
+  "adapter": "adapter-name@semver — e.g. 'claude-design-adapter@1.0.0'",
+  "mode": "initial | new-feature | regen",
+  "feature_name": "string | null",
+  "screens_exported": "integer",
+  "primitives_exported": "integer",
+  "canonical": {
+    "repo_linked_at_generation": "boolean — adapter records whether the tool had repo context",
+    "tokens_match_app_css": "boolean | null — null if app.css doesn't exist yet (initial build)"
+  },
+  "tool_specific": {
+    "// free-form adapter-scoped fields": "e.g. claude_design_bundle_url, figma_node_ids, stitch_design_md_hash"
+  },
+  "notes": "free text — adapter-specific context"
+}
+```
+
+### Required fields
+
+- `contract_version` — must be `"3"` for contracts produced against this spec
+- `source_tool` — one of the enum values
+- `generated_at` — ISO-8601 timestamp
+- `adapter` — adapter name + semver (pins which adapter version produced this)
+- `mode` — one of `initial`, `new-feature`, `regen`
+- `screens_exported` — integer count
+- `canonical` — object with `repo_linked_at_generation` (required) and `tokens_match_app_css` (required, nullable)
+
+Optional fields: `tool_version`, `feature_name` (required if mode ≠ initial), `primitives_exported`, `tool_specific`, `notes`.
+
+### Validation schema
+
+JSON schema lives at `artifacts/templates/handoff-manifest-schema.json` (created in Step 2). `/design verify` validates every manifest against that schema before running downstream checks. Manifests failing schema validation are BLOCKING.
+
+---
+
 ## Required properties
 
 | # | Property | Rule |

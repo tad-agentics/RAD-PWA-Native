@@ -164,27 +164,31 @@ Failures are BLOCKING. The Frontend agent's design intent comes from this file; 
 
 | # | Property | Rule |
 |---|---|---|
-| 1 | Entrypoint | `App.tsx` or `routes.tsx` must wire every screen with resolvable routes |
-| 2 | Theme | `theme.css` uses CSS custom properties + Tailwind v4 `@theme inline` (no `tailwind.config.ts`) |
-| 3 | Primitives | `components/ui/` contains ≥ 5 files; each file exports one primitive |
-| 4 | Screen coverage | Every screen in `artifacts/docs/screen-specs-[app]-v1.md` has a matching file |
-| 5 | Mock data | Inline or colocated; **no** `fetch`, `axios`, `supabase`, or network calls |
-| 6 | Imports | All relative imports resolve within the handoff bundle — no `@/` aliases pointing outside the bundle |
-| 7 | Typography | `@font-face` declarations or Google Fonts `@import` in `theme.css` (Fonts will be self-hosted during Foundation) |
-| 8 | Assets | Images referenced via imports or public URLs — no local `/public/` absolute paths |
+| 1 | Manifest | `handoff-manifest.json` exists at the handoff root with valid required fields per the schema in "## Handoff manifest" |
+| 2 | Context | `design-context.md` exists at the handoff root with all required sections populated per "## Design context document" |
+| 3 | Theme | `theme.css` uses CSS custom properties + Tailwind v4 `@theme inline` (no `tailwind.config.ts`) |
+| 4 | Primitives (initial only) | `components/ui/` contains ≥ 5 files; each file exports one primitive. New-feature and regen modes skip this check. |
+| 5 | Screen coverage | Every screen in `artifacts/docs/screen-specs-[app]-v1.md` has a matching file |
+| 6 | Mock data | Inline or colocated; **no** `fetch`, `axios`, `supabase`, or network calls |
+| 7 | Imports | All relative imports resolve within the handoff bundle — no `@/` aliases pointing outside the bundle |
+| 8 | Typography | `@font-face` declarations or Google Fonts `@import` in `theme.css` (fonts are self-hosted during Foundation) |
+| 9 | Assets | Images referenced via imports or public URLs — no local `/public/` absolute paths |
+
+An entrypoint file (`App.tsx` or `routes.tsx`) is **not** a required property in v3. If the source tool produces one, the adapter may preserve it; the Frontend agent uses it as a reference map only and never copies it into `src/`.
 
 ---
 
 ## Forbidden contents
 
-These cause `/design verify` to fail:
+These cause `/design verify` to fail, regardless of adapter:
 
 - `globals.css` — RAD uses `src/app.css`
 - `app/` directory or `page.tsx` files — Next.js conventions, not React Router
 - `next.config.*`, `next-env.d.ts` — Next.js config
 - `node_modules/`, `package-lock.json`, `yarn.lock` — install happens in Foundation Step 0
-- `src/make-import/`, `figma-make-brief.*` — legacy Figma Make tokens (validator guards against these)
+- `src/make-import/`, `figma-make-brief.*` — legacy Figma Make tokens (superseded by adapter layer)
 - Any `.env*` files — secrets never flow through design handoff
+- Any file matching the active adapter's discard list — per the adapter SKILL's `## Discard list` section (see "## Discard list — adapter-scoped" below)
 
 ## Discard list (Claude Design scaffold files — delete on import)
 

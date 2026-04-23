@@ -101,6 +101,65 @@ JSON schema lives at `artifacts/templates/handoff-manifest-schema.json` (created
 
 ---
 
+## Design context document
+
+Every canonical handoff has a `design-context.md` at its root. Adapters produce this from EDS §5 (brand) plus the source tool's extracted tokens. All adapters produce the same structure — the pipeline reads the same shape regardless of which tool generated the handoff.
+
+### Required sections
+
+```markdown
+# Design Context — [App Name]
+
+## Brand
+- Voice, personality (3 words), anti-references — from EDS §1, §2
+
+## Color System
+- Token table with hex + oklch + semantic role — from EDS §5
+
+## Typography
+- Display font, body font, modular scale — from EDS §5
+
+## Spacing
+- Base unit + scale
+
+## Components
+- Primitive list with variants and sizes
+
+## Interaction Patterns
+- From EDS §4
+
+## Anti-Patterns
+- From EDS §8 + design-system.mdc Slop Guard
+
+## Copy Rules
+- Language, forbidden words, screen-context rules — from copy-rules.mdc
+
+## Build Constraints
+- Framework, styling approach, component library, font hosting
+```
+
+### Source of content
+
+- Sections 1–6 (Brand, Color, Typography, Spacing, Components, Interaction Patterns) — the adapter extracts these from the source tool's output (theme tokens, component library, interaction metadata) and cross-checks against EDS §5. If the tool didn't produce a value, the adapter falls back to EDS §5 as source of truth.
+- Sections 7–9 (Anti-Patterns, Copy Rules, Build Constraints) — the adapter populates these from the existing RAD files (EDS §8, copy-rules.mdc, project.mdc). These do not depend on the source tool.
+
+### Template
+
+`artifacts/templates/design-context-template.md` (created in Step 2) is the starting template. Adapters begin from it and fill in every section. Placeholders (`[placeholder]`) must be replaced with real content before `/design verify` will pass.
+
+### Enforcement
+
+`/design verify` parses `design-context.md` and requires:
+
+1. Every section listed above is present as an H2 heading
+2. Each section contains ≥ 1 content line below the heading (excludes blank lines and any line that is exactly a placeholder like `[placeholder]` or `TODO`)
+3. The `## Color System` section contains ≥ 3 token rows
+4. The `## Components` section contains ≥ 5 primitive rows (for initial builds — new-feature appendices may contain fewer)
+
+Failures are BLOCKING. The Frontend agent's design intent comes from this file; sparse content means sparse integration quality.
+
+---
+
 ## Required properties
 
 | # | Property | Rule |

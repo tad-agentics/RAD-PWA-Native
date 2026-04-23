@@ -1,171 +1,140 @@
 ## /design
 
-Wrapper for the human-driven Claude Design step. Runs pre-flight on the brief, points the human at the right skill file, and validates the handoff bundle after export. Not an agent dispatch — this command is a checklist with scripted checks.
+Adapter dispatcher for RAD's tool-agnostic design step. Reads `artifacts/design-tool.config.json` to determine which adapter to run, then delegates pre-flight, human-driver instructions, and post-flight verification to that adapter's SKILL.
 
-Usage: `/design` (initial build) · `/design new-feature [name]` · `/design regen [screen]`
+Not an agent dispatch — this command is a checklist with scripted checks. The human drives the design tool; this command orchestrates the workflow around it.
 
----
-
-## Mode A — Initial Build (after `/phase2`)
-
-### Pre-flight
-
-Confirm, then report any misses to the human:
-
-- [ ] `artifacts/docs/claude-design-brief.md` exists and is not empty
-- [ ] `artifacts/docs/screen-specs-[app]-v1.md` exists
-- [ ] `artifacts/docs/northstar-[app].html` exists
-- [ ] `src/design-handoff/` does NOT yet exist (or is empty)
-- [ ] Human has access to Claude Design (Pro/Max/Team/Enterprise plan)
-- [ ] **Repo is linked in Claude Design** — human has connected the GitHub repo or attached the local directory via Claude Design's Import button. Without the link, Claude Design invents tokens and primitives instead of matching the existing system. This is the single biggest quality lever — never skip.
-- [ ] **Prompt-budget guard (H1):**
-  ```bash
-  bash .cursor/skills/claude-design/scripts/rollup-prompt-budget.sh --machine
-  ```
-  Exit 0 → proceed. Exit 2 (WARN, ≥ 40 turns / 30 days) → surface the warning to the human; planning bigger briefs / fewer iterations is advised but proceed. Exit 1 (BLOCK, ≥ 50 turns OR ≥ 3 consecutive `shape_mismatch: yes`) → halt and report. For BLOCK on budget: wait for window to roll forward or get Tech Lead override. For BLOCK on drift: open `artifacts/issues/handoff-contract-v3.md` per the script's guidance — Anthropic likely changed Claude Design's export schema and the contract needs bumping.
-
-### Instructions to the human
-
-Present:
-
-```
-Run Claude Design now.
-
-1. Open Claude Design. Confirm the repo link shows your project name in the
-   workspace sidebar — if not, link it now via Import → GitHub or Local Directory.
-2. Paste artifacts/docs/claude-design-brief.md verbatim into the prompt.
-3. Add the three-line initial-build prompt from .cursor/skills/claude-design/SKILL.md §1.
-4. Iterate until every screen in the brief is rendered and the handoff exports cleanly.
-5. Export TWO artifacts:
-   a) ZIP — extract into src/design-handoff/
-   b) Claude Code handoff bundle — copy the bundle URL or paste the implementation
-      notes / token metadata into artifacts/docs/claude-design-handoff-notes.md
-   The ZIP is the source of truth for code; the handoff metadata is supplementary
-   context the Frontend agent reads alongside.
-
-When done, run /design verify to validate the export against artifacts/docs/handoff-contract.md.
-```
-
-### Post-flight — `/design verify`
-
-Run the contract check:
-
-- [ ] `src/design-handoff/App.tsx` or `src/design-handoff/routes.tsx` exists
-- [ ] `src/design-handoff/theme.css` exists
-- [ ] `src/design-handoff/components/ui/` directory exists with ≥ 5 primitives
-- [ ] No `globals.css`, no `app/` (Next.js), no `page.tsx` files
-- [ ] None of the discard-list files in `artifacts/docs/handoff-contract.md` §Discard list are present (delete on sight)
-- [ ] Every screen listed in `screen-specs-[app]-v1.md` has a matching file in the handoff
-- [ ] **Handoff-notes capture (C3 — machine-checked):**
-  ```bash
-  bash .cursor/skills/claude-design/scripts/verify-handoff-notes.sh initial
-  ```
-  `artifacts/docs/claude-design-handoff-notes.md` must have an `## Initial Build` entry with four `### ` subsections — Tokens, Components, Notes, Interactions — each ≥ 20 real-content lines. Placeholder text from the template does not count. Exit 0 → pass. Exit 1 → BLOCKING: paste the missing sections from Claude Code's handoff bundle and re-run (budget ~5 minutes).
-- [ ] **Token freshness (C2 — enforces the repo-link mandate):**
-  ```bash
-  bash .cursor/skills/claude-design/scripts/verify-handoff-tokens.sh initial src/design-handoff
-  ```
-  Exit 0 → pass. Exit 1 → BLOCKING: tokens don't match EDS §5 roles, meaning the repo/EDS wasn't linked in Claude Design. Re-link, regenerate, re-run verify.
-
-Report file-by-file. On any miss, point the human at the relevant fix in `.cursor/skills/claude-design/SKILL.md` §Failure Modes. On all-pass, record:
-
-```
-Append an entry to artifacts/docs/claude-design-log.md using the template in that file.
-If the pattern is likely to repeat across apps, also flag it for promotion to
-artifacts/studio/claude-design-log.md at /session-end.
-```
-
-Then: "Handoff verified. Proceed to `/phase4`."
+Usage:
+- `/design` — initial build (after `/phase2`)
+- `/design new-feature [name]` — incremental design for a new feature
+- `/design regen [screen]` — drift regen for a single screen
+- `/design verify` — re-run canonical + adapter-specific verification without re-running the tool
+- `/design verify new-feature [name]` — verify an incremental bundle
+- `/design verify regen [screen]` — verify a regen bundle
 
 ---
 
-## Mode B — `/design new-feature [name]`
+## Step 1 — Read adapter config
 
-### Pre-flight
+Read `artifacts/design-tool.config.json` at the project root. Extract:
+- `adapter` → primary adapter name (e.g. `"claude-design"` or `"manual"`)
+- `fallback_adapters` → ordered list of fallbacks
+- `tool_settings.[adapter]` → adapter-specific settings
 
-- [ ] `artifacts/docs/features/[name].md` exists with an approved Frontend Scope
-- [ ] `src/design-handoff/new-feature-[name]/` does NOT yet exist
-- [ ] Initial `src/design-handoff/` has already been consumed (components in `src/components/ui/`)
-- [ ] **Repo link in Claude Design is current** — if the link was set up before the initial build, re-sync so Claude Design sees the post-Foundation `src/components/ui/`, `src/app.css`, and `src/routes/_app/` as the current source of truth. Stale links cause primitive duplication.
+If the config file does not exist, halt and report:
+> `artifacts/design-tool.config.json` is missing. Either run `/init` to scaffold it, or create it manually. Default adapter is `claude-design`. See `.cursor/skills/design-adapters/` for all available adapters.
 
-### Instructions to the human
-
-```
-Open Claude Design, then:
-
-1. Confirm the repo link is current (re-sync if needed). The link is mandatory —
-   without it, Claude Design will regenerate primitives instead of reusing them.
-2. Paste the "Incremental" prompt from .cursor/skills/claude-design/SKILL.md §2.
-3. Paste the Frontend Scope section from artifacts/docs/features/[name].md.
-4. Ask only for the new screens. Do NOT regenerate existing primitives.
-5. Export ZIP into src/design-handoff/new-feature-[name]/.
-6. Append the handoff bundle's implementation notes for these screens into
-   artifacts/docs/claude-design-handoff-notes.md (under a new Feature section).
-
-When done, run /design verify new-feature [name].
-```
-
-### Post-flight — `/design verify new-feature [name]`
-
-- [ ] Export is in `src/design-handoff/new-feature-[name]/`, not overwriting the root handoff
-- [ ] No new files in `components/ui/` (Claude Design must reuse existing primitives)
-- [ ] Every screen listed in feature doc's Frontend Scope has a file
-- [ ] **Handoff-notes capture (C3 — machine-checked):**
-  ```bash
-  bash .cursor/skills/claude-design/scripts/verify-handoff-notes.sh new-feature [name]
-  ```
-  `artifacts/docs/claude-design-handoff-notes.md` must have a `## Feature: [name]` appendix with the same four `### ` subsections, each ≥ 20 real-content lines (new additions only — do not repeat initial-build tokens/components). Exit 1 → BLOCKING.
-- [ ] **Token freshness (C2 — enforces the repo-link mandate):**
-  ```bash
-  bash .cursor/skills/claude-design/scripts/verify-handoff-tokens.sh new-feature src/design-handoff/new-feature-[name]
-  ```
-  Exit 0 → pass (no theme.css, or every token already in `src/app.css`). Exit 1 → BLOCKING: the handoff invents tokens, meaning the repo link was stale/absent. Re-sync the link in Claude Design, regenerate, re-run.
-
-Report, and on pass: "Incremental handoff verified. Run `/feature [name]` to dispatch."
+The configured adapter must have a corresponding SKILL file at `.cursor/skills/design-adapters/[adapter]-adapter/SKILL.md`. If it does not, halt and report:
+> `adapter: "[X]"` in config but no `.cursor/skills/design-adapters/[X]-adapter/SKILL.md` exists. Either author the adapter or change the config to a valid adapter name.
 
 ---
 
-## Mode C — `/design regen [screen]`
+## Step 2 — Resolve mode
 
-Used after `/visual-audit` flags drift on a specific screen.
+Determine mode from the command arguments:
+- No argument → `initial` mode. Requires: `src/design-handoff/` does NOT yet exist (or is empty).
+- `new-feature [name]` → incremental mode. Requires: `artifacts/docs/features/[name].md` exists.
+- `regen [screen]` → drift regen mode. Requires: recent `/visual-audit` report flagged this screen.
+- `verify [mode] [arg]` → skip human step, run verification only.
 
-### Pre-flight
-
-- [ ] `artifacts/qa-reports/visual-audit-*.md` flags `[screen]` with a "drift" reason
-- [ ] `src/design-handoff/regen-[screen]/` does NOT yet exist
-- [ ] **Repo link in Claude Design is current** — without it, the regen drifts further. Re-sync if needed.
-
-### Instructions to the human
-
-```
-Open Claude Design with the repo link current, then paste the "Drift Regen"
-prompt from .cursor/skills/claude-design/SKILL.md §3 with the screen name
-filled in.
-
-Export to src/design-handoff/regen-[screen]/ — a single file is fine.
-```
-
-### Post-flight — `/design verify regen [screen]`
-
-- [ ] Export is in `src/design-handoff/regen-[screen]/`
-- [ ] Mock data shape matches the current mock shape in `src/design-handoff/` (so Supabase wiring still applies)
-- [ ] **Regen shape (H3 — single file, no invented primitives):**
-  ```bash
-  bash .cursor/skills/claude-design/scripts/verify-regen-shape.sh [screen]
-  ```
-  Asserts: exactly one `.tsx` file at `src/design-handoff/regen-[screen]/<screen>.tsx`, no other files (no `.css`, `.ts`, `.json`, no `components/` or `ui/` subdirs), and every `@/components/ui/*` import in the regen file resolves to a primitive that already exists in `src/components/ui/`. Exit 1 → BLOCKING: Claude Design invented files or primitives under prompt pressure. Re-prompt with the §3 Drift Regen template emphasizing "exactly one file, no new primitives." If a new primitive is genuinely needed, switch to `/design new-feature [name]` instead — regen is not the right path for new shared code.
-- [ ] **Token freshness (C2 — enforces the repo-link mandate):**
-  ```bash
-  bash .cursor/skills/claude-design/scripts/verify-handoff-tokens.sh regen src/design-handoff/regen-[screen]
-  ```
-  Exit 0 → pass. Exit 1 → BLOCKING: regen invents tokens (repo link stale). Re-sync link, regenerate, re-run.
-
-On pass: "Regen verified. Dispatch Frontend Developer to diff and re-copy the affected route file."
+Validate prerequisites for the mode. If any fail, halt with a specific remediation message.
 
 ---
 
-## Notes
+## Step 3 — Adapter pre-flight
 
-- This command never writes code. It only runs checks, instructs the human, and logs entries.
-- Full prompting patterns, anti-patterns, and failure-mode escalation: `.cursor/skills/claude-design/SKILL.md`.
-- Export shape contract: `artifacts/docs/handoff-contract.md`.
+Read `.cursor/skills/design-adapters/[adapter]-adapter/SKILL.md`. Locate its pre-flight section for the requested mode. Run every pre-flight check defined there.
+
+The canonical pre-flight (runs regardless of adapter) includes:
+- `artifacts/docs/screen-specs-[app]-v1.md` exists (for initial + new-feature modes)
+- `artifacts/docs/northstar-[app].html` exists (for initial mode)
+- `artifacts/docs/design-brief.md` exists (for initial + new-feature modes; produced by Phase 2 product-designer)
+
+The adapter's pre-flight may add tool-specific gates — e.g. the `claude-design-adapter` runs the H1 prompt-budget guard via `.cursor/skills/design-adapters/claude-design-adapter/scripts/rollup-prompt-budget.sh`.
+
+If any pre-flight check fails with BLOCKING, halt. Report the exact check that failed and the adapter SKILL's remediation guidance. Do not proceed to human step.
+
+---
+
+## Step 4 — Human-driver step
+
+Present the adapter's human-driver instructions to the Tech Lead. These come from the adapter's SKILL.md §Prompting Patterns (or equivalent section) for the requested mode.
+
+For the default `claude-design` adapter, the human instructions point at the Claude Design product and describe repo linking, brief pasting, iteration, and dual-artifact export. For `manual-adapter`, the human instructions describe producing the bundle by hand.
+
+The command's role at this step is presentational. Do not execute the design tool — the human does that. When the human confirms the export/production step is complete, proceed to Step 5.
+
+---
+
+## Step 5 — Adapter normalization
+
+Invoke the adapter's normalization step if the adapter supports one. The `claude-design-adapter` unzips the Claude Design export, deletes discard-list files, generates `handoff-manifest.json`, produces `design-context.md`, and moves files into canonical structure. The `manual-adapter` has no normalization (the human produced canonical output directly).
+
+The normalization step details are in the adapter's SKILL.md §Adapter contract. Run them as documented.
+
+If normalization fails (e.g. required files missing from the tool's output, malformed manifest), halt with the specific normalization step that failed.
+
+---
+
+## Step 6 — Verify (canonical + adapter-specific)
+
+`/design verify` runs two layers:
+
+**Layer 1 — Canonical checks** (every adapter):
+- `handoff-manifest.json` exists and validates against `artifacts/templates/handoff-manifest-schema.json`
+- `design-context.md` exists with all 9 required H2 sections, each populated (not template placeholders)
+- Required shape per contract v3 §Canonical handoff shape (theme.css, components/ui/ ≥ 5 files for initial mode, routes/ or screens/ with one file per screen in spec)
+- Forbidden contents absent — `globals.css`, Next.js files, `.env` files must never appear in the handoff (contract v3 §Forbidden contents)
+
+**Layer 2 — Adapter-specific checks** (from the adapter's SKILL.md §Enforcement gates):
+- For `claude-design-adapter`: C2 token diff, C3 design-context substance, H1 prompt budget, H3 regen shape, H4 version drift
+- For `manual-adapter`: none (canonical checks only)
+- For future adapters: whatever gates the adapter defines
+
+Report per-check PASS/FAIL. On any BLOCKING fail, halt and instruct the human to fix before proceeding to `/foundation` or `/feature`.
+
+---
+
+## Step 7 — Log the session
+
+Append an entry to `artifacts/docs/design-tool-log.md` using the machine-parseable header format. Required fields:
+- `adapter` — from config
+- `tool_version` — from the adapter's normalization (or `n/a` for manual)
+- `prompts_consumed` — H1 metric (0 for manual)
+- `shape_mismatch` — H4 metric (set by Step 6 verification)
+- `export_target` — path where handoff landed
+- `verification` — pass | fail-then-fixed-on-N | failed
+
+`/session-end` reads these rollups to track prompt budget and schema drift over time.
+
+---
+
+## Switching adapters mid-project
+
+If the primary adapter fails (tool outage, breaking schema change, quota exceeded), edit `artifacts/design-tool.config.json`:
+
+```json
+{
+  "adapter": "manual",
+  "fallback_adapters": [],
+  "tool_settings": {
+    "manual": { "validate_shape_only": true }
+  }
+}
+```
+
+Re-run `/design`. The pipeline, agents, rules, and commands are tool-agnostic — only the adapter changes. Record the switch as an entry in `artifacts/docs/design-tool-log.md` with rationale in the notes field.
+
+---
+
+## Troubleshooting
+
+**Pre-flight fails for missing artifacts/docs/design-brief.md:** Run `/phase2` first. The product-designer produces the design brief.
+
+**Adapter not found in .cursor/skills/design-adapters/:** Check the adapter name in `artifacts/design-tool.config.json` matches a directory under `.cursor/skills/design-adapters/[name]-adapter/`. Note the `-adapter` suffix.
+
+**Canonical verification fails but adapter-specific passes:** The handoff violates contract v3. Check `handoff-manifest.json` schema compliance and `design-context.md` section completeness first — these are the new v3 requirements adapters may be under-producing.
+
+**Adapter-specific verification fails:** Read the adapter SKILL's §Failure Modes section. Most failures have documented fixes.
+
+**Need a new adapter:** See `.cursor/skills/design-adapters/README.md` (created in Milestone 5) for the authoring contract.

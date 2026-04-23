@@ -32,18 +32,18 @@ Read:
 
 Staging URL: [staging-url]
 
-Compare staging screens against the original Claude Design component code in src/design-handoff/ (or git history if already deleted).
-Work from the Claude Design prototype URL and the exported handoff bundle in `src/design-handoff/`. Do not attempt to re-request designs from Claude Design during audit.
+Compare staging screens against the original handoff component code in src/design-handoff/ (or git history if already deleted).
+Work from the design tool's prototype URL (if the adapter recorded one in handoff-manifest.json) and the exported handoff bundle in `src/design-handoff/`. Do not attempt to re-request designs from the design tool during audit.
 
 Run the full visual fidelity audit:
-- **Claude Design fidelity (CRITICAL)** — since screens are copied directly from Claude Design, every Tailwind class, spacing value, color, font-weight, border-radius, and animation timing must be IDENTICAL to Claude Design's original code. Any visual difference means the agent modified code it shouldn't have. Compare staging against Claude Design's original files in src/design-handoff/ (or git history). Flag every deviation as BLOCKING.
+- **Handoff fidelity (CRITICAL)** — since screens are copied directly from the canonical handoff, every Tailwind class, spacing value, color, font-weight, border-radius, and animation timing must be IDENTICAL to the adapter's original code. Any visual difference means the agent modified code it shouldn't have. Compare staging against the handoff's original files in src/design-handoff/ (or git history). Flag every deviation as BLOCKING.
 - AI Slop Guard rules (design-system.mdc)
 - Token compliance — no raw colors, no arbitrary spacing
 - Mobile viewport at 375px — every screen
 - All four interaction states visible — default / loading / error / empty
 - No placeholder text or lorem ipsum
 - Copy quality — run 5-question Copy Quality Test on all visible copy
-- Dopamine moment fidelity — for D1–D4 flagged screens: verify animation timing matches EDS §6. Since Claude Design implemented these, they should be untouched — if timing differs, the agent modified animation code it shouldn't have.
+- Dopamine moment fidelity — for D1–D4 flagged screens: verify animation timing matches EDS §6. Since the adapter's handoff implemented these, they should be untouched — if timing differs, the agent modified animation code it shouldn't have.
 - Share card rendering — if applicable
 
 Landing page specific checks (at `/`):

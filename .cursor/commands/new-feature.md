@@ -93,7 +93,7 @@ On approval, create `artifacts/docs/features/[feature-name].md`:
 [tables, columns, RLS, Edge Functions — or "none"]
 
 ## Frontend Scope
-[screens, Claude Design component names to copy, interactions — or new screens to build from screen specs]
+[screens, handoff component names to copy, interactions — or new screens to build from screen specs]
 
 ## Integration Notes
 [links to artifacts/integrations/ docs if applicable, or "none"]
@@ -103,14 +103,14 @@ On approval, create `artifacts/docs/features/[feature-name].md`:
 
 ## Native Brief Tracking (H2 — mode ≠ pwa only)
 
-`native_brief_count: 0`         <!-- incremented by mobile-developer for each native-targeted Claude Design brief requested for this feature; see .cursor/skills/claude-design/SKILL.md §2b -->
+`native_brief_count: 0`         <!-- incremented by mobile-developer for each native-targeted design brief requested for this feature; see .cursor/skills/design-adapters/claude-design-adapter/SKILL.md §2b (or the active adapter's SKILL) -->
 `native_brief_override: no`     <!-- set to "yes — approved by Tech Lead on YYYY-MM-DD: <reason>" only if a 4th+ brief is justified -->
 
 Hard cap: **3 native briefs per feature**. The mobile-developer agent must
 refuse to request a 4th brief unless `native_brief_override` is set to
 `yes` with a Tech Lead justification logged here. If the cap is reached
 without a clear path forward, escalate to the Tech Lead — the screen-set
-likely needs scope reduction, not more Claude Design runs.
+likely needs scope reduction, not more design tool runs.
 
 ---
 
@@ -138,7 +138,7 @@ If the feature adds or materially changes screens:
 /design new-feature [feature-name]
 ```
 
-The human runs Claude Design pointing at the existing repo (do not regenerate primitives), exports to `src/design-handoff/new-feature-[name]/`, and runs `/design verify new-feature [name]`. Full prompting patterns: `.cursor/skills/claude-design/SKILL.md` §2.
+The human runs the configured design tool pointing at the existing repo (do not regenerate primitives), exports to `src/design-handoff/new-feature-[name]/`, and runs `/design verify new-feature [name]`. Full prompting patterns: `.cursor/skills/design-adapters/claude-design-adapter/SKILL.md` §2 (or the active adapter's SKILL).
 
 Skip this step if the feature is backend-only or reuses existing screens with minor edits.
 

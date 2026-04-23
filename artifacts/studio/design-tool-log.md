@@ -1,20 +1,21 @@
-# Claude Design — Studio Prompt Log
+# Design Tool — Studio-Wide Learnings
 
-Running log of prompt patterns and failure modes across all apps shipped by this studio. Updated by the Product Designer (or whoever drove the Claude Design session) after every `/design` run.
+Patterns confirmed across 2+ apps get promoted here from per-app `artifacts/docs/design-tool-log.md` files. Rules become doctrine once documented here.
 
-Read this before writing any new `claude-design-brief.md`.
+Read this before writing any new `design-brief.md`, regardless of which adapter is active.
 
 ---
 
 ## Entry format
 
-Promoted from per-app entries (`artifacts/docs/claude-design-log.md`) at `/session-end` once a pattern is observed across 2+ apps. Header block is machine-parseable — same field names as the per-app log so the rollup script can ingest both for monthly studio review.
+Promoted from per-app entries (`artifacts/docs/design-tool-log.md`) at `/session-end` once a pattern is observed across 2+ apps. Header block is machine-parseable — same field names as the per-app log so the rollup script can ingest both for monthly studio review.
 
 ```
 ### [YYYY-MM-DD] [app-slug] — [phase/feature]
 
+adapter: [claude-design | manual | figma-make | stitch | figma-mcp]
 prompts_consumed: [N]            # H1 — sum across this app's run for the entry context
-claude_design_version: [version | YYYY-MM-DD ship date | unknown]   # H4
+tool_version: [version | YYYY-MM-DD ship date | unknown | n/a]   # H4
 shape_mismatch: [yes | no]       # H4 — set yes if /design verify or Foundation flagged any handoff-shape deviation during this app
 result: [clean | required-regen | failed]
 
@@ -22,7 +23,7 @@ result: [clean | required-regen | failed]
 - [One-line pattern. Example: "Listing mock entities at top of brief produced consistent data shapes across all screens."]
 
 **What didn't:**
-- [One-line failure. Example: "Asking for 20 screens in one prompt → Claude Design skipped 3 — split next time."]
+- [One-line failure. Example: "Asking for 20 screens in one prompt → the tool skipped 3 — split next time."]
 
 **Takeaway for next ship:**
 - [One-line rule. Example: "Cap briefs at 12 screens per run; split by wave."]
@@ -46,6 +47,6 @@ These are promoted from entry-level notes to studio-wide rules once 2+ apps prov
 
 ## Failure-mode checklist
 
-Before starting a new Claude Design session, verify none of these past failure modes apply to the current brief. Each bullet is preventable if caught before prompting.
+Before starting a new design-tool session, verify none of these past failure modes apply to the current brief. Each bullet is preventable if caught before prompting.
 
 - _(empty — will populate as failures are logged)_

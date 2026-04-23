@@ -1,0 +1,19 @@
+{
+  "contract_version": "3",
+  "source_tool": "claude-design",
+  "tool_version": "beta-2026-04",
+  "generated_at": "2026-04-15T14:32:00Z",
+  "adapter": "claude-design-adapter@1.0.0",
+  "mode": "initial",
+  "feature_name": null,
+  "screens_exported": 3,
+  "primitives_exported": 5,
+  "canonical": {
+    "repo_linked_at_generation": true,
+    "tokens_match_app_css": null
+  },
+  "tool_specific": {
+    "claude_design_project_id": "example-12345"
+  },
+  "notes": "Example handoff for a notes-taking app. Three screens (list, detail, settings) + five primitives (Badge, Button, Card, Dialog, Input)."
+}

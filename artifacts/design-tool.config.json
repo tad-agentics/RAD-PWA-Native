@@ -1,0 +1,14 @@
+{
+  "$schema_note": "Per-project design adapter selection. Read by the /design dispatcher at .cursor/commands/design.md (rewritten in Milestone 4). The 'adapter' field picks which adapter runs; 'fallback_adapters' lists alternates for emergency switches (e.g. primary tool outage). 'tool_settings' carries adapter-specific configuration.",
+  "adapter": "claude-design",
+  "fallback_adapters": ["manual"],
+  "tool_settings": {
+    "claude-design": {
+      "require_repo_link": true,
+      "require_handoff_metadata": true
+    },
+    "manual": {
+      "validate_shape_only": true
+    }
+  }
+}

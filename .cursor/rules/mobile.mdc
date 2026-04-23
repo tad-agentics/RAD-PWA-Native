@@ -100,6 +100,6 @@ All data via `useSupabase()` from `shared/api/supabase-context` through TanStack
 | react-scroll-area | Native ScrollView | Direct replacement |
 | react-form | react-hook-form | Different paradigm |
 
-## MCP (optional)
+## Native translation reference
 
-Claude Design exports a handoff bundle the agent reads from `artifacts/docs/design-reference/` for native translation. The translation work is identical regardless of how the bundle was placed on disk.
+The adapter exports a handoff bundle the agent reads from `artifacts/docs/design-reference/` for native translation. The translation work is identical regardless of which source tool produced the handoff.

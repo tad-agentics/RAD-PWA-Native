@@ -86,10 +86,10 @@ export function useCalendarDays(month: number, year: number) {
 }
 ```
 
-**In the screen component** (after copying from Claude Design):
+**In the screen component** (after copying from the handoff):
 
 ```typescript
-// str_replace this Claude Design line:
+// str_replace this handoff line:
 //   const days = generateCalendarDays(calMonth, calYear);
 // with:
 const { data: days, isPending, error } = useCalendarDays(calMonth, calYear);
@@ -98,7 +98,7 @@ if (isPending) return <SkeletonCard />;
 if (error) return <ErrorBanner message={error.message} />;
 if (!days?.length) return <EmptyState message="..." />;
 
-// Everything below stays exactly as Claude Design wrote it — days is the same shape
+// Everything below stays exactly as the adapter wrote it — days is the same shape
 ```
 
 ### staleTime Reference
@@ -291,10 +291,10 @@ export function useInterpretation(resultData: unknown, enabled = true) {
 }
 ```
 
-**In the screen component** (after copying from Claude Design):
+**In the screen component** (after copying from the handoff):
 
 ```typescript
-// Claude Design's mock: hardcoded interpretation string
+// The handoff's mock: hardcoded interpretation string
 //   const interpretation = "Ngày Hoàng Đạo, Trực Thành — rất thuận lợi cho ký kết.";
 
 // Replace with:

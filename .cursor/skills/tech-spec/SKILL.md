@@ -100,13 +100,13 @@ The tech spec must not re-derive what the northstar already defines:
 - Copy slots with context types — confirms which screens have paywall gates (drives payment API contracts)
 - Credit cost per screen — from metadata blocks (confirms pricing table alignment)
 
-**From `src/design-handoff/` (Claude Design handoff output):**
-- Mock data structures — Claude Design's hardcoded arrays and objects define the exact data shapes the frontend expects. Read these before designing the schema.
-- Schema MUST produce query results matching Claude Design's mock data shapes. Column names should match mock object property names where possible.
+**From `src/design-handoff/` (the adapter's handoff output):**
+- Mock data structures — the handoff's hardcoded arrays and objects define the exact data shapes the frontend expects. Read these before designing the schema.
+- Schema MUST produce query results matching the handoff's mock data shapes. Column names should match mock object property names where possible.
 - If a mock shape requires transformation (denormalized, computed fields), document the transformation in the API contract or as a database view.
 - Mock auth patterns — reveal which screens assume authentication and what user data they expect.
 
-**When Claude Design's mock data conflicts with the northstar:** The northstar is authoritative for _what data exists_ (columns, relationships, entities). Claude Design is authoritative for _what the frontend renders_ (which fields are displayed, their names in the UI). If the northstar defines fields Claude Design doesn't display, add them to the schema anyway — they may be used by Edge Functions, cron, or future features. If Claude Design displays fields the northstar doesn't mention, flag for Tech Lead review before adding to the schema.
+**When the handoff's mock data conflicts with the northstar:** The northstar is authoritative for _what data exists_ (columns, relationships, entities). The handoff is authoritative for _what the frontend renders_ (which fields are displayed, their names in the UI). If the northstar defines fields the handoff doesn't display, add them to the schema anyway — they may be used by Edge Functions, cron, or future features. If the handoff displays fields the northstar doesn't mention, flag for Tech Lead review before adding to the schema.
 
 **From `artifacts/docs/emotional-design-system.md`:**
 - Brand context and copy register — for writing user-visible error messages and copy in API responses
@@ -307,7 +307,7 @@ Business rules the system must enforce. Derived from the northstar and domain re
 
 ## 8b. Database Schema
 
-**Derive tables from invariants + northstar + Claude Design mock shapes:**
+**Derive tables from invariants + northstar + handoff mock shapes:**
 - **Profiles table:** Northstar §9 (Auth Model) specifies what profile data is stored — birth date, birth time, gender, family members, etc. Every field listed in §9 must appear as a column.
 - **Credit/payment tables:** Northstar §11 (Payment) and §4 (Revenue Model) define the payment model. If credit-based: need `credit_balances` and `credit_transactions` tables. If subscription: need `subscriptions` table.
 - **Core entity tables:** Northstar §7 (Build Scope) and §13 (User Scenarios) reveal which entities the app manages. Every data variable in the wireframe metadata blocks must map to a column in these tables.
@@ -704,7 +704,7 @@ Render as `<script type="application/ld+json">` in the landing page component. E
 - Self-host fonts in `public/fonts/` — download .woff2 files during `/init`
 - Load via `@font-face` in `src/app.css` with `font-display: swap`
 - **Must include Vietnamese glyphs** for proper diacritic rendering (Be Vietnam Pro, Inter, or Nunito Sans recommended)
-- Reference via CSS custom property in `@theme inline` block (e.g., `--font-[name]`) — Claude Design's theme.css typically handles this
+- Reference via CSS custom property in `@theme inline` block (e.g., `--font-[name]`) — the adapter's theme.css typically handles this
 
 ### Vietnamese SEO Requirements (if Vietnam market)
 
@@ -741,7 +741,7 @@ Before finalizing — all sections present, complete, and traceable to source:
 - [ ] 5. External Integrations — extracted from northstar §10 + §11; SDK, init file, key operations, webhook events per service; research docs supplement only what the northstar doesn't cover
 - [ ] 6. Tech Stack — all layers listed; payment provider from northstar §11 (not hardcoded Stripe); animation libraries from EDS §6 if needed; unused rows omitted
 - [ ] 7. Architecture — data flow described, SDK rule stated
-- [ ] 8. Schema — tables derived from invariants + northstar §9/§11/§7 + Claude Design mock shapes; every wireframe data variable maps to a column; indexes on all FK and WHERE columns; seed data created
+- [ ] 8. Schema — tables derived from invariants + northstar §9/§11/§7 + handoff mock shapes; every wireframe data variable maps to a column; indexes on all FK and WHERE columns; seed data created
 - [ ] 9. Data Access Layer — query function or hook for every screen data need in the screen specs
 - [ ] 10. API Contracts — every Edge Function fully specified; direct client→RLS operations identified; cross-checked against northstar §10 endpoints and screen spec interaction flow branch conditions; northstar §13 scenario endpoints all present
 - [ ] 11. Auth & Security — extracted from northstar §9: exact method, anonymous-first behavior, account trigger, profile data, session rules, OAuth providers with custom vs. native distinction

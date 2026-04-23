@@ -18,7 +18,7 @@ Phase 1 produces three artifacts in a single session. The EDS derives entirely f
 | Output | Format | Committed? | Audience | Used in |
 |---|---|---|---|---|
 | Northstar onepager | HTML | Yes | Human — single source of truth for business concept | Every downstream phase |
-| `emotional-design-system.md` | Markdown or branded HTML | Yes | Human writing Claude Design prompt copy | Reference during Phase 2 screen planning + Claude Design brief |
+| `emotional-design-system.md` | Markdown or branded HTML | Yes | Human writing design prompt copy | Reference during Phase 2 screen planning + design brief |
 | `.cursor/rules/copy-rules.mdc` | .mdc | Yes | Cursor | Auto-loads on `src/**/*.tsx` during screen builds |
 
 **Format flexibility rule:** Phase 1 is often produced outside this template — in Claude.ai, Gemini, or a separate creative process. The northstar and EDS may arrive as branded HTML files instead of plain markdown. This is acceptable and often preferable (branded presentation builds stakeholder confidence).
@@ -116,7 +116,7 @@ A single table listing what ships in this build. Everything is in scope — no t
 **The landing page is mandatory.** It serves three acquisition channels: organic SEO (Google search), viral share links (Zalo/Facebook → landing page → install), and paid ads (Facebook/TikTok → landing page → install). Without it, the PWA has no discoverability surface.
 
 ### 7b. Landing Page Content
-Content for the landing page must be defined in the northstar — the screen planning agent needs it for the Claude Design brief.
+Content for the landing page must be defined in the northstar — the screen planning agent needs it for the design brief.
 
 - **Headline:** One sentence with a specific benefit and number
 - **Subheadline:** Clarifies the audience in one line
@@ -126,7 +126,7 @@ Content for the landing page must be defined in the northstar — the screen pla
 - **FAQ items:** 4–6 questions the target user would ask. These become FAQ JSON-LD structured data for rich results.
 - **Social proof quotes:** 2–3 real or realistic testimonials with name, age, profession, city
 
-**Extraction test:** Can the Claude Design brief include every copy string on the landing page using only this section? If yes, it's specific enough.
+**Extraction test:** Can the design brief include every copy string on the landing page using only this section? If yes, it's specific enough.
 
 ### 8. Not Building
 Features explicitly excluded from this version. Agents pattern-match against this list to reject scope creep — every entry must be a specific named feature, not a vague category.
@@ -382,7 +382,7 @@ Sections: Copy Formula, Forbidden Opening Words, Forbidden Words, Screen-Context
 - Language and market specified in Hard Rules
 
 ### Extraction-Readiness
-- Visual Direction → Claude Design brief + Foundation CSS tokens
+- Visual Direction → design brief + Foundation CSS tokens
 - Copy formula + screen-context → Phase 2 screen planning
 - Revenue model → Phase 4 payment schema
 - Moat → Phase 4 architectural decisions

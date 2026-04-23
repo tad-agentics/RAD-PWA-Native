@@ -123,7 +123,7 @@ check_zero "legacy Figma/Make references (now handled via adapters)" \
 
 check_zero "Claude Design vocabulary in pipeline (should be tool-agnostic post-v3)" \
   "Claude Design" \
-  "handoff-contract\|claude-design-adapter\|Design Tool Selection\|Anthropic Claude Design\|Planned\|changelog\|skills/claude-design\|commands/design\.md\|claude-design-log\|claude-design-handoff-notes\|example-claude-design"
+  "handoff-contract\|claude-design-adapter\|Design Tool Selection\|Anthropic Claude Design\|Planned\|changelog\|commands/design\.md\|design-tool-log"
 
 check_zero "stale 'ported into' language (use 'copied into')" \
   "ported into\|Ported into" \

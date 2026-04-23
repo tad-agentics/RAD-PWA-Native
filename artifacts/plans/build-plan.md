@@ -11,14 +11,14 @@ The "2–3 days" RAD promise is a floor, not a wish. Tech Lead fills this table 
 
 | Day | Morning | Afternoon | Gate |
 |---|---|---|---|
-| Day 1 | `/phase1` → `/phase2` → human runs Claude Design → `/design verify` | `/phase4` → `/setup` → Foundation (backend + frontend + landing + auth) | Foundation green at EOD |
+| Day 1 | `/phase1` → `/phase2` → human runs the configured design tool → `/design verify` | `/phase4` → `/setup` → Foundation (backend + frontend + landing + auth) | Foundation green at EOD |
 | Day 2 | Wave 1 features (`/feature` per feature) | Wave 2 features + `/dogfood` + `/pre-handoff` | Deploy to production (`/deploy`) |
 
 ### Mode: `native` (3-day target)
 
 | Day | Morning | Afternoon | Gate |
 |---|---|---|---|
-| Day 1 | `/phase1` → `/phase2` → human runs Claude Design → `/design verify` | `/phase4` → `/setup` → Backend + Web Frontend Foundation | Web landing deployed |
+| Day 1 | `/phase1` → `/phase2` → human runs the configured design tool → `/design verify` | `/phase4` → `/setup` → Backend + Web Frontend Foundation | Web landing deployed |
 | Day 2 | `/native-init` + Mobile Foundation | Wave 1 features (web + mobile) | Mobile dev build on simulator green |
 | Day 3 | Wave 2 features | `/dogfood` → `/pre-handoff` → `/deploy` → `/store-submit` | App submitted to TestFlight / Play internal |
 

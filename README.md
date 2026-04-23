@@ -1,6 +1,6 @@
 # RAD — Rapid App Development (PWA + Native)
 
-RAD is a multi-agent development template for Cursor that ships production-ready **AI-powered B2C and B2B2C apps that help people with life and work** — consumer web apps (React Router v7 + Vite) with optional Expo native clients that share types and API code. You define the product. Claude Design designs it. A coordinated team of AI agents builds it — backend, frontend, mobile (when applicable), QA, design, devops, and research — each with narrow boundaries, structured handoffs, and human approval gates.
+RAD is a multi-agent development template for Cursor that ships production-ready **AI-powered B2C and B2B2C apps that help people with life and work** — consumer web apps (React Router v7 + Vite) with optional Expo native clients that share types and API code. You define the product. The configured AI design tool designs it (per `artifacts/design-tool.config.json` — adapter-driven). A coordinated team of AI agents builds it — backend, frontend, mobile (when applicable), QA, design, devops, and research — each with narrow boundaries, structured handoffs, and human approval gates.
 
 RAD is not a framework or a library. It is a set of agent instructions, slash commands, skills, and quality checks that turn Cursor into a managed development team. The human acts as Tech Lead — making architectural decisions, approving gates, and steering the product. The agents do the construction.
 
@@ -24,13 +24,13 @@ Building an app with AI agents without structure produces inconsistent, fragile 
 
 - **Constraining each agent to a narrow domain** — the backend agent never touches frontend code, the frontend agent never writes migrations, the QA agent never self-resolves security decisions. Each agent reads only the files it needs and produces only the artifacts it owns.
 - **Enforcing a linear pipeline with gates** — no phase starts until the previous phase is approved. The northstar is validated before scaffolding. The tech spec is approved before building. Each feature passes QA before the next wave starts. No agent self-proceeds.
-- **Making the design the source of truth** — Claude Design generates a complete working React app with mock data. The frontend agent's job is integration (swap mocks for real Supabase queries), not construction. This eliminates the "AI rewrote my UI" problem — 90% of Claude Design's handoff code stays untouched.
+- **Making the design the source of truth** — the active design adapter normalizes the configured tool's output into a complete working React app with mock data (see `artifacts/docs/handoff-contract.md` v3). The frontend agent's job is integration (swap mocks for real Supabase queries), not construction. This eliminates the "AI rewrote my UI" problem — 90% of the handoff code stays untouched.
 - **Validating technical decisions before code** — a complexity scan identifies features that need research (billing, real-time, complex auth). The Research Agent investigates implementation patterns on the specific stack. The tech spec documents every non-trivial decision with options considered, research basis, and revisit triggers.
 - **Catching problems at every layer** — 66 automated rule checks, per-feature health scores, schema anti-pattern checklists, structured dogfooding, and a security audit before every deploy.
 
 ## Stack
 
-**Web:** React Router v7 (Vite) · Supabase · TanStack React Query · Vercel · Tailwind CSS · Claude Design  
+**Web:** React Router v7 (Vite) · Supabase · TanStack React Query · Vercel · Tailwind CSS · [adapter-driven AI design tool — see `artifacts/design-tool.config.json`]  
 
 **Native (when deployment mode is `native` or `pwa-then-native`):** Expo · Expo Router · NativeWind · FlashList · react-native-reusables patterns · workspace packages `mobile` + `shared`
 
@@ -40,18 +40,34 @@ Building an app with AI agents without structure produces inconsistent, fragile 
 - **Supabase (Postgres + RLS + Edge Functions + Storage).** Edge Functions (Deno) stream LLM responses natively via `ReadableStream` — the cleanest home for provider SDK calls, rate limits, and usage accounting. RLS is the single authorization boundary for per-user data (threads, entries, goals).
 - **TanStack React Query.** Correct for persisted resource state (thread lists, history, profile). For in-flight LLM streams, RAD uses `useState` in a dedicated hook — see `.cursor/skills/ai-patterns/SKILL.md` §1.
 - **Vercel.** Static SPA hosting at SGN POPs — 50-80ms TTFB from SEA, imperceptible for the target app class. No server runtime; all server logic lives in Edge Functions.
-- **Tailwind + Claude Design.** Claude Design reads the codebase, extracts the design system, and packages a handoff bundle the Frontend Developer integrates via copy-then-edit. 90% of handoff code stays untouched.
+- **Tailwind + AI design adapter.** The active design adapter reads the codebase, extracts the design system, and packages a canonical handoff bundle (see `artifacts/docs/handoff-contract.md` v3). 90% of handoff code stays untouched. The adapter layer means RAD is AI-design-tool agnostic — swap tools per project in `artifacts/design-tool.config.json`.
 - **Expo (+ `shared/` workspace).** Native is almost always on the roadmap for this app class. `shared/` holds types, validation, and a Supabase factory usable from web and native, so features extend to native with minimal rework.
 
 This matches how [React Native documents getting started today](https://reactnative.dev/docs/getting-started): they steer new apps toward a **framework** path, and the official [environment setup](https://reactnative.dev/docs/environment-setup) recommends **Expo**. Use the **[Expo documentation](https://docs.expo.dev/)** as the day-to-day reference ([Expo Router](https://docs.expo.dev/router/introduction/), [EAS Build & Submit](https://docs.expo.dev/eas/), [environment setup](https://docs.expo.dev/get-started/set-up-your-environment)). **Prerequisites and link tables** for humans are in `RAD-GUIDE.md` → **React Native and Expo**.
 
 Deployment mode (`pwa`, `native`, or `pwa-then-native`) is locked in northstar §7c and validated in `/office-hours`. See **Deployment Mode** in `RAD-GUIDE.md`.
 
+## Design Tool Selection
+
+RAD is AI-design-tool agnostic via a ports-and-adapters architecture. Pick your adapter in `artifacts/design-tool.config.json`:
+
+| Adapter | Tool | Status | Requirements |
+|---|---|---|---|
+| `claude-design` | Anthropic Claude Design | Active (default) | Claude Pro/Max/Team/Enterprise |
+| `manual` | None (escape hatch) | Active | No tool — validation only |
+| `figma-make` | Figma Make | Planned | Figma paid plan |
+| `stitch` | Google Stitch | Planned | Google account (Gemini API quota) |
+| `figma-mcp` | Figma Dev Mode MCP | Planned | Figma Dev seat + MCP server |
+
+**Switching adapters mid-project:** edit `artifacts/design-tool.config.json`, run `/design`. The pipeline, agents, rules, and commands are tool-agnostic — no other files change.
+
+See `.cursor/skills/design-adapters/` for all available adapters and `artifacts/docs/handoff-contract.md` for the canonical handoff shape every adapter produces.
+
 ## How It Works
 
 You talk to a **Tech Lead** agent in Cursor. It orchestrates specialist subagents — backend, frontend, **mobile** (when not PWA-only), QA, product design, devops, and research — each with a narrow domain, defined inputs, and structured outputs. Slash commands dispatch the right agent with the right context. You approve gates. Agents build.
 
-The key insight: **Claude Design produces a complete working React app with mock data.** The frontend agent copies Claude Design's handoff files directly into route files, then applies targeted edits — swap mock data for Supabase queries, fix import paths, add loading/error/empty states. Layout, styling, and animations stay untouched. This cuts screen build time from hours to minutes.
+The key insight: **the active design adapter normalizes the configured tool's output into a complete working React app with mock data.** The frontend agent copies the adapter's handoff files directly into route files, then applies targeted edits — swap mock data for Supabase queries, fix import paths, add loading/error/empty states. Layout, styling, and animations stay untouched. This cuts screen build time from hours to minutes.
 
 ## Principles
 
@@ -77,7 +93,7 @@ Three principles shape every agent's behavior:
 **Accounts:**
 - [ ] [Supabase](https://supabase.com) — two projects: dev + production
 - [ ] [Vercel](https://vercel.com) — connect GitHub
-- [ ] [Claude](https://claude.ai) — Pro/Max/Team/Enterprise plan for access to Claude Design
+- [ ] Design tool account — per the adapter selected in `artifacts/design-tool.config.json`. Default adapter (`claude-design`) requires [Claude](https://claude.ai) Pro/Max/Team/Enterprise. Other adapters (`stitch`, `figma-mcp`, `figma-make`, `manual`) have their own requirements — see the adapter's SKILL.md in `.cursor/skills/design-adapters/`.
 - [ ] Payment provider (if monetizing) — test mode keys
 - [ ] [Resend](https://resend.com) (if sending email) — API key
 
@@ -118,8 +134,8 @@ To refresh core files from the upstream **RAD-React** web template only, run `sc
 | 1 | _(external)_ | Write northstar + EDS in Claude.ai / Gemini / any collaborative tool | Place in `artifacts/docs/` |
 | 2 | `/office-hours` | Validate northstar structure + stress-test the idea | All 12 sections pass |
 | 3 | `/init` | Scaffold project, install deps, link Vercel | Fill `.env.local` + MCP tokens |
-| 4 | `/phase2` | Screen specs + Claude Design brief | Approve, then design in Claude Design |
-| 5 | _(manual)_ | Copy Claude Design handoff to `src/design-handoff/` | — |
+| 4 | `/phase2` | Screen specs + design brief | Approve, then design in the configured tool |
+| 5 | _(manual)_ | Copy design handoff to `src/design-handoff/` | — |
 | 6 | `/phase4` | Tech spec (complexity scan → targeted research → invariants → schema → contracts) | Approve |
 | 7 | `/setup` | Build plan with feature dependency graph | Approve |
 | 8 | `/foundation` | Backend infra → Web foundation (+ native foundation when mode ≠ `pwa`) | Auto |
@@ -142,7 +158,7 @@ Web (React Router v7 on Vercel)        Supabase (sole backend)
 ├── TanStack React Query                ├── Auth (email, OTP, OAuth)
 ├── Pre-rendered landing at /           ├── Edge Functions (LLM, webhooks, cron)
 ├── SPA for /app/* (auth-guarded)       ├── Storage
-├── Claude Design handoff → route files └── Realtime (if needed)
+├── design handoff → route files        └── Realtime (if needed)
 ├── @supabase/supabase-js
 └── imports shared types + API helpers from workspace package `shared`
 
@@ -162,10 +178,10 @@ No server runtime in the web client. No Next.js API routes. RLS is the single au
 | Agent | Domain | Invoked via |
 |---|---|---|
 | **Tech Lead** | Orchestration, architecture, gates | Main Cursor session |
-| **Product Designer** | Screen specs, Claude Design briefs, visual QA | `/phase2`, `/visual-audit` |
+| **Product Designer** | Screen specs, design briefs, visual QA | `/phase2`, `/visual-audit` |
 | **Backend Developer** | Schema, migrations, RLS, Edge Functions | `/foundation`, `/feature` |
 | **Frontend Developer** | Web screen integration, components, responsive PWA | `/foundation`, `/feature` |
-| **Mobile Developer** | Expo screens (hybrid translation from Claude Design handoff web TSX), native UX | **`/foundation`** (mobile shell) + **`/feature [name]`** (Step 2b per feature). No separate `/mobile` command — see below. |
+| **Mobile Developer** | Expo screens (hybrid translation from the canonical handoff's web TSX), native UX | **`/foundation`** (mobile shell) + **`/feature [name]`** (Step 2b per feature). No separate `/mobile` command — see below. |
 | **QA Agent** | Feature validation, health scoring, security audit | `/feature`, `/pre-handoff` |
 | **DevOps Agent** | Production deploy | `/deploy` |
 | **Research Agent** | Integration docs + technical pattern research | `/research`, auto from `/phase4` |
@@ -210,7 +226,7 @@ Details live in `.cursor/commands/foundation.md` (Mobile Foundation), `.cursor/c
 |---|---|
 | `/office-hours` | Validate northstar + product diagnostic + stack fit check |
 | `/init` | Scaffold project, install deps, configure MCP |
-| `/phase2` | Screen specs + Claude Design brief |
+| `/phase2` | Screen specs + design brief |
 | `/phase4` | Tech spec (complexity scan → research → invariants → schema → decisions → contracts) |
 | `/setup` | Generate build plan with feature context packages |
 | `/foundation` | Backend + web foundation; **if mode ≠ `pwa`**, also dispatches **Mobile Developer** for the Expo shell |
@@ -238,9 +254,9 @@ src/                         Web app (expanded by /init)
     _index/route.tsx         Landing page (pre-rendered for SEO)
     _auth/                   Login, signup, OAuth callback
     _app/                    Authenticated screens (auth guard layout)
-      [feature]/route.tsx    Feature screens (integrated from Claude Design)
+      [feature]/route.tsx    Feature screens (integrated from the design handoff)
   components/
-    ui/                      Claude Design's UI primitives (copied as-is)
+    ui/                      handoff UI primitives (copied as-is from the adapter output)
   hooks/                     useAuth, useProfile, useInstallPrompt, etc.
   lib/
     supabase.ts              Web client (uses shared factory when extracted)

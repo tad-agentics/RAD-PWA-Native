@@ -1,6 +1,6 @@
 # Studio Anti-Patterns
 
-Things that looked clever at build time but hurt the product post-launch. One entry per confirmed anti-pattern. If an entry stops being relevant (framework change, Claude Design update, etc.), delete it rather than annotate.
+Things that looked clever at build time but hurt the product post-launch. One entry per confirmed anti-pattern. If an entry stops being relevant (framework change, design tool update, etc.), delete it rather than annotate.
 
 Read this at the start of every `/phase2`, `/foundation`, and `/new-feature` — before committing to an approach that might have been tried and rejected before.
 

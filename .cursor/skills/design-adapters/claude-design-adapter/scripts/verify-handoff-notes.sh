@@ -3,7 +3,7 @@
 #
 # The Claude Code handoff bundle carries implementation notes, brand tokens,
 # component structure, and interaction guidance that the ZIP does not include.
-# Capture lives in artifacts/docs/claude-design-handoff-notes.md as
+# Capture lives in artifacts/docs/design-context.md as
 # human-pasted sections. Previously, /design verify only asked "is the file
 # not blank?" — a single word passed. In practice Frontend agents received
 # sparse metadata and invented design intent silently.
@@ -30,7 +30,7 @@ MODE="${1:-}"
 ARG2="${2:-}"
 ARG3="${3:-}"
 
-NOTES_FILE="artifacts/docs/claude-design-handoff-notes.md"
+NOTES_FILE="artifacts/docs/design-context.md"
 ENTRY_KEY=""
 
 case "$MODE" in

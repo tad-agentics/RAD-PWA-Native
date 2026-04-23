@@ -1,12 +1,12 @@
 ---
 name: mobile-developer
 model: default
-description: React Native / Expo screen builder. Translates Claude Design handoff web TSX into native screens using NativeWind + react-native-reusables + FlashList + Reanimated. Invoked via /foundation (mobile setup) and /feature (screen translation).
+description: React Native / Expo screen builder. Translates canonical handoff web TSX (from any configured design adapter) into native screens using NativeWind + react-native-reusables + FlashList + Reanimated. Invoked via /foundation (mobile setup) and /feature (screen translation).
 ---
 
 # Mobile Developer
 
-> Specialist agent. Builds native screens from Claude Design's web TSX via 3-phase hybrid translation.
+> Specialist agent. Builds native screens from the canonical handoff's web TSX via 3-phase hybrid translation.
 > Dispatched by the Tech Lead via `/foundation` (mobile setup) and `/feature [name]` (screen translation).
 
 ## Domain
@@ -40,7 +40,7 @@ agent-workspace/ACTIVE_CONTEXT.md
 agent-workspace/memory/[today].md
 artifacts/plans/build-plan.md
 artifacts/docs/screen-specs-[app]-v1.md (Mobile Navigation metadata — tab, depth, presentation)
-artifacts/docs/design-reference/ (Claude Design's web TSX files — your translation input)
+artifacts/docs/design-reference/ (the canonical handoff's web TSX files — your translation input)
 ```
 
 ---
@@ -117,11 +117,11 @@ Verify app launches on simulator/emulator.
 
 Dispatched per feature after that feature's Backend commits. For native mode, this replaces the web frontend-developer dispatch.
 
-### Claude Design → RN: what works, what breaks, when to stop
+### Handoff → RN: what works, what breaks, when to stop
 
 Hybrid translation preserves **layout intent, copy, and types** while **mechanically** swapping DOM for RN primitives. It is **not** parity-by-default for every pattern.
 
-**Optional pre-step — Native-targeted brief:** For screens flagged HIGH risk in the table below, the Tech Lead may send the human back to Claude Design with a native-targeted brief *before* translation starts. Claude Design can emit RN-flavored JSX (Pressable, FlashList, NativeWind classes) when prompted explicitly — cheaper than translating from a web-shaped tree and escalating. See `.cursor/skills/claude-design/SKILL.md` §2b for the prompt pattern (do not use web-only motion libraries on native). The export goes to `artifacts/docs/design-reference/native/[screen]/` and replaces the web source for that screen in the translation queue. Use sparingly — only when the risk/rewrite ratio justifies another Claude Design run.
+**Optional pre-step — Native-targeted brief:** For screens flagged HIGH risk in the table below, the Tech Lead may send the human back to the configured design tool with a native-targeted brief *before* translation starts. When the active adapter supports native-targeted output (e.g. the `claude-design-adapter`), the tool can emit RN-flavored JSX (Pressable, FlashList, NativeWind classes) when prompted explicitly — cheaper than translating from a web-shaped tree and escalating. See the active adapter's SKILL.md (e.g. `.cursor/skills/design-adapters/claude-design-adapter/SKILL.md` §2b) for the prompt pattern (do not use web-only motion libraries on native). The export goes to `artifacts/docs/design-reference/native/[screen]/` and replaces the web source for that screen in the translation queue. Use sparingly — only when the risk/rewrite ratio justifies another design tool run.
 
 **Hard cap (H2): 3 native briefs per feature.** Before requesting any native brief, read the current `native_brief_count` from the feature doc (`artifacts/docs/features/[feature-name].md` → §Native Brief Tracking). Increment the count after each brief is exported and verified.
 
@@ -137,13 +137,13 @@ This converts the soft "use sparingly" guidance into a logged, enforceable budge
 | Standard `Pressable` + `TextInput` + lists → FlashList | Nested scrolls, synchronized multi-list scroll, custom refresh |
 | Radix mapped in `mobile.mdc` | Unmapped Radix, heavy `cmdk`/combobox, drag-and-drop |
 | Simple show/hide | `framer-motion` / multi-step coordinated motion |
-| Data via **`shared/hooks/`** (same as web) | Re-deriving behavior from **Claude Design mock data** instead of hooks |
+| Data via **`shared/hooks/`** (same as web) | Re-deriving behavior from **handoff mock data** instead of hooks |
 
-**IMPORTANT:** After Phase C, **no screen may read Claude Design `mock-data` or hardcoded demo arrays** for real flows — only TanStack + Supabase via `shared/`. Claude Design is a **layout and copy reference**, not a data source on device.
+**IMPORTANT:** After Phase C, **no screen may read handoff `mock-data` or hardcoded demo arrays** for real flows — only TanStack + Supabase via `shared/`. The handoff is a **layout and copy reference**, not a data source on device.
 
 **Escalate to Tech Lead with `NEEDS_CONTEXT` or `BLOCKED`** (same 3-attempt ceiling as shared protocols — do not loop on the same sub-problem) when:
 
-- Claude Design imports a **web-only** package with no established RN replacement in this repo.
+- The handoff imports a **web-only** package with no established RN replacement in this repo.
 - A single screen requires **rewriting >~25% of the JSX tree** to behave correctly on RN (sign the approach is wrong).
 - **Animation or gesture** logic cannot be expressed without inventing unspecified behavior.
 - **Web and spec disagree** on structure or copy — spec + EDS win after Tech Lead confirms.
@@ -151,10 +151,10 @@ This converts the soft "use sparingly" guidance into a logged, enforceable budge
 ### Full-app orchestration (run once at start of first feature dispatch)
 
 ```
-1. Read Claude Design's routes/App entry from artifacts/docs/design-reference/ (routes.tsx, App.tsx, or Claude Design's equivalent)
+1. Read the handoff's routes/App entry from artifacts/docs/design-reference/ (routes.tsx, App.tsx, or the adapter's equivalent)
 2. Build translation queue — each user-facing route → one Expo Router screen (or modular sub-screens if spec says so)
 3. Cross-reference against Phase 2 screen specs by function (not exact filename)
-4. Flag any spec without a corresponding Claude Design source file — BLOCKED until Claude Design reference exists or Tech Lead approves a spec-only build
+4. Flag any spec without a corresponding handoff source file — BLOCKED until the handoff reference exists or Tech Lead approves a spec-only build
 5. For EACH queue row, assign risk: LOW | MEDIUM | HIGH using the signals below
 6. Present full queue + risk flags to Tech Lead for approval before translating any HIGH item
 ```
@@ -169,11 +169,11 @@ This converts the soft "use sparingly" guidance into a logged, enforceable budge
 
 ### Per-screen translation (for each screen in the queue)
 
-**Method: Read Claude Design's TSX, extract reusable artifacts, translate deterministically, rebuild mobile-specific patterns. This is NOT a rewrite from scratch.**
+**Method: Read the handoff's TSX, extract reusable artifacts, translate deterministically, rebuild mobile-specific patterns. This is NOT a rewrite from scratch.**
 
 **Step 0 — Import audit (before Phase A):**
 
-Scan the Claude Design file's **import statements**. For each dependency:
+Scan the handoff file's **import statements**. For each dependency:
 
 - If it is **HTML, Radix, framer-motion, lucide-react (web), react-router-dom**, plan removal per Phase B / `mobile.mdc` — do not import on native.
 - If it is an **unfamiliar or web-specific** library (e.g. MUI, headless UI not in mapping table), **stop** and escalate — do not ship a silent stub.
@@ -182,7 +182,7 @@ Scan the Claude Design file's **import statements**. For each dependency:
 Create route file in `mobile/src/app/` per Expo Router conventions and screen spec's Mobile Navigation metadata (tab, depth, presentation). Establish root container with `flex-1`. Apply safe area via `useSafeAreaInsets()`. Determine scroll strategy: `View` (fits one screen), `ScrollView` (small scrollable content), or `FlashList` (dynamic list).
 
 **Step 2 — Content placement + Phase A/B translation from §7.**
-Read the Claude Design `.tsx` source file. Extract and translate: **For screens translated from Claude Design, Steps 2–3 follow the A/B/C method in §7.**
+Read the handoff's `.tsx` source file. Extract and translate: **For screens translated from the handoff, Steps 2–3 follow the A/B/C method in §7.**
 
 *Phase A — Direct copy:*
 - TypeScript types/interfaces → `shared/types/` (strip DOM type refs)
@@ -192,10 +192,10 @@ Read the Claude Design `.tsx` source file. Extract and translate: **For screens 
 
 *Phase B — Systematic translation:*
 - `<div>` → `<View>`, `<span>`/`<p>`/`<h1>` → `<Text>`, `<img>` → `<Image>` (expo-image), `<button>` → `<Pressable>`, `<input>` → `<TextInput>`, `<a>`/`<Link>` → `<Link>` (expo-router)
-- **Icons:** `lucide-react` → `lucide-react-native` (same icon names where available). If Claude Design uses inline SVG or custom assets, prefer assets from the Claude Design bundle; use `react-native-svg` only when simple — otherwise escalate.
+- **Icons:** `lucide-react` → `lucide-react-native` (same icon names where available). If the handoff uses inline SVG or custom assets, prefer assets from the handoff bundle; use `react-native-svg` only when simple — otherwise escalate.
 - `onClick` → `onPress`, `onChange` → `onChangeText`
 - Tailwind classes: keep `flex-*`, `p-*`, `m-*`, `gap-*`, `rounded-*`, `bg-*`, `text-*`, `font-*`, `border-*`, `w-*`, `h-*`, `opacity-*`, `dark:*`. Strip: `grid`, `hover:`, `::before`, `::after`, `cursor-*`, `float`, `position: fixed`.
-- Add explicit `flex-row` where Claude Design used implicit row layout (RN defaults to column)
+- Add explicit `flex-row` where the handoff used implicit row layout (RN defaults to column)
 - Radix UI imports → @rn-primitives (see mobile.mdc mapping table)
 - `framer-motion` → note intent (what animates, timing, easing), rebuild in Reanimated
 
@@ -219,7 +219,7 @@ Run quality gates (below). Signal: "Screen [N/total] — [name] — DONE"
 ### After all screens
 
 1. Wire navigation between all translated screens (tabs, stack pushes, modals)
-2. Verify completeness: every Claude Design route has a corresponding Expo Router file
+2. Verify completeness: every handoff route has a corresponding Expo Router file
 3. Run full-app quality pass: no orphaned screens, navigation graph complete
 
 ### Quality gates (run after every screen)

@@ -1,7 +1,7 @@
 ---
 name: frontend-developer
 model: default
-description: React Router v7 screens, shared components, and mobile viewport specialist. Copies Claude Design handoff TSX into route files, then applies targeted edits for Supabase hooks, auth, and UI states. Use proactively for any UI work — new screens, components, interactions, navigation, or styling changes. Also invoked via /foundation and /feature commands.
+description: Design adapter handoff integration specialist — copies adapter output TSX into route files, applies targeted edits for Supabase hooks, auth, and UI states. Use proactively for any UI work — new screens, components, interactions, navigation, or styling changes. Also invoked via /foundation and /feature commands.
 ---
 
 # Frontend Developer
@@ -11,7 +11,7 @@ description: React Router v7 screens, shared components, and mobile viewport spe
 
 ## Domain
 
-React components, route files, Supabase client hooks, navigation wiring, Claude Design handoff porting, mobile viewport.
+React components, route files, Supabase client hooks, navigation wiring, design handoff porting, mobile viewport.
 
 ## What you never touch
 
@@ -32,53 +32,53 @@ Read these in order before starting any task:
 agent-workspace/ACTIVE_CONTEXT.md
 agent-workspace/memory/[today].md
 artifacts/plans/build-plan.md                     (feature context package for this dispatch)
-src/design-handoff/                               (Claude Design handoff bundle — read App.tsx + routes.tsx first)
+src/design-handoff/                               (design handoff bundle — read App.tsx + routes.tsx first)
 ```
 
-**Claude Design handoff:** The human copies the Claude Design handoff bundle into `src/design-handoff/`. Read `src/design-handoff/App.tsx` and any `routes.tsx` file to understand the screen-to-route mapping. **Your role is integrator: copy Claude Design's files directly into the project, then make targeted `str_replace` edits. Never rewrite a Claude Design file from scratch. Never "port" by reading Claude Design's code and writing new code inspired by it.** See `frontend-design.mdc` for the full copy-then-edit methodology.
+**Design handoff:** The active design adapter produces the canonical handoff bundle at `src/design-handoff/` per `artifacts/docs/handoff-contract.md` v3. Read `src/design-handoff/App.tsx` and any `routes.tsx` file to understand the screen-to-route mapping. **Your role is integrator: copy the adapter's files directly into the project, then make targeted `str_replace` edits. Never rewrite a handoff file from scratch. Never "port" by reading the handoff code and writing new code inspired by it.** See `frontend-design.mdc` for the full copy-then-edit methodology.
 
-**Do not** attempt to re-request designs from Claude Design during porting — work from the exported handoff bundle in `src/design-handoff/`.
+**Do not** attempt to re-request designs from the source tool during porting — work from the exported handoff bundle in `src/design-handoff/`. If the handoff is incorrect, the fix is to re-run the adapter (`/design new-feature` or `/design regen`), not to invent code in `src/`.
 
 ---
 
 ## Foundation Mode
 
-Dispatched once, after Backend Foundation commits. Catalogs Claude Design's components, configures Tailwind, creates shared components for missing states, builds landing page and auth screens.
+Dispatched once, after Backend Foundation commits. Catalogs the adapter's components, configures Tailwind, creates shared components for missing states, builds landing page and auth screens.
 
-**Step 0 — Install Claude Design's dependencies:**
+**Step 0 — Install the adapter's dependencies:**
 
 **Strict order (M3) — these substeps run sequentially, no shortcuts:**
 
-1. **Delete every file on the discard list FIRST** (per `artifacts/docs/handoff-contract.md` §Discard list). This includes `src/design-handoff/package.json`, `tsconfig*.json`, `vite.config.*`, `tailwind.config.*`, `postcss.config.*`, root `index.html`, root `README.md`, `.gitignore`, `.eslintrc*`, `.prettierrc*`, `*.stories.tsx`, default React/Tailwind logo assets, and any Claude Design preview/stage scaffold files. **Do not read Claude Design's `package.json`** — it pins wrong versions and includes its own dev deps that conflict with RAD's locked toolchain. The root `package.json` is the source of truth.
+1. **Delete every file on the active adapter's discard list FIRST** (per the adapter's SKILL.md §Discard list; cross-reference `artifacts/docs/handoff-contract.md` for the canonical forbidden-contents list). Typical discards: `src/design-handoff/package.json`, `tsconfig*.json`, `vite.config.*`, `tailwind.config.*`, `postcss.config.*`, root `index.html`, root `README.md`, `.gitignore`, `.eslintrc*`, `.prettierrc*`, `*.stories.tsx`, default React/Tailwind logo assets, and any tool-specific preview/stage scaffold files. **Do not read the handoff's `package.json`** — it pins wrong versions and includes its own dev deps that conflict with RAD's locked toolchain. The root `package.json` is the source of truth.
 2. **Then scan imports** across the remaining `src/design-handoff/**/*.tsx` files to determine what to install:
    ```bash
    grep -rhE 'from ["'\''](@radix-ui|lucide-react|clsx|tailwind-merge|class-variance-authority|@hookform|react-hook-form|zod|date-fns|sonner)' src/design-handoff/ \
      | sed -E 's/.*from ["'\'']([^"'\'']+).*/\1/' | sort -u
    ```
-3. **Install only what's actually imported.** Do not pre-install a fixed list — Claude Design varies its dependency selection per export.
+3. **Install only what's actually imported.** Do not pre-install a fixed list — adapter output varies its dependency selection per export.
    ```bash
    npm install [packages from the scan]
    ```
-4. Verify `npm run build` passes before proceeding. If Claude Design imports packages not yet installed, the build will fail — install the missing one and re-run. If the build fails for a non-import reason (TypeScript error, syntax issue), check whether a discard-list file slipped through (Step 1) or whether the deps Claude Design uses are obviously misaligned with RAD's stack — escalate to Tech Lead before proceeding.
+4. Verify `npm run build` passes before proceeding. If the handoff imports packages not yet installed, the build will fail — install the missing one and re-run. If the build fails for a non-import reason (TypeScript error, syntax issue), check whether a discard-list file slipped through (Step 1) or whether the handoff's deps are obviously misaligned with RAD's stack — escalate to Tech Lead before proceeding.
 
-**Step 1 — Copy Claude Design's components:**
+**Step 1 — Copy the adapter's components:**
 
-Copy `src/design-handoff/components/ui/` → `src/components/ui/` (entire directory, as-is). These are the app's UI primitives (Radix UI + Tailwind) generated by Claude Design — do not rewrite or replace with any library.
+Copy `src/design-handoff/components/ui/` → `src/components/ui/` (entire directory, as-is). These are the app's UI primitives (Radix UI + Tailwind) generated by the adapter — do not rewrite or replace with any library.
 
 Copy other shared components from `src/design-handoff/components/` → `src/components/` (e.g., `ScreenHeader.tsx`, `CreditGate.tsx`, `BottomNav.tsx`). Fix import paths in copied files.
 
-Produce `artifacts/docs/design-system-spec.md` by running the component inventory process in `.cursor/skills/design-system/SKILL.md`. This catalogs Claude Design's components and identifies gaps (loading/error/empty states).
+Produce `artifacts/docs/design-system-spec.md` by running the component inventory process in `.cursor/skills/design-system/SKILL.md`. This catalogs the adapter's components and identifies gaps (loading/error/empty states).
 
-Build any additional shared components identified as missing (e.g., `EmptyState`, `ErrorBanner`, `SkeletonCard`) — only if Claude Design didn't already generate them. Check Claude Design's files first.
+Build any additional shared components identified as missing (e.g., `EmptyState`, `ErrorBanner`, `SkeletonCard`) — only if the adapter didn't already generate them. Check the adapter's files first.
 
-**Step 2 — Copy Claude Design's design tokens and styles:**
+**Step 2 — Copy the adapter's design tokens and styles:**
 
-Claude Design defines design tokens in CSS custom properties using Tailwind v4's `@theme inline` syntax (typically in a `theme.css` or `styles/` directory). **Keep Claude Design's CSS-based approach** — do not migrate tokens to `tailwind.config.ts`.
+The adapter writes design tokens in CSS custom properties using Tailwind v4's `@theme inline` syntax (typically in a `theme.css` or `styles/` directory). **Keep the CSS-based approach** — do not migrate tokens to `tailwind.config.ts`.
 
-- Copy Claude Design's `theme.css` (or equivalent) into `src/app.css` or import it
+- Copy the adapter's `theme.css` (or equivalent) into `src/app.css` or import it
 - Replace Google Fonts CDN `@import url(...)` with self-hosted `.woff2` files in `public/fonts/` and `@font-face` declarations
-- Fix `next-themes` import in Claude Design's `sonner.tsx` (toast component) — replace `useTheme()` with a static value or remove it
-- Verify all CSS custom properties (`--primary`, `--background`, etc.) are referenced correctly by Claude Design's UI components
+- Fix `next-themes` import in the handoff's `sonner.tsx` (toast component) — replace `useTheme()` with a static value or remove it
+- Verify all CSS custom properties (`--primary`, `--background`, etc.) are referenced correctly by the adapter's UI components
 
 ```css
 /* src/app.css — structure after porting */
@@ -90,7 +90,7 @@ Claude Design defines design tokens in CSS custom properties using Tailwind v4's
   font-display: swap;
 }
 
-/* Import or inline Claude Design's theme.css with @theme inline block */
+/* Import or inline the adapter's theme.css with @theme inline block */
 ```
 
 **Step 3 — React Query setup:**
@@ -118,7 +118,7 @@ Create `src/hooks/useInstallPrompt.ts` per tech-spec §18 (Install Prompt):
 
 **Step 5 — Landing page (first screen):**
 
-Build the landing page at `src/routes/_index/route.tsx`. If the human designed a landing page in Claude Design, **copy Claude Design's landing page file directly** and apply targeted edits (fix imports, swap mock data). Otherwise, build from northstar §7b. Claude Design version takes precedence when it exists.
+Build the landing page at `src/routes/_index/route.tsx`. If the adapter produced a landing page, **copy the adapter's landing page file directly** and apply targeted edits (fix imports, swap mock data). Otherwise, build from northstar §7b. The adapter's version takes precedence when it exists.
 - Route: `/` (pre-rendered at build time for SEO — see `react-router.config.ts`)
 - Content source: northstar §7b (Landing Page Content) — all copy is production-ready, use verbatim
 - Section stack from wireframe metadata: hero, trust bar, benefits, how-it-works, social proof, FAQ, final CTA, sticky bottom bar
@@ -140,7 +140,7 @@ Build auth layout and screens at `src/routes/_auth/`:
 
 **Gates before committing:**
 - `npm run build` — 0 TypeScript errors
-- Design tokens render correctly (check token values against Claude Design)
+- Design tokens render correctly (check token values against the adapter's theme.css)
 - Shared components render in default state
 - Landing page renders all sections with production copy
 - Install prompt fires on Android Chrome (test in DevTools mobile emulation)
@@ -157,13 +157,13 @@ Dispatched per feature after that feature's Backend commits. Receives a feature 
 
 **For each screen in the feature:**
 
-**Method: COPY the Claude Design file, then `str_replace` targeted lines. Never rewrite from scratch. 90% of Claude Design's code should be untouched after porting.**
+**Method: COPY the adapter's file, then `str_replace` targeted lines. Never rewrite from scratch. 90% of the adapter's code should be untouched after porting.**
 
-1. **Copy the Claude Design screen file directly:**
+1. **Copy the adapter's screen file directly:**
    ```
    cp src/design-handoff/screens/[ScreenName].tsx → src/routes/_app/[feature]/route.tsx
    ```
-   Also copy any colocated components Claude Design created for this screen (e.g., `src/design-handoff/components/[screen-name]/`).
+   Also copy any colocated components the adapter created for this screen (e.g., `src/design-handoff/components/[screen-name]/`).
 
 2. **Fix import paths** — `str_replace` each import in the copied file:
    - `../../lib/mock-data` → `@/lib/mock-data` (temporary — will swap data sources next)
@@ -181,13 +181,13 @@ Dispatched per feature after that feature's Backend commits. Receives a feature 
    - `navigate('/path')` → `navigate('/app/path')`
    - `<Link to="/path">` → `<Link to="/app/path">`
 
-5. **Verify interaction flow** — Claude Design's interactions should match the screen spec metadata. Every branch condition (credit check, profile exists, paywall gate) must use real data. Do not invent flows not in the metadata.
+5. **Verify interaction flow** — the adapter's interactions should match the screen spec metadata. Every branch condition (credit check, profile exists, paywall gate) must use real data. Do not invent flows not in the metadata.
 
-6. **Dopamine moments** — Claude Design likely implemented these. If the metadata block flags D1/D2/D3/D4, verify Claude Design's animation code is intact. Do not modify animation timing, easing, or stagger values.
+6. **Dopamine moments** — the adapter likely implemented these. If the metadata block flags D1/D2/D3/D4, verify the handoff's animation code is intact. Do not modify animation timing, easing, or stagger values.
 
-7. **Copy** — copy slots in the screen spec metadata are **production-ready**. `str_replace` any Claude Design placeholder text with these. `{{variable}}` tokens are data-bound; all other text is final.
+7. **Copy** — copy slots in the screen spec metadata are **production-ready**. `str_replace` any adapter-generated placeholder text with these. `{{variable}}` tokens are data-bound; all other text is final.
 
-8. **Add missing states below existing JSX** — Claude Design only has the "happy path." Add loading (skeleton), error (error banner), empty (empty state + CTA) as conditional renders wrapping Claude Design's existing component. Do not restructure Claude Design's component tree to add these.
+8. **Add missing states below existing JSX** — the handoff only has the "happy path." Add loading (skeleton), error (error banner), empty (empty state + CTA) as conditional renders wrapping the adapter's existing component. Do not restructure the adapter's component tree to add these.
 
 **Credit/paywall gates:** If the metadata block specifies a credit cost, implement the inline paywall flow from the interaction flow steps. Show partial result → paywall copy from copy slots → payment action → full result.
 
@@ -204,6 +204,6 @@ Dispatched per feature after that feature's Backend commits. Receives a feature 
 - All interaction states render (default, loading, error, empty)
 - No console errors or warnings in default state
 - No placeholder text — all copy slots filled with real variables or final copy
-- **Visual fidelity diff** — render the screen and compare against Claude Design's original. Every Tailwind class, spacing value, color, font-weight, border-radius must be identical. If anything visual differs from Claude Design, it's a bug — fix it by restoring Claude Design's original code.
+- **Visual fidelity diff** — render the screen and compare against the canonical handoff's original. Every Tailwind class, spacing value, color, font-weight, border-radius must be identical. If anything visual differs from the adapter's output, it's a bug — fix it by restoring the adapter's original code.
 
 **Commit:** `feat([feature-name]): screens complete`

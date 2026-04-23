@@ -14,7 +14,7 @@ Before dispatching, confirm:
 - [ ] `npm run build` passes on current state
 - [ ] **Design handoff present for new screens (M4):** if the feature's Frontend Scope in `artifacts/docs/features/[name].md` (or its build-plan context package) names any screen NOT already present in `src/design-handoff/screens/` (or equivalent path from the initial handoff), then `src/design-handoff/new-feature-[name]/` MUST exist and have passed `/design verify new-feature [name]`. Run this scripted check:
   ```bash
-  bash .cursor/skills/claude-design/scripts/check-feature-design-prereq.sh [name]
+  bash .cursor/skills/design-adapters/claude-design-adapter/scripts/check-feature-design-prereq.sh [name]
   ```
   Exit 0 → proceed. Exit 1 → BLOCKING with message: "Feature [name] adds new screens but `src/design-handoff/new-feature-[name]/` is missing. Run `/design new-feature [name]` first, then `/design verify new-feature [name]`, then re-run `/feature [name]`." This prevents the soft-condition skip from `/new-feature` Step 5 — Frontend agent will not be dispatched without design handoff in place.
 
@@ -58,11 +58,11 @@ Read:
 - artifacts/docs/emotional-design-system.md — read §6 if any screen has a dopamine moment flag (D1–D4)
 
 Mode: Feature
-For each screen: COPY the Claude Design screen file from src/design-handoff/screens/ directly into the route file. Then apply targeted str_replace edits per frontend-design.mdc (fix imports, swap mock data → Supabase queries, swap mock auth → useAuth). Do NOT rewrite any Claude Design file from scratch — 90% of Claude Design's handoff stays untouched.
+For each screen: COPY the screen file from src/design-handoff/screens/ directly into the route file. Then apply targeted str_replace edits per frontend-design.mdc (fix imports, swap mock data → Supabase queries, swap mock auth → useAuth). Do NOT rewrite any handoff file from scratch — 90% of the adapter's handoff stays untouched.
 - Implement interaction flows exactly as specified in screen spec metadata
 - Copy slots are production-ready — use verbatim
-- Add loading/error/empty states below existing JSX (Claude Design handoff output only has happy path)
-- Every Tailwind class, animation, and layout decision from Claude Design must be preserved exactly
+- Add loading/error/empty states below existing JSX (the adapter's handoff output only has happy path)
+- Every Tailwind class, animation, and layout decision from the handoff must be preserved exactly
 
 Mutation Patterns (mandatory):
 - Every useMutation must invalidate ALL affected query keys in onSuccess. Over-invalidate when in doubt.
@@ -99,10 +99,10 @@ Read:
 - agent-workspace/ACTIVE_CONTEXT.md
 - artifacts/plans/build-plan.md — read the [name] feature context package
 - artifacts/docs/screen-specs-[app]-v1.md — screens for this feature (Mobile Navigation metadata)
-- artifacts/docs/design-reference/ — Claude Design .tsx files for screens in this feature
+- artifacts/docs/design-reference/ — .tsx files for screens in this feature (from the canonical handoff)
 
 Mode: Feature
-For each screen: run 3-phase hybrid translation from Claude Design's web TSX.
+For each screen: run 3-phase hybrid translation from the canonical handoff's web TSX.
   Phase A: Extract types, mock data, copy strings → shared/
   Phase B: Element swaps, class filtering, Radix→@rn-primitives
   Phase C: Navigation, scroll, keyboard, safe area, haptics

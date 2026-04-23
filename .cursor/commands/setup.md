@@ -1,12 +1,12 @@
 # /setup
 
-Tech Lead scaffolds the project and generates the build plan. Runs after Phase 4 is approved and Claude Design handoff bundle is in `src/design-handoff/`.
+Tech Lead scaffolds the project and generates the build plan. Runs after Phase 4 is approved and the design handoff bundle is in `src/design-handoff/`.
 
 ## Pre-flight checks
 
 Before starting, confirm:
 - [ ] `artifacts/docs/tech-spec.md` exists
-- [ ] `src/design-handoff/` exists with Claude Design's handoff bundle (human has exported from Claude Design)
+- [ ] `src/design-handoff/` exists with the adapter's handoff bundle (human has exported from the configured design tool)
 - [ ] `artifacts/docs/screen-specs-[app]-v1.md` exists
 - [ ] `artifacts/plans/build-plan.md` is still the placeholder (not yet generated)
 - [ ] `npm run build` passes (or `package.json` exists with base dependencies installed)
@@ -62,7 +62,7 @@ Produce `artifacts/plans/build-plan.md` with:
    - The landing page is the first screen built — validates tokens, components, and install flow
 3. **Per-feature context packages** — for each feature, extract and compile:
    - Backend context: exact tables, RLS intent, data hooks, Edge Functions (if needed)
-   - Frontend context: exact screens with metadata (components, data vars, states, interaction flows with branch conditions, Claude Design component names for copying)
+   - Frontend context: exact screens with metadata (components, data vars, states, interaction flows with branch conditions, handoff component names for copying)
    - **Wiring Map (mandatory)** — copy the feature's Wiring Map subsection from `tech-spec.md` §10b into the context package verbatim. This is the single source of truth for BE↔FE bindings: tables, hooks, mutations, invalidations, Edge Function shapes, round-trip checks. Without this section in the context package, the Frontend agent invents bindings and ships shells. `/wire-check` reasons against this map; QA Pass 0 enforces it.
    - Copy: production-ready copy slots from screen spec metadata, tagged with context type
    - Dopamine moments: which screens have D1–D4 flags, reference EDS §6

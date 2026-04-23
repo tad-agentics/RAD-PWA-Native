@@ -1,12 +1,12 @@
 # /phase4
 
-Tech Lead writes the tech spec directly. Runs after Claude Design handoff bundle is in `src/design-handoff/`.
+Tech Lead writes the tech spec directly. Runs after the design handoff bundle is in `src/design-handoff/`.
 
 ## Pre-flight checks
 
 Before starting, confirm:
 - [ ] `artifacts/docs/screen-specs-[app]-v1.md` exists and is approved
-- [ ] `src/design-handoff/` exists with Claude Design's handoff bundle
+- [ ] `src/design-handoff/` exists with the adapter's handoff bundle
 - [ ] `artifacts/docs/northstar-[app].html` exists
 - [ ] `artifacts/docs/tech-spec.md` does NOT exist (not already run)
 

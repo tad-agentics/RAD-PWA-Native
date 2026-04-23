@@ -243,32 +243,76 @@ Downstream files (commands, rules, agents) reference only the canonical `/design
 
 ## What Foundation does with this
 
-Step 0 — Install dependencies: scan imports across all `src/design-handoff/**/*.tsx`, run `npm install [packages]`.
+Foundation runs AFTER the active adapter has produced `src/design-handoff/` and `/design verify` has passed.
 
-Step 1 — Move as-is:
-- `src/design-handoff/components/ui/` → `src/components/ui/`
-- Other shared components in `src/design-handoff/components/` → `src/components/`
+### Step 0 — Adapter discards + dependency install
 
-Step 2 — Copy theme:
-- `src/design-handoff/theme.css` → appended into `src/app.css`
-- Replace Google Fonts CDN `@import` with self-hosted `.woff2` via `@font-face`
+Delete files matching the active adapter's `## Discard list` (from its SKILL.md). Then scan imports across all `src/design-handoff/**/*.tsx` and run `npm install [packages]`. Verify `npm run build` passes before proceeding.
 
-Step 3 — Copy-then-edit screens:
+### Step 1 — Shared components as-is
+
+- `src/design-handoff/components/ui/` → `src/components/ui/` (copy entire directory)
+- Other shared components in `src/design-handoff/components/` → `src/components/` (e.g. `ScreenHeader.tsx`, `CreditGate.tsx`, `BottomNav.tsx`)
+- Fix import paths in copied files (relative → `@/` aliases)
+- Catalog into `artifacts/docs/design-system-spec.md` per `.cursor/skills/design-system/SKILL.md`
+
+### Step 2 — Theme tokens
+
+- Append `src/design-handoff/theme.css` into `src/app.css` (preserve `@theme inline` block as-is)
+- Replace Google Fonts CDN `@import` with self-hosted `.woff2` + `@font-face` declarations
+
+### Step 3 — Design context + manifest
+
+- Copy `src/design-handoff/design-context.md` into `artifacts/docs/design-context.md` (or append if it already exists for `new-feature` mode)
+- Archive `src/design-handoff/handoff-manifest.json` into `artifacts/docs/design-tool-log.md` as the session-header block for this build
+- The Frontend agent reads `artifacts/docs/design-context.md` alongside the screen spec when porting each route
+
+### Step 4 — Copy-then-edit screens
+
+Per `.cursor/rules/frontend-design.mdc`:
 - Each `src/design-handoff/[screen].tsx` copied directly into `src/routes/_app/[feature]/route.tsx`
-- Targeted edits: swap mock data → Supabase hook, fix import paths, add loading/error/empty states
-- **Layout, styling, and animations stay untouched**
+- Targeted `str_replace` edits: swap mock data → Supabase hook, fix import paths, add loading/error/empty states
+- **Layout, styling, and animations stay untouched** (90% untouched rule)
+- Visual fidelity: every Tailwind class, spacing value, color, font-weight, border-radius must match the adapter's output exactly
 
-Step 4 — Delete `src/design-handoff/` after all screens are ported. See `.gitignore` — this directory is a staging area, not committed.
+### Step 5 — Clean up
+
+- Delete `src/design-handoff/` after all screens are ported (this directory is gitignored; it's a staging area, not committed)
+- `artifacts/docs/design-context.md` remains in the repo — it's the Frontend agent's reference for subsequent features
 
 ---
 
 ## Breaking changes
 
-If Claude Design's export format changes in a way that breaks this contract:
+There are two kinds of breaking change in the ports-and-adapters model. They are managed separately.
 
-1. Update this file and bump the version at the top
-2. Update `.cursor/skills/claude-design/SKILL.md` §Export Checklist
-3. Update `/design verify` checks in `.cursor/commands/design.md`
-4. Update Foundation Step 1–3 in `.cursor/commands/foundation.md`
+### Contract-level breaking changes
 
-All four files are the source of truth. Drift between them causes silent foundation failures.
+If the canonical shape itself changes (required fields, manifest schema, design-context structure), every adapter must be updated. This affects the whole studio's portfolio.
+
+Process:
+1. Bump `contract_version` at the top of this file
+2. Update the schema at `artifacts/templates/handoff-manifest-schema.json`
+3. Update each adapter's SKILL.md to produce the new shape
+4. Update `/design verify` in `.cursor/commands/design.md`
+5. Update Foundation Step 1–4 (above) if the pipeline consumption changes
+
+Adapters pin the contract version they target in their semver (e.g. `claude-design-adapter@1.0.0` targets contract v3). Projects pin adapter versions in `artifacts/design-tool.config.json`. Contract changes do NOT force simultaneous adapter upgrades — existing projects on old adapters remain usable until the studio migrates them.
+
+### Adapter-level breaking changes
+
+When a source tool (Claude Design, Figma Make, Stitch, etc.) changes its output schema in a way that breaks its adapter, only that adapter needs to change. The canonical contract is unaffected.
+
+Process:
+1. The adapter owner updates the adapter's SKILL.md and normalization scripts
+2. Bump the adapter's semver (e.g. `claude-design-adapter@1.0.0` → `@1.1.0` for compatible fixes, `@2.0.0` for incompatible changes)
+3. Old projects continue to use the old pinned adapter version
+4. New projects adopt the new adapter version at their next `/design` run
+
+This is the core value of the ports-and-adapters design: tool-level breakage is contained to a single adapter file plus its scripts. Pipeline files (commands, rules, agents) are never touched.
+
+### When a tool becomes unavailable
+
+If an AI design tool is permanently down or discontinued (e.g. the vendor shuts it down), the human switches `artifacts/design-tool.config.json` to a different adapter (`manual-adapter` as the universal fallback, or a different tool's adapter if one exists). The pipeline keeps working.
+
+---

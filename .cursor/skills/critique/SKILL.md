@@ -1,14 +1,38 @@
 ---
 name: critique
-description: Evaluate design from a UX perspective, assessing visual hierarchy, information architecture, emotional resonance, cognitive load, and overall quality with quantitative scoring, persona-based testing, automated anti-pattern detection, and actionable feedback. Use when the user asks to review, critique, evaluate, or give feedback on a design or component.
-version: 2.1.1
+description: UX design review via parallel persona sub-agents + Nielsen heuristics scoring. Evaluates visual hierarchy, information architecture, emotional resonance, cognitive load. Complements /audit (technical quality) with design-quality judgment. Runs as part of /pre-handoff, or invoked standalone when the Tech Lead wants a design read on a feature or screen.
+disable-model-invocation: true
+version: critique-rad@1.0.0
+upstream: impeccable/critique@2.1.1
+license: Apache 2.0 — see NOTICE.md
 ---
 
 ## STEPS
 
 ### Step 1: Preparation
 
-Invoke /impeccable, which contains design principles, anti-patterns, and the **Context Gathering Protocol**. Follow the protocol before proceeding. If no design context exists yet, you MUST run /impeccable teach first. Additionally gather: what the interface is trying to accomplish.
+Before running this skill, confirm:
+
+- `artifacts/docs/design-context.md` exists (produced by the active adapter during `/foundation`)
+- `artifacts/docs/design-principles/` exists with the 9 reference files (typography, color-and-contrast, spatial-design, motion-design, interaction-design, responsive-design, ux-writing, craft, extract)
+- `artifacts/docs/emotional-design-system.md` (EDS) exists — critique anchors in brand/audience/tone from EDS §1-3
+
+If any are missing, halt and report.
+
+Additionally gather from the Tech Lead (one-liner each):
+
+- What the interface is trying to accomplish
+- Which user persona is most important to audit for (if the feature has a primary user type)
+
+Anchor critique findings in:
+
+- EDS §2 (brand personality) — to judge emotional resonance
+- `artifacts/docs/design-principles/interaction-design.md` — to judge interaction patterns
+- `artifacts/docs/design-principles/ux-writing.md` — to judge microcopy/error messaging
+- `artifacts/docs/design-principles/spatial-design.md` — to judge hierarchy and composition
+- This skill's `reference/heuristics-scoring.md` — for Nielsen scoring rubric
+- This skill's `reference/personas.md` — for persona definitions used in parallel sub-agents
+- This skill's `reference/cognitive-load.md` — for cognitive load assessment
 
 ### Step 2: Gather Assessments
 
@@ -28,7 +52,7 @@ document.title = '[LLM] ' + document.title;
 ```
 Think like a design director. Evaluate:
 
-**AI Slop Detection (CRITICAL)**: Does this look like every other AI-generated interface? Review against ALL **DON'T** guidelines in the impeccable skill. Check for AI color palette, gradient text, dark glows, glassmorphism, hero metric layouts, identical card grids, generic fonts, and all other tells. **The test**: If someone said "AI made this," would you believe them immediately?
+**AI Slop Detection (CRITICAL)**: Does this look like every other AI-generated interface? Review against RAD's anti-pattern rules: `artifacts/docs/design-principles/` per-dimension slop tells + `.cursor/rules/design-system.mdc` §AI Slop Guard. Check for AI color palette, gradient text, dark glows, glassmorphism, hero metric layouts, identical card grids, generic fonts, and all other tells. **The test**: If someone said "AI made this," would you believe them immediately?
 
 **Holistic Design Review**: visual hierarchy (eye flow, primary action clarity), information architecture (structure, grouping, cognitive load), emotional resonance (does it match brand and audience?), discoverability (are interactive elements obvious?), composition (balance, whitespace, rhythm), typography (hierarchy, readability, font choices), color (purposeful use, cohesion, accessibility), states & edge cases (empty, loading, error, success), microcopy (clarity, tone, helpfulness).
 
@@ -147,7 +171,7 @@ For each issue, tag with **P0-P3 severity** (consult [heuristics-scoring](refere
 #### Persona Red Flags
 > *Consult [personas](reference/personas.md)*
 
-Auto-select 2-3 personas most relevant to this interface type (use the selection table in the reference). If `.cursorrules` contains a `## Design Context` section from `impeccable teach`, also generate 1-2 project-specific personas from the audience/brand info.
+Auto-select 2-3 personas most relevant to this interface type (use the selection table in the reference). If `artifacts/docs/emotional-design-system.md` §1 (brand) and §3 (audience) are populated (via Phase 1 EDS authoring + Foundation's `design-context.md` generation), also generate 1-2 project-specific personas from the audience/brand info.
 
 For each selected persona, walk through the primary user action and list specific red flags found:
 
@@ -221,3 +245,42 @@ After presenting the summary, tell the user:
 > You can ask me to run these one at a time, all at once, or in any order you prefer.
 >
 > Re-run `/critique` after fixes to see your score improve.
+
+---
+
+## RAD integration
+
+### Entry points
+
+- **`/pre-handoff` Pass 7** (automatic) — runs after `/audit` (Pass 6) completes
+- **Standalone** — Tech Lead invokes `/critique [feature-or-screen]` during development
+
+### Output location
+
+- `artifacts/qa-reports/critique-[YYYY-MM-DD]-[scope].md`
+
+### Output format
+
+The critique report includes:
+
+1. **Persona assessments** — one report per persona sub-agent run in parallel
+2. **Heuristics scoring** — Nielsen's 10 heuristics, scored per this skill's `reference/heuristics-scoring.md`
+3. **Cognitive load analysis** — per this skill's `reference/cognitive-load.md`
+4. **Anti-pattern detection** — automated flags cross-referenced against EDS §8
+5. **Prioritized action items** — each finding tagged with severity + effort
+
+### Relationship to other QA skills
+
+See `.cursor/skills/audit/SKILL.md` §Relationship to other QA skills for the full QA skill roster.
+
+### When the Tech Lead should invoke standalone
+
+- A dogfood session flagged "something feels off" but `/visual-audit` passed
+- Before a major feature launch when technical quality is already clean
+- When onboarding a new developer — critique reports train judgment faster than verbal feedback
+
+---
+
+## Attribution
+
+This skill is adapted from Impeccable's `/critique`. See `NOTICE.md` for upstream attribution and license terms (Apache 2.0).

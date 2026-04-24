@@ -42,6 +42,16 @@ This library is adapted from the Impeccable project — see [NOTICE.md](NOTICE.m
 
 ---
 
+## Reference examples
+
+Full DESIGN.md files from Google Labs (Apache 2.0), imported as aspirational quality targets. See [examples/](examples/) for three complete reference systems: Atmospheric Glass (glassmorphism weather app), Paws & Paths (friendly pet care platform), Totality Festival (dark cosmic music festival).
+
+Each example is ~200 lines of rich YAML tokens + multi-section prose. Use them to calibrate what "good" design-context.md output looks like when reviewing adapter output or authoring briefs.
+
+Attribution in [examples/NOTICE.md](examples/NOTICE.md).
+
+---
+
 ## Upstream sync
 
 See [NOTICE.md](NOTICE.md) §Upstream updates for the process to pull newer Impeccable releases into this fork.

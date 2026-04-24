@@ -28,6 +28,136 @@ Never start any copy string with: [word], [word], [word], [word], [word]
 
 Never use: [word], [word], [word], [word], [word]
 
+---
+
+## UX Writing Principles
+
+Good UX copy reduces cognitive load. Bad UX copy creates it. Apply these principles every time you write user-facing text — error messages, labels, buttons, empty states, onboarding, tooltips, form help text. Adapted from `artifacts/docs/design-principles/ux-writing.md`.
+
+### Clarity > cleverness
+
+The goal is understanding, not admiration. Clever copy that confuses is worse than plain copy that works. Avoid:
+
+- Idioms that don't translate to Vietnamese (or whatever the product language is)
+- Wordplay in error messages
+- Puns on branded terms
+- Unexplained jargon
+
+If the reader has to stop and decode the copy, the copy failed.
+
+### Be specific, not generic
+
+| Generic (bad) | Specific (good) |
+|---|---|
+| "Something went wrong" | "Couldn't connect to the server. Check your internet and try again." |
+| "Invalid input" | "Phone number must start with 0 or +84" |
+| "Error" | "Can't save — your session expired. Sign in again." |
+| "Success!" | "Saved. Your profile is live." |
+| "Please try again later" | "The server is down. We'll send you an email when it's back (usually within an hour)." |
+
+Specific copy **names the thing that happened** and **tells the user what to do next**. Generic copy dumps the burden back on the user to figure it out.
+
+### Write for the moment, not the feature
+
+User-facing copy reflects the state the user is in, not the technology that produced it. Examples of the wrong frame:
+
+- "Rate limit exceeded" — technology-framed. User doesn't know what a rate limit is.
+- "You're going too fast — slow down for 30 seconds" — moment-framed. User knows what to do.
+
+- "Unauthorized" — technology-framed.
+- "You need to sign in to see this page" — moment-framed.
+
+- "Null pointer exception" — never show this to a user. Log it; show "Something broke on our end. We've logged it and we're looking."
+
+### Match voice to context
+
+The same information gets written differently depending on where it appears:
+
+| Context | Voice | Example for "we saved your work" |
+|---|---|---|
+| Toast notification | Brief, confident | "Saved" |
+| Error recovery | Reassuring | "Saved your draft — you won't lose anything" |
+| Onboarding | Encouraging | "Nice — your first note is saved! You can always find it in All Notes." |
+| Empty state after save | Acknowledging + next-step | "Saved. Create another, or open it from the list." |
+
+Check the brand personality in EDS §2 before writing — "calm, capable, quick" produces different copy from "playful, irreverent, warm."
+
+### Microcopy that earns its place
+
+Every label, button, tooltip, help text is a chance to reduce uncertainty. If the copy doesn't reduce uncertainty, delete it.
+
+| Purpose | Rule |
+|---|---|
+| Button labels | Verb + object. "Save draft" not "Submit". "Delete post" not "OK". |
+| Form labels | Describe what's expected, not just the field name. "Email (we'll never share it)" |
+| Placeholder text | Show format examples. "+84 912 345 678" not "Phone number" |
+| Help text below inputs | Show only when the input is non-obvious. Silent fields for obvious fields. |
+| Tooltips | Reserve for secondary info. Never put critical info behind a tooltip. |
+| Empty states | Name the state + show the next action. "No notes yet. Create your first one ↓" |
+
+### Error messages follow a 3-part structure
+
+Every error message should have:
+
+1. **What happened** (in the user's frame, not the system's)
+2. **Why it happened** (if helpful — sometimes it isn't)
+3. **What to do next** (specific, actionable)
+
+Examples:
+
+- ❌ "Login failed"
+- ✅ "Couldn't sign you in. **The password is wrong.** Try again, or reset your password."
+
+- ❌ "Validation error on field email"
+- ✅ "That email doesn't look right. **Missing the @ symbol?** Check the address and try again."
+
+- ❌ "Server error 500"
+- ✅ "Something broke on our end. **We've logged it** and we're looking. Refresh the page, or try again in a few minutes."
+
+### Empty states earn the screen
+
+A screen with nothing in it is a missed chance to onboard, to teach, to reassure. Bad empty state: blank page with "No items." Good empty state: headline + illustration + CTA + optional tip.
+
+| Screen type | Empty state formula |
+|---|---|
+| First-run (no data ever) | "Welcome — [feature value]. [Primary CTA to start]" |
+| Cleared list (deleted last item) | "All [items] cleared. [CTA to create new]" |
+| Filtered to zero | "No [items] match. [CTA to clear filters]" |
+| Offline | "[Items] can't load — you're offline. We'll sync when you reconnect." |
+
+### Skip the pleasantries
+
+"Please", "kindly", "we apologize for the inconvenience" — unless the situation genuinely calls for apology (major outage, data loss), drop them. They dilute. Direct + warm beats polite + thin.
+
+| Too polite (bad) | Direct + warm (good) |
+|---|---|
+| "Please kindly enter your email address to continue" | "Enter your email to continue" |
+| "We apologize for the inconvenience. An error occurred." | "Something broke. We're on it." |
+| "Thank you for your patience as we process your request" | "Working on it — should be done in about 10 seconds." |
+
+### What to avoid
+
+- All-caps for emphasis (reserve for 2-3 letter labels max)
+- Multiple exclamation marks ("Great job!!!")
+- "Ooops!" framing on serious errors — trivializes user harm
+- Technical acronyms unexplained (API, DNS, OAuth)
+- Stale corporate voice ("leverage", "synergy", "utilize")
+- Fake urgency ("Hurry!", "Limited time!") unless genuinely true
+- Passive voice for user actions ("Your file was deleted" — but good for system actions: "The server is down")
+
+### Localization awareness
+
+RAD targets Vietnamese B2C — most copy ships in Vietnamese. When writing English copy first (for design specs, error messages in shared libraries):
+
+- Write for 30% expansion when translated to Vietnamese
+- Avoid constructions that rely on English grammar (e.g. "Missing {item}" — in Vietnamese this changes based on item type)
+- Prefer explicit subjects over pronouns ("Save this note" not "Save this" — pronouns resolve differently across languages)
+- Test error messages specifically — they expand the most and are the highest-stakes copy
+
+See the **Forbidden Words**, **Screen-Context Copy Rules**, and **Copy Quality Test** sections in this file for RAD-project-specific language conventions, and `artifacts/docs/design-principles/ux-writing.md` for deeper UX writing reference.
+
+---
+
 ## Screen-Context Copy Rules
 
 Each context type has its own emotional objective. When context type and base formula conflict, context type wins.

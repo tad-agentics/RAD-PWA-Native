@@ -2,9 +2,9 @@
 
 This is the file-level contract between **any AI design tool** (via its adapter) and RAD's integration pipeline. If an adapter's output does not meet this contract, `/design verify` fails and the handoff is rejected before `/foundation` or `/feature` run.
 
-**Contract version: 3** (tool-agnostic — adapters normalize tool output to the canonical shape below).
+**Contract version: 3.1** (tool-agnostic — adapters normalize tool output to the canonical shape below. v3.1 adds DESIGN.md hybrid format for design-context.md.)
 
-Previous versions (v1, v2) were coupled to Claude Design. v3 decouples the contract from any specific tool. The canonical shape, required properties, and forbidden contents apply to **every** adapter. Tool-specific concerns (prompting patterns, discard lists, verification extras) live in the adapter's SKILL, not here.
+Previous versions (v1, v2) were coupled to Claude Design. v3 decoupled the contract from any specific tool. v3.1 extends design-context.md with a DESIGN.md-compatible YAML frontmatter (`@google/design.md@0.1.1`, Apache 2.0, version: alpha) for machine-readable design tokens — preserving all of v3's prose sections. The canonical shape, required properties, and forbidden contents apply to **every** adapter. Tool-specific concerns (prompting patterns, discard lists, verification extras) live in the adapter's SKILL, not here.
 
 ---
 
@@ -74,7 +74,8 @@ Every canonical handoff has a `handoff-manifest.json` at its root. Adapters writ
   "primitives_exported": "integer",
   "canonical": {
     "repo_linked_at_generation": "boolean — adapter records whether the tool had repo context",
-    "tokens_match_app_css": "boolean | null — null if app.css doesn't exist yet (initial build)"
+    "tokens_match_app_css": "boolean | null — null if app.css doesn't exist yet (initial build)",
+    "design_md_version": "string — DESIGN.md spec version the adapter's YAML frontmatter targets. Current: '0.1.1' for v3.1 contracts. 'alpha' accepted for early adapters."
   },
   "tool_specific": {
     "// free-form adapter-scoped fields": "e.g. claude_design_bundle_url, figma_node_ids, stitch_design_md_hash"
@@ -85,13 +86,13 @@ Every canonical handoff has a `handoff-manifest.json` at its root. Adapters writ
 
 ### Required fields
 
-- `contract_version` — must be `"3"` for contracts produced against this spec
+- `contract_version` — `"3"` or `"3.1"`. New handoffs should use `"3.1"`; `"3"` accepted during adapter migration
 - `source_tool` — one of the enum values
 - `generated_at` — ISO-8601 timestamp
 - `adapter` — adapter name + semver (pins which adapter version produced this)
 - `mode` — one of `initial`, `new-feature`, `regen`
 - `screens_exported` — integer count
-- `canonical` — object with `repo_linked_at_generation` (required) and `tokens_match_app_css` (required, nullable)
+- `canonical` — object with `repo_linked_at_generation` (required), `tokens_match_app_css` (required, nullable), and `design_md_version` (required for contract v3.1; optional for v3 for backward compatibility)
 
 Optional fields: `tool_version`, `feature_name` (required if mode ≠ initial), `primitives_exported`, `tool_specific`, `notes`.
 
@@ -103,9 +104,68 @@ JSON schema lives at `artifacts/templates/handoff-manifest-schema.json` (created
 
 ## Design context document
 
-Every canonical handoff has a `design-context.md` at its root. Adapters produce this from EDS §5 (brand) plus the source tool's extracted tokens. All adapters produce the same structure — the pipeline reads the same shape regardless of which tool generated the handoff.
+Every canonical handoff has a `design-context.md` at its root in **hybrid format** (contract v3.1):
 
-### Required sections
+1. **YAML frontmatter** — machine-readable design tokens per DESIGN.md spec v0.1.1 (alpha). Validated by `npx @google/design.md@0.1.1 lint`.
+2. **Markdown body** — 9 H2 prose sections (RAD's structure). Captures context DESIGN.md's format does not cover (Brand voice, Interaction Patterns, Anti-Patterns, Copy Rules, Build Constraints).
+
+Adapters produce both parts from EDS §5 (brand) + source tool's extracted tokens + RAD's existing rules (copy-rules.mdc, design-system.mdc).
+
+### YAML frontmatter schema
+
+```yaml
+---
+version: alpha                        # pinned to DESIGN.md v0.1.1
+design_md_version: "0.1.1"            # explicit version declaration
+name: "[App Name]"                    # required
+description: "[one-liner]"            # optional
+
+colors:                               # required — flat hex values
+  primary: "#RRGGBB"                  # required — brand anchor
+  secondary: "#RRGGBB"                # required — secondary
+  tertiary: "#RRGGBB"                 # optional — accent
+  neutral: "#RRGGBB"                  # required — background
+  surface: "#RRGGBB"                  # required for card/modal
+  on-surface: "#RRGGBB"               # required — text on surface
+  outline: "#RRGGBB"                  # required — borders
+  error: "#RRGGBB"                    # required if used
+  success: "#RRGGBB"                  # required if used
+  # add dark-mode tokens only if EDS §5 declares dark mode support
+
+typography:                           # required — one entry per tier used
+  display-lg: { fontFamily, fontSize, fontWeight, lineHeight, letterSpacing }
+  headline-md: { fontFamily, fontSize, fontWeight, lineHeight }
+  body-lg: { fontFamily, fontSize, fontWeight, lineHeight }
+  body-md: { fontFamily, fontSize, fontWeight, lineHeight }
+  label-sm: { fontFamily, fontSize, fontWeight, lineHeight, letterSpacing }
+
+rounded:                              # required
+  sm: "[dimension]"
+  md: "[dimension]"
+  lg: "[dimension]"
+  full: "9999px"
+
+spacing:                              # required
+  unit: "[dimension]"                 # base unit (e.g. "4px")
+  xs, sm, md, lg, xl: "[dimension]"
+
+components:                           # required — minimal index (Option A)
+  # One entry per primitive in src/design-handoff/components/ui/
+  # Format: primitive-name: dominant-token-name-or-hex
+  # Full styling lives in the TSX file, not here
+  button-primary: primary
+  button-secondary: secondary
+  card: surface
+  input: surface
+  dialog: surface
+---
+```
+
+Flat hex values only. Token references (e.g. `"{colors.primary}"`) are valid per DESIGN.md spec but RAD adapters don't emit them — the overhead isn't worth the value at adapter scale.
+
+### Prose body — 9 required sections
+
+Below the YAML frontmatter closing `---`, an H1 title followed by these 9 H2 sections in order:
 
 ```markdown
 # Design Context — [App Name]
@@ -114,16 +174,16 @@ Every canonical handoff has a `design-context.md` at its root. Adapters produce 
 - Voice, personality (3 words), anti-references — from EDS §1, §2
 
 ## Color System
-- Token table with hex + oklch + semantic role — from EDS §5
+- Token table (tokens defined in YAML frontmatter; prose describes rationale)
 
 ## Typography
-- Display font, body font, modular scale — from EDS §5
+- Display font, body font, modular scale
 
 ## Spacing
-- Base unit + scale
+- Base unit + scale rationale
 
 ## Components
-- Primitive list with variants and sizes
+- Primitive list with variants and sizes (prose complement to the YAML components index)
 
 ## Interaction Patterns
 - From EDS §4
@@ -132,7 +192,7 @@ Every canonical handoff has a `design-context.md` at its root. Adapters produce 
 - From EDS §8 + design-system.mdc Slop Guard
 
 ## Copy Rules
-- Language, forbidden words, screen-context rules — from copy-rules.mdc
+- Language, forbidden words, screen-context rules — from copy-rules.mdc and its §UX Writing Principles section
 
 ## Build Constraints
 - Framework, styling approach, component library, font hosting
@@ -140,23 +200,32 @@ Every canonical handoff has a `design-context.md` at its root. Adapters produce 
 
 ### Source of content
 
-- Sections 1–6 (Brand, Color, Typography, Spacing, Components, Interaction Patterns) — the adapter extracts these from the source tool's output (theme tokens, component library, interaction metadata) and cross-checks against EDS §5. If the tool didn't produce a value, the adapter falls back to EDS §5 as source of truth.
-- Sections 7–9 (Anti-Patterns, Copy Rules, Build Constraints) — the adapter populates these from the existing RAD files (EDS §8, copy-rules.mdc, project.mdc). These do not depend on the source tool.
+- **YAML `colors`, `typography`, `rounded`, `spacing`, `components`** — adapter extracts from source tool's theme/tokens; falls back to EDS §5 if tool didn't produce a value
+- **Prose Sections 1-6** (Brand, Color, Typography, Spacing, Components, Interaction) — adapter authors from EDS + extracted tokens
+- **Prose Sections 7-9** (Anti-Patterns, Copy Rules, Build Constraints) — adapter copies from RAD rule files (EDS §8, copy-rules.mdc, project.mdc); do not depend on source tool
 
 ### Template
 
-`artifacts/templates/design-context-template.md` (created in Step 2) is the starting template. Adapters begin from it and fill in every section. Placeholders (`[placeholder]`) must be replaced with real content before `/design verify` will pass.
+`artifacts/templates/design-context-template.md` is the starting template. Adapters begin from it and populate every section and every YAML field. Placeholders (`[placeholder]`) must be replaced with real content before `/design verify` will pass.
 
 ### Enforcement
 
-`/design verify` parses `design-context.md` and requires:
+`/design verify` runs three layers of checks on design-context.md:
 
-1. Every section listed above is present as an H2 heading
-2. Each section contains ≥ 1 content line below the heading (excludes blank lines and any line that is exactly a placeholder like `[placeholder]` or `TODO`)
-3. The `## Color System` section contains ≥ 3 token rows
-4. The `## Components` section contains ≥ 5 primitive rows (for initial builds — new-feature appendices may contain fewer)
+1. **DESIGN.md lint** (new in v3.1) — `npx @google/design.md@0.1.1 lint` validates YAML structure, checks broken token references, runs WCAG AA contrast checks on all color-on-background combinations. BLOCKING on errors.
+2. **Prose structure check** — every H2 section from the 9-section list is present and contains ≥ 1 non-placeholder content line
+3. **Substance checks** — `## Color System` has ≥ 3 token rows; `## Components` has ≥ 5 primitive rows for initial builds
 
-Failures are BLOCKING. The Frontend agent's design intent comes from this file; sparse content means sparse integration quality.
+Failures at any layer are BLOCKING.
+
+### Backward compatibility (v3 → v3.1)
+
+v3 design-context.md files (markdown-only, no YAML frontmatter) remain valid through a grace period. Adapters pinned to `claude-design-adapter@1.0.0` or `manual-adapter@1.0.0` continue producing v3 output. Adapters bumped to @1.1.0 produce v3.1 output (YAML + prose). The pipeline accepts both; `/design verify` inspects the contract_version field in handoff-manifest.json and routes checks accordingly:
+
+- v3 handoff → prose structure + substance checks only (no lint)
+- v3.1 handoff → all three layers (lint + prose + substance)
+
+Projects migrate to v3.1 at their next `/design` run after their adapter ships a 1.1.0 version.
 
 ---
 
@@ -165,7 +234,7 @@ Failures are BLOCKING. The Frontend agent's design intent comes from this file; 
 | # | Property | Rule |
 |---|---|---|
 | 1 | Manifest | `handoff-manifest.json` exists at the handoff root with valid required fields per the schema in "## Handoff manifest" |
-| 2 | Context | `design-context.md` exists at the handoff root with all required sections populated per "## Design context document" |
+| 2 | Context | `design-context.md` exists at the handoff root in hybrid format (YAML frontmatter + prose) per §Design context document. v3 markdown-only files accepted during adapter migration. |
 | 3 | Theme | `theme.css` uses CSS custom properties + Tailwind v4 `@theme inline` (no `tailwind.config.ts`) |
 | 4 | Primitives (initial only) | `components/ui/` contains ≥ 5 files; each file exports one primitive. New-feature and regen modes skip this check. |
 | 5 | Screen coverage | Every screen in `artifacts/docs/screen-specs-[app]-v1.md` has a matching file |
@@ -173,6 +242,7 @@ Failures are BLOCKING. The Frontend agent's design intent comes from this file; 
 | 7 | Imports | All relative imports resolve within the handoff bundle — no `@/` aliases pointing outside the bundle |
 | 8 | Typography | `@font-face` declarations or Google Fonts `@import` in `theme.css` (fonts are self-hosted during Foundation) |
 | 9 | Assets | Images referenced via imports or public URLs — no local `/public/` absolute paths |
+| 10 | YAML validation | `design-context.md` YAML frontmatter validates against `npx @google/design.md@0.1.1 lint` with zero errors. WCAG AA contrast warnings surfaced but non-blocking. (v3.1 only) |
 
 An entrypoint file (`App.tsx` or `routes.tsx`) is **not** a required property in v3. If the source tool produces one, the adapter may preserve it; the Frontend agent uses it as a reference map only and never copies it into `src/`.
 
@@ -287,6 +357,25 @@ Per `.cursor/rules/frontend-design.mdc`:
 There are two kinds of breaking change in the ports-and-adapters model. They are managed separately.
 
 ### Contract-level breaking changes
+
+**Recent version bumps:**
+
+| From | To | Type | Summary |
+|---|---|---|---|
+| v3 | v3.1 | Minor, backward-compatible | Added DESIGN.md hybrid format (YAML frontmatter + prose) to design-context.md. New `canonical.design_md_version` manifest field. New `/design verify` lint layer via `npx @google/design.md@0.1.1 lint`. v3 handoffs remain valid during adapter migration. |
+
+**Process for minor bumps (like v3 → v3.1):**
+
+1. Update this file's contract_version marker
+2. Update `artifacts/templates/handoff-manifest-schema.json` to accept both old and new contract_version values
+3. Update `artifacts/templates/design-context-template.md` with new structure
+4. Update each adapter's SKILL.md + semver (e.g. claude-design-adapter@1.0.0 → @1.1.0)
+5. Update `/design verify` in `.cursor/commands/design.md` to inspect contract_version and route checks accordingly
+6. Existing projects can stay on the old adapter version indefinitely; new projects use the new adapter
+
+Old handoffs remain valid — the check routing above means the pipeline gracefully handles both.
+
+---
 
 If the canonical shape itself changes (required fields, manifest schema, design-context structure), every adapter must be updated. This affects the whole studio's portfolio.
 

@@ -1,7 +1,45 @@
 ---
 name: harden
-description: Make interfaces production-ready: error handling, empty states, onboarding flows, i18n, text overflow, and edge case management. Use when the user asks to harden, make production-ready, handle edge cases, add error states, design empty states, improve onboarding, or fix overflow and i18n issues.
-version: 2.1.1
+description: Flag production-readiness gaps across text overflow, error states, empty states, onboarding, i18n, and edge cases. Generates a gap report with severity ratings and remediation paths. Runs as part of /pre-handoff, or invoked standalone when the Tech Lead suspects a feature has thin edge-case coverage. Outputs findings for Tech Lead triage — does NOT auto-implement fixes (those go through a new-feature loop per RAD's no-return-visits doctrine).
+disable-model-invocation: true
+version: harden-rad@1.0.0
+upstream: impeccable/harden@2.1.1
+license: Apache 2.0 — see NOTICE.md
+---
+
+## MANDATORY PREPARATION
+
+Before running this skill, confirm:
+
+- `artifacts/docs/design-context.md` exists with populated Interaction Patterns section
+- `artifacts/docs/design-principles/interaction-design.md` exists (covers form patterns, state machines, feedback, error handling)
+- `artifacts/docs/design-principles/ux-writing.md` exists (covers error messages, empty-state copy)
+- The feature or screens being hardened have already passed `/visual-audit`
+
+If the feature hasn't passed `/visual-audit` yet, halt and report. Don't audit production-readiness of something that isn't fidelity-complete yet — it's the wrong sequence.
+
+Anchor findings in:
+
+- `artifacts/docs/design-principles/interaction-design.md` §State machines + §Error handling + §Empty states
+- `artifacts/docs/design-principles/ux-writing.md` §Error messages + §Microcopy
+- EDS §4 (interaction patterns) for brand-specific interaction voice
+- Each screen spec in `artifacts/docs/screen-specs-[app]-v1.md` for the screen's intended behavior under edge cases
+
+## RAD scoping
+
+This skill **flags gaps**, it does **not fix them**. That's a deliberate RAD constraint to preserve the 90% untouched rule. The frontend-developer's job during Feature Mode is integration (copy handoff, edit per str_replace table); creative extension of the design to cover edge cases breaks that contract.
+
+When this skill discovers a gap:
+
+1. **Document it in the gap report** with severity (P0 blocking ship, P1 significant risk, P2 edge-case polish, P3 nice-to-have)
+2. **Escalate to Tech Lead** via the standard QA escalation path
+3. Tech Lead decides:
+   - **Start a new-feature loop** — run `/design new-feature [gap-name]` with a targeted brief asking the adapter to produce the missing states. The adapter generates them; the frontend-developer integrates them normally.
+   - **Accept as documented limitation** — log the gap in the release notes and move on
+   - **Hot-fix within scope** (rare) — only when the fix is mechanical (add `min-width: 0` to a flex container to fix overflow) and trivially implementable without design judgment. Tech Lead owns this call.
+
+**Never auto-implement fixes that require new UI states, new copy, or new interaction flows.** Those are design-layer work and belong in the adapter step, not the integration layer.
+
 ---
 
 Strengthen interfaces against edge cases, errors, internationalization issues, and real-world usage scenarios that break idealized designs.
@@ -385,3 +423,49 @@ Test thoroughly with edge cases:
 - **Empty**: Remove all data, test empty states
 
 Remember: You're hardening for production reality, not demo perfection. Expect users to input weird data, lose connection mid-flow, and use your product in unexpected ways. Build resilience into every component.
+
+---
+
+## RAD integration
+
+### Entry points
+
+- **`/pre-handoff` Pass 8** (automatic) — runs after `/critique` (Pass 7)
+- **Standalone** — Tech Lead invokes `/harden [feature-or-screen]` when a dogfood session or `/audit` flags thin edge-case coverage
+
+### Output location
+
+- `artifacts/qa-reports/harden-[YYYY-MM-DD]-[scope].md`
+
+### Output format
+
+The gap report includes:
+
+1. **Text overflow gaps** — long-text truncation, flex/grid min-width-0 issues, RTL bidi, emoji rendering
+2. **Error state gaps** — network failures, API errors (4xx/5xx), validation errors, permission errors, rate limits
+3. **Empty state gaps** — first-run, no-results, cleared state, filtered to zero
+4. **Onboarding gaps** — first-run detection, progressive disclosure, skip paths
+5. **i18n gaps** — translation expansion (German ~30% longer), RTL, CJK character rendering, date/number/currency formats
+6. **Loading state gaps** — skeleton states, optimistic UI, stale-while-revalidate coverage
+7. **Edge case gaps** — concurrent operations, race conditions, stale data
+
+Each gap:
+
+- **Severity** — P0 blocking / P1 significant / P2 polish / P3 nice-to-have
+- **Location** — file + line number (or screen + surface)
+- **Remediation path** — one of: "new-feature loop" (design needed) / "hot-fix in scope" (mechanical, no design judgment) / "document + defer"
+
+### Relationship to other QA skills
+
+See `.cursor/skills/audit/SKILL.md` §Relationship to other QA skills for the full QA roster. `/harden` is complementary to `/audit`:
+
+- `/audit` — did we build it to technical quality standards? (a11y, perf, responsive)
+- `/harden` — will it survive real-world use? (edge cases, errors, i18n, empty states)
+
+Both run at `/pre-handoff`. Both can run standalone.
+
+---
+
+## Attribution
+
+This skill is adapted from Impeccable's `/harden`. See `NOTICE.md` for upstream attribution and license terms (Apache 2.0).

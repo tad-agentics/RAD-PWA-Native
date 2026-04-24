@@ -55,21 +55,22 @@ CD_HANDOFF="$SANDBOX/claude-design-handoff"
 mkdir -p "$CD_HANDOFF/components/ui"
 mkdir -p "$CD_HANDOFF/routes"
 
-# handoff-manifest.json — claude-design source
+# handoff-manifest.json — claude-design source (v3.1)
 cat > "$CD_HANDOFF/handoff-manifest.json" <<'JSON'
 {
-  "contract_version": "3",
+  "contract_version": "3.1",
   "source_tool": "claude-design",
   "tool_version": "beta-2026-04",
   "generated_at": "2026-04-15T14:32:00Z",
-  "adapter": "claude-design-adapter@1.0.0",
+  "adapter": "claude-design-adapter@1.1.0",
   "mode": "initial",
   "feature_name": null,
   "screens_exported": 3,
   "primitives_exported": 5,
   "canonical": {
     "repo_linked_at_generation": true,
-    "tokens_match_app_css": null
+    "tokens_match_app_css": null,
+    "design_md_version": "0.1.1"
   },
   "tool_specific": {
     "claude_design_project_id": "test-cd-001"
@@ -78,8 +79,66 @@ cat > "$CD_HANDOFF/handoff-manifest.json" <<'JSON'
 }
 JSON
 
-# design-context.md — canonical shape with all 9 sections populated
+# design-context.md — hybrid format (YAML frontmatter + 9 H2 prose sections)
 cat > "$CD_HANDOFF/design-context.md" <<'MD'
+---
+version: alpha
+design_md_version: "0.1.1"
+name: "Test App (claude-design)"
+description: "Integration test mock handoff for claude-design adapter"
+
+colors:
+  primary: "#2563EB"
+  secondary: "#6C7278"
+  tertiary: "#B8422E"
+  neutral: "#F7F5F2"
+  surface: "#FFFFFF"
+  on-surface: "#1A1A1A"
+  outline: "#E5E7EB"
+  error: "#DC2626"
+  success: "#16A34A"
+
+typography:
+  display-lg:
+    fontFamily: Inter
+    fontSize: 48px
+    fontWeight: "600"
+    lineHeight: 1.1
+    letterSpacing: -0.02em
+  body-md:
+    fontFamily: Inter
+    fontSize: 16px
+    fontWeight: "400"
+    lineHeight: 24px
+  label-sm:
+    fontFamily: Inter
+    fontSize: 12px
+    fontWeight: "600"
+    lineHeight: 16px
+    letterSpacing: 0.05em
+
+rounded:
+  sm: 4px
+  md: 8px
+  lg: 16px
+  full: 9999px
+
+spacing:
+  unit: 4px
+  xs: 4px
+  sm: 8px
+  md: 16px
+  lg: 24px
+  xl: 48px
+
+components:
+  button-primary: primary
+  card: surface
+  dialog: surface
+  input: surface
+  badge: primary
+---
+
 # Design Context — Test App (claude-design)
 
 ## Brand
@@ -88,11 +147,11 @@ cat > "$CD_HANDOFF/design-context.md" <<'MD'
 - Anti-references: no neumorphism, no maximalist gradients
 
 ## Color System
-| Token | Hex | OKLCH | Role |
-|---|---|---|---|
-| primary | #2563EB | oklch(0.55 0.2 260) | CTAs |
-| background | #FFFFFF | oklch(1 0 0) | page background |
-| foreground | #1A1A1A | oklch(0.15 0 0) | primary text |
+| Token | Hex | Role |
+|---|---|---|
+| primary | #2563EB | CTAs |
+| background | #FFFFFF | page background |
+| foreground | #1A1A1A | primary text |
 
 ## Typography
 - Display: Inter, 600/700
@@ -184,8 +243,8 @@ for f in required:
     if f not in manifest:
         errors.append(f'manifest missing required field: {f}')
 
-if manifest.get('contract_version') != '3':
-    errors.append(f\"contract_version is {manifest.get('contract_version')}, expected '3'\")
+if manifest.get('contract_version') not in ('3', '3.1'):
+    errors.append(f\"contract_version is {manifest.get('contract_version')}, expected '3' or '3.1'\")
 
 if manifest.get('source_tool') not in ('claude-design', 'figma-make', 'stitch', 'figma-mcp', 'manual'):
     errors.append(f\"source_tool invalid: {manifest.get('source_tool')}\")
@@ -240,21 +299,22 @@ MANUAL_HANDOFF="$SANDBOX/manual-handoff"
 mkdir -p "$MANUAL_HANDOFF/components/ui"
 mkdir -p "$MANUAL_HANDOFF/screens"
 
-# Same canonical shape but source_tool: manual
+# Same canonical shape but source_tool: manual (v3.1)
 cat > "$MANUAL_HANDOFF/handoff-manifest.json" <<'JSON'
 {
-  "contract_version": "3",
+  "contract_version": "3.1",
   "source_tool": "manual",
   "tool_version": "n/a",
   "generated_at": "2026-04-23T10:00:00Z",
-  "adapter": "manual-adapter@1.0.0",
+  "adapter": "manual-adapter@1.1.0",
   "mode": "initial",
   "feature_name": null,
   "screens_exported": 3,
   "primitives_exported": 5,
   "canonical": {
     "repo_linked_at_generation": false,
-    "tokens_match_app_css": null
+    "tokens_match_app_css": null,
+    "design_md_version": "0.1.1"
   },
   "tool_specific": {},
   "notes": "Integration test: mock manual handoff — human-produced bundle."
@@ -292,8 +352,8 @@ errors = []
 manifest = json.loads((handoff / 'handoff-manifest.json').read_text())
 if manifest.get('source_tool') != 'manual':
     errors.append(f\"source_tool should be 'manual', got: {manifest.get('source_tool')}\")
-if manifest.get('adapter') != 'manual-adapter@1.0.0':
-    errors.append(f\"adapter should be 'manual-adapter@1.0.0', got: {manifest.get('adapter')}\")
+if manifest.get('adapter') != 'manual-adapter@1.1.0':
+    errors.append(f\"adapter should be 'manual-adapter@1.1.0', got: {manifest.get('adapter')}\")
 
 # Same 9-section context check
 content = (handoff / 'design-context.md').read_text()
@@ -318,6 +378,69 @@ print('  canonical checks passed')
 " || fail "manual canonical validation failed"
 
 pass "manual handoff validates against contract v3"
+
+# ---------- Test 2b: DESIGN.md YAML validates for both handoffs ----------
+
+echo ""
+echo "Test 2b: DESIGN.md YAML frontmatter validates"
+echo "---------------------------------------------"
+
+for handoff in "$CD_HANDOFF" "$MANUAL_HANDOFF"; do
+  python3 -c "
+import yaml, re, sys
+content = open('$handoff/design-context.md').read()
+match = re.match(r'^---\n(.*?)\n---\n', content, re.DOTALL)
+if not match:
+    print('  ✗ No YAML frontmatter found in $handoff/design-context.md', file=sys.stderr)
+    sys.exit(1)
+try:
+    parsed = yaml.safe_load(match.group(1))
+except yaml.YAMLError as e:
+    print('  ✗ Invalid YAML in $handoff/design-context.md:', e, file=sys.stderr)
+    sys.exit(1)
+
+# Required DESIGN.md fields
+required = ['name', 'colors', 'typography', 'rounded', 'spacing', 'components']
+missing = [f for f in required if f not in parsed]
+if missing:
+    print('  ✗ Missing required fields in $handoff/design-context.md:', missing, file=sys.stderr)
+    sys.exit(1)
+
+# RAD-specific: version + design_md_version must be set
+if parsed.get('version') != 'alpha':
+    print('  ✗ $handoff: version field should be \"alpha\", got:', parsed.get('version'), file=sys.stderr)
+    sys.exit(1)
+if parsed.get('design_md_version') != '0.1.1':
+    print('  ✗ $handoff: design_md_version should be \"0.1.1\", got:', parsed.get('design_md_version'), file=sys.stderr)
+    sys.exit(1)
+" || fail "YAML frontmatter validation failed for $handoff"
+done
+pass "DESIGN.md YAML frontmatter parses for both handoffs with required fields"
+
+# ---------- Test 2c: contract v3.1 manifest fields ----------
+
+echo ""
+echo "Test 2c: Manifest has v3.1-specific fields"
+echo "------------------------------------------"
+
+for handoff in "$CD_HANDOFF" "$MANUAL_HANDOFF"; do
+  python3 -c "
+import json, sys
+manifest = json.load(open('$handoff/handoff-manifest.json'))
+if manifest.get('contract_version') != '3.1':
+    print('  ✗ $handoff: contract_version should be 3.1, got:', manifest.get('contract_version'), file=sys.stderr)
+    sys.exit(1)
+canonical = manifest.get('canonical', {})
+if canonical.get('design_md_version') != '0.1.1':
+    print('  ✗ $handoff: canonical.design_md_version should be 0.1.1, got:', canonical.get('design_md_version'), file=sys.stderr)
+    sys.exit(1)
+adapter = manifest.get('adapter', '')
+if '@1.1.' not in adapter:
+    print('  ✗ $handoff: adapter should be @1.1.x, got:', adapter, file=sys.stderr)
+    sys.exit(1)
+" || fail "Manifest v3.1 field check failed for $handoff"
+done
+pass "Manifests have contract_version 3.1 + design_md_version + @1.1.x adapter pins"
 
 # ---------- Test 3: Prove pipeline is tool-agnostic ----------
 
@@ -413,6 +536,6 @@ pass "All fallback adapters have SKILL files"
 
 echo ""
 echo "=== ALL TESTS PASSED ==="
-echo "Pipeline is tool-agnostic. Adapter switching works."
+echo "Pipeline is tool-agnostic. Adapter switching works. DESIGN.md hybrid format (v3.1) validates across both adapters."
 echo ""
 exit 0

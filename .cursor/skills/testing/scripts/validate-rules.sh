@@ -178,6 +178,27 @@ check_positive "design-principles library imported" \
   "artifacts/docs/design-principles/" 5
 
 echo ""
+echo "── DESIGN.md Hybrid Format (v3.1) ──"
+
+check_positive "DESIGN.md reference examples imported" \
+  "artifacts/docs/design-principles/examples/" 2
+
+check_positive "claude-design-adapter bumped to @1.1.0 for v3.1" \
+  "claude-design-adapter@1.1.0" 1
+
+check_positive "manual-adapter bumped to @1.1.0 for v3.1" \
+  "manual-adapter@1.1.0" 1
+
+check_positive "Contract v3.1 referenced in pipeline" \
+  "contract v3.1\|Contract version: 3.1\|contract_version.*3.1" 3
+
+check_positive "DESIGN.md lint referenced in verify" \
+  "@google/design.md@0.1.1\|design.md@0.1.1 lint" 2
+
+check_positive "design_md_version field in pipeline" \
+  "design_md_version" 3
+
+echo ""
 echo "── TanStack React Query ──"
 
 check_positive "TanStack / react-query mentioned" \

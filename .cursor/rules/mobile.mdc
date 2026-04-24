@@ -102,4 +102,4 @@ All data via `useSupabase()` from `shared/api/supabase-context` through TanStack
 
 ## Native translation reference
 
-The adapter exports a handoff bundle the agent reads from `artifacts/docs/design-reference/` for native translation. The translation work is identical regardless of which source tool produced the handoff.
+Foundation Step 4b preserves the web-shape screen TSX at `artifacts/docs/design-reference/web/` — that's the mobile-developer's translation input. For HIGH-risk screens where the adapter was re-run with a native-targeted brief (see the active adapter's SKILL §Prompting Patterns), RN-shaped TSX lives at `artifacts/docs/design-reference/native/[screen]/` and replaces the web source for that screen. The translation work is identical regardless of which source tool produced the handoff.

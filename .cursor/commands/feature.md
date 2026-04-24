@@ -99,7 +99,7 @@ Read:
 - agent-workspace/ACTIVE_CONTEXT.md
 - artifacts/plans/build-plan.md — read the [name] feature context package
 - artifacts/docs/screen-specs-[app]-v1.md — screens for this feature (Mobile Navigation metadata)
-- artifacts/docs/design-reference/ — .tsx files for screens in this feature (from the canonical handoff)
+- artifacts/docs/design-reference/web/ — web TSX for screens in this feature (preserved by Foundation Step 4b as the mobile-developer's translation input). For HIGH-risk screens, check artifacts/docs/design-reference/native/[screen]/ first — when present, the adapter already produced RN-shaped TSX and mobile-developer reads from native/ instead of translating.
 
 Mode: Feature
 For each screen: run 3-phase hybrid translation from the canonical handoff's web TSX.

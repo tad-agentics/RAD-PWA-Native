@@ -1,5 +1,27 @@
 # Changelog — [App Name]
 
+## v3.1.1 — Foundation preservation step for mobile translation (2026-04-24)
+
+Documentation clarification — no schema change, no adapter bump.
+
+Codified an existing implicit behavior that would have bitten on the next real build: Foundation now has an explicit Step 4b that preserves the web-shape screen TSX at `artifacts/docs/design-reference/web/` before `src/design-handoff/` is deleted in Step 5.
+
+**Why:** the mobile-developer instructions (mobile-developer.md, feature.md, mobile.mdc, design-system.mdc) all read from `artifacts/docs/design-reference/`, but the contract never said how that directory gets populated. Without Step 4b, `src/design-handoff/` gets deleted, mobile-developer runs later, finds nothing, and escalates or invents. The mobile-developer translates from **mock-shaped** TSX (pre-Supabase wiring) to preserve design intent — reading from `src/routes/` after Step 4's str_replace edits loses that fidelity.
+
+**Directory layout:**
+- `artifacts/docs/design-reference/web/` — Foundation-preserved web TSX (standard translation input)
+- `artifacts/docs/design-reference/native/[screen]/` — adapter-produced RN output for HIGH-risk screens (native-targeted brief flow, claude-design-adapter SKILL §2b). When present, mobile-developer reads from `native/` instead of translating from `web/`.
+
+Both subdirectories are gitignored — `artifacts/docs/design-reference/` is local staging, not committed. Fresh clones must re-run `/design` + `/foundation` before mobile work.
+
+**Files updated:**
+- `artifacts/docs/handoff-contract.md` — new Foundation Step 4b, Step 5 updated to note design-reference/ persists through cleanup
+- 5 bare `design-reference/` refs normalized to `design-reference/web/` across mobile-developer.md, feature.md, mobile.mdc, design-system.mdc
+
+**No contract version bump** — v3.1 remains current; this patches implicit behavior into explicit documentation. Adapters unchanged.
+
+---
+
 ## v3.1 — DESIGN.md Hybrid Format (2026-04-24)
 
 Contract bump: v3 → v3.1 (backward-compatible). Adopts Google Labs DESIGN.md v0.1.1 (alpha, `@google/design.md@0.1.1`, Apache 2.0) as a format layer on top of RAD's existing design-context.md structure.

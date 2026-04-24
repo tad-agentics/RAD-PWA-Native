@@ -1,7 +1,54 @@
 ---
 name: optimize
-description: Diagnoses and fixes UI performance across loading speed, rendering, animations, images, and bundle size. Use when the user mentions slow, laggy, janky, performance, bundle size, load time, or wants a faster, smoother experience.
-version: 2.1.1
+description: UI performance diagnostics across bundle size, rendering, animations, images, and load time. Generates a scored performance report with severity-tagged findings and remediation paths. Runs as part of /pre-handoff, or invoked standalone when the Tech Lead suspects perf regression. Flags issues for Tech Lead triage — mechanical fixes apply in-scope, design-layer rework routes back through new-feature loop.
+disable-model-invocation: true
+version: optimize-rad@1.0.0
+upstream: impeccable/optimize@2.1.1
+license: Apache 2.0 — see NOTICE.md
+---
+
+## MANDATORY PREPARATION
+
+Before running this skill, confirm:
+
+- `artifacts/docs/design-context.md` exists (Build Constraints section informs what's acceptable perf-wise)
+- `artifacts/docs/design-principles/` exists (consult `responsive-design.md` for mobile perf context)
+- The feature has been built and integrated (optimize runs on shipped code, not handoff code)
+- `.cursor/rules/frontend.mdc` is loaded — RAD has existing performance rules (React Router v7 Vite config, TanStack Query caching, code-splitting conventions) that this skill's findings must respect
+
+RAD-specific performance priors to anchor findings in:
+
+- **Target mobile devices**: mid-tier Vietnamese Android phones (Xiaomi Redmi / Samsung A-series typical) on 4G
+- **Budget**: LCP < 2.5s on 4G, TTI < 3.5s, bundle < 200KB initial JS
+- **Cache strategy**: TanStack Query (see `.cursor/skills/caching-strategies/SKILL.md`) — query keys + `staleTime` discipline is how RAD avoids over-fetching
+- **Vite + React Router v7 config**: route-level code splitting is built in — don't flag missing splits that the framework already handles
+
+If any context is missing, halt and report.
+
+## RAD scoping
+
+This skill **flags performance issues** and scores them. It does **not auto-implement fixes** during Feature Mode (90% untouched rule). When a finding requires:
+
+- **Mechanical fix** (add `loading="lazy"` to an image, replace `Animated` API with Reanimated on mobile, add `React.memo` to a frequently-rerendering list item): hot-fix in scope. Tech Lead approves; the fix is trivially implementable without design judgment.
+- **Design-layer rework** (image is fundamentally too large and needs a different crop / format / art direction; the feature has a loading state that was never designed): route back through `/design new-feature [perf-name]` so the adapter produces the missing design work.
+- **Framework config change** (Vite rollup settings, React Router prerender config): Tech Lead owns this; it's outside agent scope.
+- **Defer** (the finding is real but the effort-to-impact ratio doesn't justify action this release): document in release notes.
+
+**Never auto-implement non-trivial fixes.** If the fix requires more than a 2-line change or any design judgment, escalate.
+
+### RAD perf baseline
+
+Findings get compared against RAD's baseline, not Impeccable's generic thresholds:
+
+| Metric | Budget | Baseline source |
+|---|---|---|
+| LCP (4G, mid-tier Android) | < 2.5s | Target for Vietnamese B2C market |
+| TTI (4G, mid-tier Android) | < 3.5s | Same |
+| Initial JS bundle | < 200KB gzipped | Vite + React Router v7 typical |
+| Image total on LCP screen | < 500KB | Mid-tier phone memory pressure |
+| Animations | 60fps (UI thread, not JS thread) | RN: Reanimated only. Web: transform/opacity only |
+| Query `staleTime` discipline | All queries have explicit `staleTime` | TanStack Query hygiene from caching-strategies skill |
+
 ---
 
 Identify and fix performance issues to create faster, smoother user experiences.
@@ -262,3 +309,52 @@ Test that optimizations worked:
 - **User perception**: Does it *feel* faster?
 
 Remember: Performance is a feature. Fast experiences feel more responsive, more polished, more professional. Optimize systematically, measure ruthlessly, and prioritize user-perceived performance.
+
+---
+
+## RAD integration
+
+### Entry points
+
+- **`/pre-handoff` Pass 9** (automatic) — runs after `/harden` (Pass 8)
+- **Standalone** — Tech Lead invokes `/optimize [feature-or-screen]` when dogfooding or monitoring flags perf regression, or before high-traffic launch
+
+### Output location
+
+- `artifacts/qa-reports/optimize-[YYYY-MM-DD]-[scope].md`
+
+### Output format
+
+Scored report across 5 dimensions:
+
+1. **Loading speed** — LCP, TTI, FCP measurements if available; route-level splitting; prerender config
+2. **Rendering** — component rerender hotspots, missing memoization, layout thrashing, expensive selectors
+3. **Animations** — JS-thread vs UI-thread animations (Reanimated on mobile; transform/opacity on web); jank detection
+4. **Images** — lazy loading coverage, format choices (AVIF / WebP), width/height attributes, responsive srcsets
+5. **Bundle size** — initial JS gzipped, unused imports, tree-shaking gaps, heavy dependencies
+
+Each finding:
+
+- **Severity** — P0 (blocks launch) / P1 (noticeable on target devices) / P2 (polish) / P3 (nice-to-have)
+- **Measurement** — specific metric value vs RAD baseline
+- **Location** — file + line number, or route + surface
+- **Remediation path** — mechanical fix / new-feature loop / framework config change / defer
+
+### Relationship to other QA skills
+
+| Skill | Focus |
+|---|---|
+| `/audit` | Technical quality across 5 dimensions (a11y, perf, theming, responsive, anti-patterns) |
+| `/critique` | UX design quality via persona sub-agents + Nielsen heuristics |
+| `/harden` | Production-readiness gaps (edge cases, errors, i18n, empty states) |
+| `/optimize` (this skill) | UI performance diagnostics with measurement-backed findings |
+
+**`/audit` vs `/optimize` overlap:** `/audit` includes performance as one of its 5 dimensions scored 0-4. `/optimize` goes deeper — specific measurements, specific remediation paths, anchored in RAD's baseline. Run `/audit` for a broad quality read; run `/optimize` when perf is the specific concern or when `/audit`'s perf score came back ≤ 2.
+
+See `.cursor/skills/caching-strategies/SKILL.md` for RAD's query-caching patterns — many perf findings reduce to "this query doesn't have a `staleTime` and the component is re-mounting" which is a caching-hygiene issue, not a code issue.
+
+---
+
+## Attribution
+
+This skill is adapted from Impeccable's `/optimize`. See `NOTICE.md` for upstream attribution and license terms (Apache 2.0).

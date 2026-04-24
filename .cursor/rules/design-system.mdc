@@ -12,7 +12,7 @@ This section encodes where design-system assets live, what to reuse, and what ne
 
 | Design-system rule | RAD equivalent |
 | --- | --- |
-| Read structured design before coding | **Read** the handoff TSX in `src/design-handoff/` or `artifacts/docs/design-reference/`, **plus** `artifacts/docs/screen-specs-*-v1.md` and **`artifacts/docs/design-system-spec.md`** after Foundation catalogs the handoff |
+| Read structured design before coding | **Read** the handoff TSX in `src/design-handoff/` (during Foundation, before Step 5 cleanup) or `artifacts/docs/design-reference/web/` (after Foundation, for mobile translation per Step 4b), **plus** `artifacts/docs/screen-specs-*-v1.md` and **`artifacts/docs/design-system-spec.md`** after Foundation catalogs the handoff |
 | Token / component discovery | **`design-system-spec.md`** (inventory + gaps); live primitives in **`src/components/ui/`**; tokens in **`src/app.css`** (from the handoff's `theme.css`) |
 | Do not bolt on duplicate libraries | **IMPORTANT:** the adapter's `components/ui` **is** the library — same as elsewhere in this file |
 | Asset discipline | Use images/icons **from the handoff bundle**; self-host fonts per `frontend-design.mdc`; do **not** add icon packages to replicate glyphs the adapter already ships |

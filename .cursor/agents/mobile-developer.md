@@ -40,7 +40,7 @@ agent-workspace/ACTIVE_CONTEXT.md
 agent-workspace/memory/[today].md
 artifacts/plans/build-plan.md
 artifacts/docs/screen-specs-[app]-v1.md (Mobile Navigation metadata — tab, depth, presentation)
-artifacts/docs/design-reference/ (the canonical handoff's web TSX files — your translation input)
+artifacts/docs/design-reference/web/ (web TSX files preserved by Foundation Step 4b — translation input for standard screens) + artifacts/docs/design-reference/native/[screen]/ (adapter-produced RN output for HIGH-risk screens — read from here when present instead of translating from web)
 ```
 
 ---
@@ -151,7 +151,7 @@ This converts the soft "use sparingly" guidance into a logged, enforceable budge
 ### Full-app orchestration (run once at start of first feature dispatch)
 
 ```
-1. Read the handoff's routes/App entry from artifacts/docs/design-reference/ (routes.tsx, App.tsx, or the adapter's equivalent)
+1. Read the handoff's routes/App entry from artifacts/docs/design-reference/web/ (routes.tsx, App.tsx, or the adapter's equivalent — preserved by Foundation Step 4b before src/design-handoff/ was deleted)
 2. Build translation queue — each user-facing route → one Expo Router screen (or modular sub-screens if spec says so)
 3. Cross-reference against Phase 2 screen specs by function (not exact filename)
 4. Flag any spec without a corresponding handoff source file — BLOCKED until the handoff reference exists or Tech Lead approves a spec-only build

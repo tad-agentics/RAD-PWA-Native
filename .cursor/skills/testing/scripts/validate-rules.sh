@@ -160,6 +160,24 @@ check_positive "design-tool.config.json referenced in pipeline" \
   "design-tool\.config\.json" 2
 
 echo ""
+echo "── Impeccable-Imported QA Skills ──"
+
+check_positive "/audit QA skill imported" \
+  "audit-rad@1.0.0" 1
+
+check_positive "/critique QA skill imported" \
+  "critique-rad@1.0.0" 1
+
+check_positive "/harden QA skill imported" \
+  "harden-rad@1.0.0" 1
+
+check_positive "/optimize QA skill imported" \
+  "optimize-rad@1.0.0" 1
+
+check_positive "design-principles library imported" \
+  "artifacts/docs/design-principles/" 5
+
+echo ""
 echo "── TanStack React Query ──"
 
 check_positive "TanStack / react-query mentioned" \

@@ -1,5 +1,7 @@
 # Heuristics Scoring Guide
 
+> Adapted from Impeccable's `/critique` skill. See `../NOTICE.md` for attribution.
+
 Score each of Nielsen's 10 Usability Heuristics on a 0–4 scale. Be honest — a 4 means genuinely excellent, not "good enough."
 
 ## Nielsen's 10 Heuristics

@@ -81,10 +81,35 @@ If normalization fails (e.g. required files missing from the tool's output, malf
 `/design verify` runs two layers:
 
 **Layer 1 — Canonical checks** (every adapter):
-- `handoff-manifest.json` exists and validates against `artifacts/templates/handoff-manifest-schema.json`
-- `design-context.md` exists with all 9 required H2 sections, each populated (not template placeholders)
-- Required shape per contract v3 §Canonical handoff shape (theme.css, components/ui/ ≥ 5 files for initial mode, routes/ or screens/ with one file per screen in spec)
-- Forbidden contents absent — `globals.css`, Next.js files, `.env` files must never appear in the handoff (contract v3 §Forbidden contents)
+- `handoff-manifest.json` exists and validates against `artifacts/templates/handoff-manifest-schema.json` (accepts `contract_version` "3" or "3.1")
+- For contract v3.1 handoffs: `npx @google/design.md@0.1.1 lint src/design-handoff/design-context.md` returns zero errors. Warnings (typically WCAG AA contrast) surface to Tech Lead but don't block. v3 handoffs skip this check.
+- `design-context.md` exists with all 9 required H2 prose sections, each populated (not template placeholders)
+- Required shape per contract v3.1 §Canonical handoff shape (theme.css, components/ui/ ≥ 5 files for initial mode, routes/ or screens/ with one file per screen in spec)
+- Forbidden contents absent — `globals.css`, Next.js files, `.env` files must never appear in the handoff (contract v3.1 §Forbidden contents)
+
+### Running the lint
+
+Inspect `handoff-manifest.json` to determine `contract_version`. If `"3.1"`, run:
+
+```bash
+npx @google/design.md@0.1.1 lint src/design-handoff/design-context.md
+```
+
+The lint returns structured JSON. Parse `summary.errors` — if > 0, halt verification and surface the `findings` array to the Tech Lead with the specific path + message for each error. If `summary.errors == 0`, proceed regardless of `summary.warnings` (warnings log to `design-tool-log.md` but don't block).
+
+Lint errors typically indicate:
+
+- Broken token references in the `components` section (e.g. `"{colors.missing-name}"`)
+- Malformed YAML structure
+- Color values outside valid hex format
+- Missing required sections in YAML
+
+Lint warnings typically indicate:
+
+- WCAG AA contrast below 4.5:1 on color combinations the adapter declared in `components`
+- Schema conformance hints
+
+If lint errors persist after the Tech Lead's fix attempt, the remediation path is: re-run the adapter with a more specific brief (for `claude-design-adapter`) or edit `design-context.md` manually to resolve (for `manual-adapter`).
 
 **Layer 2 — Adapter-specific checks** (from the adapter's SKILL.md §Enforcement gates):
 - For `claude-design-adapter`: C2 token diff, C3 design-context substance, H1 prompt budget, H3 regen shape, H4 version drift
@@ -136,5 +161,7 @@ Re-run `/design`. The pipeline, agents, rules, and commands are tool-agnostic �
 **Canonical verification fails but adapter-specific passes:** The handoff violates contract v3. Check `handoff-manifest.json` schema compliance and `design-context.md` section completeness first — these are the new v3 requirements adapters may be under-producing.
 
 **Adapter-specific verification fails:** Read the adapter SKILL's §Failure Modes section. Most failures have documented fixes.
+
+**DESIGN.md lint fails with network error:** The lint command uses `npx` which downloads `@google/design.md@0.1.1` on first run. If offline or network-restricted, either: (a) pre-install locally via `npm i -g @google/design.md@0.1.1` before running `/design verify`, or (b) switch the active adapter to `manual-adapter` and manually validate the YAML against `artifacts/templates/handoff-manifest-schema.json`.
 
 **Need a new adapter:** See `.cursor/skills/design-adapters/README.md` (created in Milestone 5) for the authoring contract.

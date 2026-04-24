@@ -345,10 +345,27 @@ Per `.cursor/rules/frontend-design.mdc`:
 - **Layout, styling, and animations stay untouched** (90% untouched rule)
 - Visual fidelity: every Tailwind class, spacing value, color, font-weight, border-radius must match the adapter's output exactly
 
+### Step 4b — Preserve translation sources (for mobile)
+
+Before deleting `src/design-handoff/` (Step 5), copy the web-shaped screen TSX into `artifacts/docs/design-reference/web/` as a frozen translation source for the mobile-developer:
+
+```bash
+mkdir -p artifacts/docs/design-reference/web
+cp src/design-handoff/routes/*.tsx artifacts/docs/design-reference/web/   # or screens/*.tsx per adapter
+```
+
+Why this step exists:
+- The mobile-developer translates from **mock-shaped** web TSX (pre-Supabase wiring) to preserve design intent cleanly. Reading from `src/routes/` after Step 4 means translating from str_replace-edited code with useAuth/useQuery/loading-error-empty states woven in — harder and less faithful to the original design.
+- `artifacts/docs/design-reference/` is gitignored — this is a local staging area, not committed. A fresh clone running mobile work must re-run `/design` + `/foundation` first.
+- For HIGH-risk screens, the active adapter may instead produce RN-shaped output directly at `artifacts/docs/design-reference/native/[screen]/` (see the active adapter's SKILL §Prompting Patterns for the native-brief flow). The mobile-developer reads from `native/` when present; otherwise translates from `web/`.
+
+Only the screen TSX files get preserved. `theme.css`, `components/ui/`, `handoff-manifest.json`, and `design-context.md` don't — those have already landed in `src/` or `artifacts/docs/` by Steps 1-3.
+
 ### Step 5 — Clean up
 
-- Delete `src/design-handoff/` after all screens are ported (this directory is gitignored; it's a staging area, not committed)
+- Delete `src/design-handoff/` after all screens are ported AND Step 4b preservation is complete (this directory is gitignored; it's a staging area, not committed)
 - `artifacts/docs/design-context.md` remains in the repo — it's the Frontend agent's reference for subsequent features
+- `artifacts/docs/design-reference/web/` and (if used) `native/[screen]/` remain as gitignored staging for the mobile-developer — they're not committed but persist locally until the next `/design` run overwrites them
 
 ---
 

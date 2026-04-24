@@ -1,3 +1,96 @@
+---
+version: alpha
+design_md_version: "0.1.1"
+name: "[App Name]"
+description: "[One-line description of the app's design identity — e.g. 'Warm limestone and ink: a meditative reading interface']"
+
+colors:
+  # Core brand tokens (required)
+  primary: "[hex]"       # e.g. "#1A1C1E" — CTAs, active states, brand anchor
+  secondary: "[hex]"     # e.g. "#6C7278" — borders, metadata, secondary text
+  tertiary: "[hex]"      # e.g. "#B8422E" — single accent for emphasis
+  neutral: "[hex]"       # e.g. "#F7F5F2" — page background
+
+  # Extended palette (optional — add as needed)
+  # Include dark mode tokens only if EDS §5 specifies dark mode support
+  # Use flat hex values — NOT token references like {colors.primary}
+
+  # Semantic tokens (required if used in components)
+  surface: "[hex]"       # card / modal surface
+  on-surface: "[hex]"    # text on surface
+  outline: "[hex]"       # borders
+  error: "[hex]"         # error states
+  success: "[hex]"       # success states
+
+typography:
+  # Display tier — headings, hero copy
+  display-lg:
+    fontFamily: "[font name — e.g. 'Public Sans']"
+    fontSize: "[e.g. '48px']"
+    fontWeight: "[e.g. '600']"
+    lineHeight: "[e.g. '1.1']"
+    letterSpacing: "[e.g. '-0.02em']"
+  headline-md:
+    fontFamily: "[font]"
+    fontSize: "[e.g. '24px']"
+    fontWeight: "[e.g. '500']"
+    lineHeight: "[e.g. '32px']"
+
+  # Body tier — UI labels, body copy
+  body-lg:
+    fontFamily: "[font]"
+    fontSize: "[e.g. '18px']"
+    fontWeight: "[e.g. '400']"
+    lineHeight: "[e.g. '28px']"
+  body-md:
+    fontFamily: "[font]"
+    fontSize: "[e.g. '16px']"
+    fontWeight: "[e.g. '400']"
+    lineHeight: "[e.g. '24px']"
+
+  # Label tier — captions, metadata
+  label-sm:
+    fontFamily: "[font]"
+    fontSize: "[e.g. '12px']"
+    fontWeight: "[e.g. '600']"
+    lineHeight: "[e.g. '16px']"
+    letterSpacing: "[e.g. '0.05em']"
+
+rounded:
+  sm: "[e.g. '4px']"
+  md: "[e.g. '8px']"
+  lg: "[e.g. '16px']"
+  full: "9999px"
+
+spacing:
+  unit: "[e.g. '4px']"       # base unit
+  xs: "[e.g. '4px']"
+  sm: "[e.g. '8px']"
+  md: "[e.g. '16px']"
+  lg: "[e.g. '24px']"
+  xl: "[e.g. '48px']"
+
+components:
+  # Option A: minimal index of primitives in src/design-handoff/components/ui/
+  # Each entry names the primitive + references the dominant token it uses.
+  # Full styling lives in the TSX file, not here.
+  #
+  # Format: component-name: primary-token-reference
+  # Example:
+  #   button-primary: "#B8422E"       # flat hex
+  #   card: surface                    # token name (not wrapped — plain string)
+  #
+  # Agents use this as a fast index of "what primitives exist and what's their dominant color"
+  # without reading every TSX file. For detailed styling, read the TSX.
+
+  button-primary: "[token name or hex]"
+  button-secondary: "[token name or hex]"
+  card: "[token name or hex]"
+  input: "[token name or hex]"
+  dialog: "[token name or hex]"
+  # Add one line per primitive in components/ui/
+---
+
 # Design Context — [App Name]
 
 > Template for `design-context.md` — the universal design system doc every adapter produces at the root of `src/design-handoff/`. Structure defined in `artifacts/docs/handoff-contract.md` §Design context document.
@@ -88,3 +181,17 @@ Adapters fill in this template when normalizing tool output during `/design`. Ev
 The reference library at `artifacts/docs/design-principles/` is authoritative for the design principles cited above. When the source tool produces values that contradict the references (e.g. a chroma value that reads garish at that lightness, per `color-and-contrast.md`), the adapter should flag the contradiction in the `notes` field of `handoff-manifest.json` and either correct it or defer to the Tech Lead.
 
 See [artifacts/docs/design-principles/craft.md](../docs/design-principles/craft.md) for the shape-then-build philosophy this template supports.
+
+### DESIGN.md hybrid format (v3.1)
+
+This template follows a hybrid format: YAML frontmatter (DESIGN.md v0.1.1 alpha spec, `@google/design.md@0.1.1`) + RAD's 9-section prose structure. The YAML frontmatter is machine-readable and validates against the DESIGN.md linter (`npx @google/design.md@0.1.1 lint`). The prose sections below capture design context that DESIGN.md's format does not cover (Brand voice, Interaction Patterns, Anti-Patterns, Copy Rules, Build Constraints).
+
+Adapters populate both parts during normalization. The frontmatter must be valid YAML parseable by the DESIGN.md linter; `/design verify` runs the linter and BLOCKS on validation errors.
+
+**Token format:** flat hex values (e.g. `"#1A1C1E"`). Token references (e.g. `"{colors.primary}"`) are supported by the linter but RAD adapters don't emit them — the overhead isn't worth the value at adapter scale. Adapters emit the same hex in multiple places rather than constructing a token graph.
+
+**Components in YAML:** minimal index only. The full styling of each primitive lives in the TSX file at `src/design-handoff/components/ui/[primitive].tsx`. The YAML `components` section gives agents a fast lookup of what primitives exist and their dominant token, without having to crawl the TSX tree. For detailed component styling, read the TSX.
+
+See `artifacts/docs/handoff-contract.md` §Design context document for the full contract.
+
+See `artifacts/docs/design-principles/examples/` for reference DESIGN.md files imported from Google Labs.

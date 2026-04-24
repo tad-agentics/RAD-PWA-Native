@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "RAD Handoff Manifest",
-  "description": "Schema for handoff-manifest.json — the metadata file every adapter writes at the root of src/design-handoff/. See artifacts/docs/handoff-contract.md §Handoff manifest.",
+  "description": "Schema for handoff-manifest.json — the metadata file every adapter writes at the root of src/design-handoff/. Supports contract v3 (markdown-only prose) and v3.1 (DESIGN.md hybrid format — YAML frontmatter + prose). See artifacts/docs/handoff-contract.md §Handoff manifest and §Design context document.",
   "type": "object",
   "required": [
     "contract_version",
@@ -15,8 +15,8 @@
   "properties": {
     "contract_version": {
       "type": "string",
-      "enum": ["3"],
-      "description": "Pinned to the handoff-contract.md version this manifest targets."
+      "enum": ["3", "3.1"],
+      "description": "Pinned to the handoff-contract.md version this manifest targets. v3.1 adds DESIGN.md hybrid format (YAML frontmatter + prose sections) for design-context.md. v3 (markdown-only prose) remains accepted for backward compatibility during adapter migration."
     },
     "source_tool": {
       "type": "string",
@@ -55,7 +55,7 @@
     },
     "canonical": {
       "type": "object",
-      "required": ["repo_linked_at_generation", "tokens_match_app_css"],
+      "required": ["repo_linked_at_generation", "tokens_match_app_css", "design_md_version"],
       "properties": {
         "repo_linked_at_generation": {
           "type": "boolean",
@@ -64,6 +64,11 @@
         "tokens_match_app_css": {
           "type": ["boolean", "null"],
           "description": "Null for initial builds (no app.css exists yet). Boolean for new-feature/regen modes."
+        },
+        "design_md_version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$|^alpha$",
+          "description": "The DESIGN.md spec version the adapter's YAML frontmatter targets. Current: '0.1.1' (alpha). The adapter emits design-context.md YAML per this version; /design verify runs npx @google/design.md@[version] lint against it."
         }
       }
     },

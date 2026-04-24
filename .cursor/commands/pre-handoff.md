@@ -72,6 +72,71 @@ Additional mobile checks (append to Pre-Handoff audit):
    - Re-enable network. Data refreshes automatically.
 ```
 
+---
+
+## Pass 6 — Technical Quality Audit (optional, recommended)
+
+Run `/audit` on the full app or specific feature surfaces. Generates a scored report at `artifacts/qa-reports/audit-[YYYY-MM-DD]-[scope].md` across 5 dimensions (a11y, performance, theming, responsive, anti-patterns) with P0-P3 severity.
+
+**When to skip:** simple features where `/visual-audit` already passed cleanly AND the feature surface is small (<3 screens). Otherwise run it.
+
+**Tech Lead reviews findings and decides:** fix now (if P0/P1) / defer (P2/P3) / document as known limitation.
+
+See `.cursor/skills/audit/SKILL.md`.
+
+## Pass 7 — UX Design Critique (optional, recommended for user-facing flows)
+
+Run `/critique` on the primary user flows. Generates persona-based assessments + Nielsen heuristics scoring at `artifacts/qa-reports/critique-[YYYY-MM-DD]-[scope].md`.
+
+**When to run:** every release with new user-facing surfaces. Skip for backend-only changes or internal tooling.
+
+**Tech Lead reviews and decides:** adjust before ship / accept findings / route to new-feature loop if the gap requires design-layer rework.
+
+See `.cursor/skills/critique/SKILL.md`.
+
+## Pass 8 — Production-Readiness Hardening (optional, recommended)
+
+Run `/harden` on the full app. Generates a gap report at `artifacts/qa-reports/harden-[YYYY-MM-DD]-[scope].md` covering text overflow, error states, empty states, onboarding, i18n, edge cases.
+
+**When to skip:** regen-only releases where no new flows were added.
+
+**Remediation paths** (from the skill):
+
+- Mechanical fix in scope (trivial, no design judgment) — fix now
+- New-feature loop (requires new UI states / copy / flows) — route back through `/design new-feature [gap-name]`
+- Document + defer
+
+See `.cursor/skills/harden/SKILL.md`.
+
+## Pass 9 — Performance Diagnostics (optional, recommended for high-traffic launches)
+
+Run `/optimize` on the primary screens + critical user paths. Generates measured findings at `artifacts/qa-reports/optimize-[YYYY-MM-DD]-[scope].md` vs RAD's perf baseline (LCP < 2.5s on 4G, < 200KB initial JS, etc.).
+
+**When to skip:** internal features with low traffic, or features where `/audit` perf score was already 3-4.
+
+**Remediation paths:**
+
+- Mechanical fix (lazy loading, memoization, Reanimated swap) — fix now
+- Design-layer rework (image art direction, loading state design) — new-feature loop
+- Framework config (Vite, Router prerender) — Tech Lead owns
+- Defer
+
+See `.cursor/skills/optimize/SKILL.md`.
+
+---
+
+## Pass execution order and gating
+
+Passes 1–5 are RAD-native and BLOCKING — `/pre-handoff` fails if any pass fails.
+
+Passes 6–9 are Impeccable-imported and ADVISORY — findings route to Tech Lead triage per each skill's remediation-path guidance. A P0 finding in Pass 6-9 typically blocks ship; P1-P3 are judgment calls.
+
+**Recommended sequence for a major launch:**
+1–5 (blocking) → 6 → 7 → 8 → 9 → Tech Lead triage all findings → ship or remediate.
+
+**Recommended sequence for a small feature addition:**
+1–5 (blocking) → 6 (if >3 screens changed) → Tech Lead triage → ship.
+
 ## After completion
 
 **If clean (0 BLOCKING items):**

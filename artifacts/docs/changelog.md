@@ -1,5 +1,36 @@
 # Changelog — [App Name]
 
+## v3.1 — Impeccable Integration (2026-04-24)
+
+Absorbed selected content from Impeccable v2.1.1 (https://impeccable.style, Apache 2.0) to fill gaps in RAD's QA and design-reference coverage.
+
+**Reference library added:**
+- 9 reference files at `artifacts/docs/design-principles/` — typography, color-and-contrast, spatial-design, motion-design, interaction-design, responsive-design, ux-writing, craft, extract
+- Wired into `artifacts/templates/design-context-template.md` and `.cursor/skills/wireframes/SKILL.md` so every design brief cites them
+
+**QA-layer skills added (four):**
+- `/audit` (audit-rad@1.0.0) — technical quality scored P0-P3 across 5 dimensions
+- `/critique` (critique-rad@1.0.0) — UX design review via persona sub-agents + Nielsen heuristics
+- `/harden` (harden-rad@1.0.0) — production-readiness gap flagging
+- `/optimize` (optimize-rad@1.0.0) — UI performance diagnostics vs RAD baseline
+
+All four wired into `/pre-handoff` as Passes 6-9 (advisory; route findings to Tech Lead triage per each skill's remediation paths).
+
+**UX-writing patterns merged into copy-rules.mdc:**
+- `/clarify` content absorbed as the "UX Writing Principles" section (rule-shape, not skill-shape) so every agent session has UX-writing principles auto-loaded.
+
+**Explicitly NOT imported:**
+- `/impeccable`, `/shape`, `/impeccable teach`, `/impeccable craft` — conflict with RAD's Phase 1/Phase 2
+- `/polish`, `/typeset`, `/layout`, `/colorize`, `/animate`, `/bolder`, `/quieter`, `/distill`, `/overdrive`, `/delight`, `/adapt` — design-layer creative operations; belong in the adapter step, not integration
+
+**Scope-adjusted from upstream:** `/harden` and `/optimize` FLAG findings rather than auto-implement fixes. Non-trivial remediation routes through `/design new-feature` to preserve RAD's 90% untouched rule.
+
+**Attribution:** See `artifacts/docs/design-principles/NOTICE.md` + each skill's NOTICE.md.
+
+**Install tree NOT committed:** Impeccable's `.agents/`, `.claude/`, `skills-lock.json` explicitly excluded (see `.gitignore`). This is a fork, not a dependency.
+
+---
+
 ## v3 — Tool-Agnostic Design Adapter Layer (2026-04-23)
 
 Refactored the design tool integration from a Claude Design–specific pipeline to a ports-and-adapters architecture. RAD now supports any AI design tool via a thin adapter skill, with the pipeline remaining tool-agnostic.

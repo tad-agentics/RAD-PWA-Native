@@ -275,3 +275,16 @@ For each finding: classify as AUTO-FIX (apply directly) or BLOCKING (requires Te
 - BLOCKING items logged in `artifacts/issues/` and escalated to Tech Lead
 
 **Commit:** `test: pre-handoff review complete`
+
+### QA skill roster (extended via Impeccable integration)
+
+In addition to the 5 RAD-native passes (visual fidelity, data & performance, security & RLS, interaction flows, build & test), the QA agent has access to four imported QA-layer skills for deeper quality checks at `/pre-handoff`:
+
+- `/audit` — technical quality scored across a11y, perf, theming, responsive, anti-patterns (see `.cursor/skills/audit/SKILL.md`)
+- `/critique` — UX design review via persona sub-agents + Nielsen heuristics (see `.cursor/skills/critique/SKILL.md`)
+- `/harden` — production-readiness gap flagging — overflow, i18n, empty/error/onboarding states (see `.cursor/skills/harden/SKILL.md`)
+- `/optimize` — UI performance diagnostics vs RAD baseline (see `.cursor/skills/optimize/SKILL.md`)
+
+All four run as Passes 6–9 in `/pre-handoff` and can be invoked standalone. See each skill's SKILL.md for scope, output format, and remediation routing. See `artifacts/docs/design-principles/NOTICE.md` for attribution.
+
+**Critical discipline:** these skills FLAG findings and score them. They do NOT auto-implement fixes that require design-layer work. Non-trivial fixes route back through `/design new-feature [name]` per RAD's 90% untouched rule.

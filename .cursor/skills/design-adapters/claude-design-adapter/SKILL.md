@@ -1,14 +1,14 @@
 ---
 name: claude-design-adapter
-description: RAD design adapter for Anthropic Claude Design. Normalizes Claude Design's ZIP + handoff bundle into the canonical src/design-handoff/ shape per handoff-contract.md v3. Includes prompting patterns, iterative regen, and enforcement gates C2/C3/H1/H2/H3/H4.
+description: RAD design adapter for Anthropic Claude Design. Normalizes Claude Design's ZIP + handoff bundle into the canonical src/design-handoff/ shape per handoff-contract.md v3.1. Produces design-context.md in hybrid format (DESIGN.md YAML frontmatter + RAD prose). Includes prompting patterns, iterative regen, and enforcement gates C2/C3/H1/H2/H3/H4/L1.
 disable-model-invocation: true
-version: claude-design-adapter@1.0.0
-targets_contract_version: "3"
+version: claude-design-adapter@1.1.0
+targets_contract_version: "3.1"
 ---
 
 # Claude Design Adapter
 
-This adapter integrates Anthropic Claude Design (the AI design tool) into RAD's tool-agnostic design pipeline. It produces `src/design-handoff/` matching `artifacts/docs/handoff-contract.md` v3.
+This adapter integrates Anthropic Claude Design (the AI design tool) into RAD's tool-agnostic design pipeline. It produces `src/design-handoff/` matching `artifacts/docs/handoff-contract.md` v3.1.
 
 ## Adapter contract
 
@@ -17,7 +17,13 @@ After the human export step (see §Prompting Patterns below), the adapter normal
 1. Unzip Claude Design's export into `src/design-handoff/_raw/`
 2. Delete files matching the Discard list (below)
 3. Generate `src/design-handoff/handoff-manifest.json` with `source_tool: "claude-design"` and this adapter's version/mode/fields per `artifacts/templates/handoff-manifest-schema.json`
-4. Produce `src/design-handoff/design-context.md` from the Claude Design handoff bundle metadata (Tokens, Components, Notes, Interactions sections) plus EDS §5, following `artifacts/templates/design-context-template.md`
+4. Produce `src/design-handoff/design-context.md` in hybrid format per `artifacts/templates/design-context-template.md`:
+   a. Extract design tokens from Claude Design's Tokens section (colors, typography, spacing, rounded) plus EDS §5 fallbacks for missing values
+   b. Emit them as YAML frontmatter following DESIGN.md spec v0.1.1 — flat hex values only, no token references
+   c. Populate the 9 prose sections below the frontmatter from Claude Design's Components, Notes, and Interactions sections plus RAD's existing `copy-rules.mdc` (§UX Writing Principles) and `project.mdc`
+   d. For the components YAML block: emit one entry per TSX file in `src/design-handoff/components/ui/`, naming the dominant token each primitive uses (Option A minimal index — full styling remains in TSX)
+   e. Set `version: alpha` and `design_md_version: "0.1.1"` in the frontmatter
+   f. Validate the resulting file with `npx @google/design.md@0.1.1 lint src/design-handoff/design-context.md` before completing normalization — if lint reports errors, the adapter halts and surfaces them (see §Hybrid format generation below)
 5. Move remaining files into canonical structure (components/, routes/, theme.css)
 6. Delete `src/design-handoff/_raw/`
 
@@ -43,7 +49,7 @@ If a file appears in a handoff that is neither in the canonical `artifacts/docs/
 
 ## Enforcement gates
 
-This adapter enforces gates C2, C3, H1, H2, H3, H4 from `artifacts/docs/handoff-contract.md` §Adapter-specific verification via scripts in `./scripts/`:
+This adapter enforces gates C2, C3, H1, H2, H3, H4, and L1 from `artifacts/docs/handoff-contract.md` §Adapter-specific verification via scripts in `./scripts/`:
 
 | Gate | Script | Concern |
 |---|---|---|
@@ -53,6 +59,51 @@ This adapter enforces gates C2, C3, H1, H2, H3, H4 from `artifacts/docs/handoff-
 | H2 | enforced via feature doc | native_brief_count cap of 3 |
 | H3 | verify-regen-shape.sh | Regen = single .tsx file, no invented primitives |
 | H4 | rollup-prompt-budget.sh | Consecutive shape_mismatch → contract review |
+| L1 | npx @google/design.md@0.1.1 lint | DESIGN.md YAML validation + WCAG AA contrast checks on design-context.md |
+
+## Hybrid format generation (v3.1)
+
+This adapter produces design-context.md in the hybrid format defined in contract v3.1 §Design context document. The normalization step 4 above covers the mechanics; this section explains the token extraction logic.
+
+### Token extraction priority
+
+For each YAML field in the frontmatter, the adapter's priority order:
+
+1. **Claude Design's repo-linked output** (if `canonical.repo_linked_at_generation: true`) — the tokens Claude Design read from `src/app.css` or EDS. Highest fidelity.
+2. **Claude Design's `Tokens` section** (handoff bundle) — what Claude Design explicitly emitted in its design export. Second-highest fidelity.
+3. **EDS §5 fallback** — RAD's authoritative brand reference. Used when Claude Design didn't produce a value the YAML schema requires.
+4. **Sensible default** — last resort. Example: if no `rounded.sm` was specified anywhere, adapter uses `"4px"` as a defensible starting point and records this in the manifest's `notes` field so the Tech Lead can adjust if needed.
+
+### Flat hex, no references
+
+RAD's adapters emit flat hex values across the YAML. Token references (`"{colors.primary}"`) are syntactically valid per DESIGN.md spec but require a resolver at every consumer. Adapters avoid the complexity: the same hex appears in multiple places instead of being referenced. This is a deliberate trade-off (contract v3.1 §Design context document clarifies this).
+
+### Components index (Option A)
+
+For the YAML `components` section, the adapter emits one entry per TSX file in `src/design-handoff/components/ui/`. Each entry names the dominant token used by that primitive. Example:
+
+```yaml
+components:
+  button-primary: primary      # the primary hex or the token name — reader understands
+  card: surface
+  input: surface
+  dialog: surface
+  badge: primary
+```
+
+This is a lookup index, not a styling specification. Full styling lives in the TSX files. Agents use this to find primitives by dominant token without crawling TSX.
+
+### Lint before completion
+
+Before the adapter signals normalization complete, it runs:
+
+```bash
+npx @google/design.md@0.1.1 lint src/design-handoff/design-context.md
+```
+
+If the lint returns any `"severity": "error"` findings, the adapter halts and surfaces the report to the Tech Lead. The Tech Lead resolves (either re-run Claude Design with a more specific brief, or edit design-context.md manually) before proceeding to Foundation.
+
+`"severity": "warning"` findings (typically WCAG AA contrast issues) are surfaced but do not block. They get logged in the manifest's `notes` field so Foundation's frontend-developer sees them when porting screens.
 
 ---
 

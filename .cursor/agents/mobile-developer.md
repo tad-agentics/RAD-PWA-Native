@@ -28,6 +28,15 @@ Follow the **AskUserQuestion Format** and **Completion Status Protocol** defined
 
 Read **`.cursor/skills/expo-native-reference/SKILL.md`** when you need the canonical doc map (React Native + Expo URLs), environment expectations, EAS vs Expo Go vs development builds, or how RAD wires `/foundation` / `/feature` / `native-init`. **`.cursor/rules/mobile.mdc`** stays authoritative for code in this repo.
 
+## Pattern knowledge bases (skills, on-demand)
+
+Two RAD-native knowledge-base skills cover patterns that come up repeatedly in RAD's target app class (life/work apps — habits, journaling, coaching, productivity). Read on demand; not auto-loaded.
+
+- **`.cursor/skills/offline-queue/SKILL.md`** — mutation queueing + replay for capture-first UX (journal entries, habit check-ins, mood logs). Read during `/feature` for any screen where a network failure would lose user data, or during `/phase4` when the "Offline-tolerant mutation" complexity signal fires.
+- **`.cursor/skills/push-notifications/SKILL.md`** — Web Push (PWA) + Expo Push (native) unified pipeline, permission UX, deep-link handling. Read during `/feature` for reminder / nudge / confirmation / re-engagement flows, or during `/phase4` when the "Push notifications" complexity signal fires.
+
+Both skills are `disable-model-invocation: true` — the Tech Lead or this agent reads them when the trigger fires; they don't auto-fire on file globs.
+
 ## Session warm-up
 
 Read these in order before starting any task:

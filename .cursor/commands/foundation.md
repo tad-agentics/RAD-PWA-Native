@@ -93,6 +93,7 @@ Step 5: Landing page (src/routes/_index/route.tsx) — if the adapter's handoff 
   - FAQ section renders both visible accordion AND FAQ JSON-LD structured data
   - Edge case: already-installed detection → swap install CTA for deep link
 Step 6: Auth screens (src/routes/_auth/) — if the adapter's handoff has auth screens (DangNhap, DangNhapEmail, QuenMatKhau), COPY them directly and apply targeted edits (swap mock auth → real Supabase Auth). Otherwise build from northstar §9.
+Step 7 (mode ≠ pwa only): Preserve translation sources per handoff-contract.md Step 4b. Copy src/design-handoff/routes/*.tsx (or screens/*.tsx per adapter) into artifacts/docs/design-reference/web/ as the frozen mobile-translation source. If the adapter also produced native-targeted briefs at src/design-handoff/native/[screen]/, copy those into artifacts/docs/design-reference/native/[screen]/. Skip entirely for mode=pwa. The design-reference/ directory is gitignored — local staging only, not committed.
 
 Building the landing page first validates the adapter's components + Tailwind config on a real screen before feature work begins.
 

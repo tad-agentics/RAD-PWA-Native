@@ -35,7 +35,7 @@ artifacts/plans/build-plan.md                     (feature context package for t
 src/design-handoff/                               (design handoff bundle — read App.tsx + routes.tsx first)
 ```
 
-**Design handoff:** The active design adapter produces the canonical handoff bundle at `src/design-handoff/` per `artifacts/docs/handoff-contract.md` v3. Read `src/design-handoff/App.tsx` and any `routes.tsx` file to understand the screen-to-route mapping. **Your role is integrator: copy the adapter's files directly into the project, then make targeted `str_replace` edits. Never rewrite a handoff file from scratch. Never "port" by reading the handoff code and writing new code inspired by it.** See `frontend-design.mdc` for the full copy-then-edit methodology.
+**Design handoff:** The active design adapter produces the canonical handoff bundle at `src/design-handoff/` per `artifacts/docs/handoff-contract.md` (v3 or v3.1). Read `src/design-handoff/App.tsx` and any `routes.tsx` file to understand the screen-to-route mapping. **Your role is integrator: copy the adapter's files directly into the project, then make targeted `str_replace` edits. Never rewrite a handoff file from scratch. Never "port" by reading the handoff code and writing new code inspired by it.** See `frontend-design.mdc` for the full copy-then-edit methodology.
 
 **Do not** attempt to re-request designs from the source tool during porting — work from the exported handoff bundle in `src/design-handoff/`. If the handoff is incorrect, the fix is to re-run the adapter (`/design new-feature` or `/design regen`), not to invent code in `src/`.
 

@@ -13,7 +13,7 @@ license: Apache 2.0 — see NOTICE.md
 
 Before running this skill, confirm:
 
-- `artifacts/docs/design-context.md` exists (produced by the active adapter during `/foundation` — see `artifacts/docs/handoff-contract.md` v3 §Design context document)
+- `artifacts/docs/design-context.md` exists (produced by the active adapter during `/foundation` — see `artifacts/docs/handoff-contract.md` (v3 or v3.1) §Design context document)
 - `artifacts/docs/design-principles/` exists and contains the 9 reference files (typography, color-and-contrast, spatial-design, motion-design, interaction-design, responsive-design, ux-writing, craft, extract)
 
 If either is missing, halt and report. Do not audit without context — a "technical" audit that ignores the project's design principles will flag false positives and miss real issues.

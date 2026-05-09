@@ -1,0 +1,42 @@
+---
+description: Async job pattern for AI-heavy features. Auto-loads when editing job infrastructure (migrations, Edge Functions, useJob hook, fingerprint util) or screens consuming async jobs.
+globs:
+  - supabase/migrations/*jobs*.sql
+  - supabase/migrations/*workflows*.sql
+  - supabase/functions/**/*.ts
+  - shared/hooks/useJob*.ts
+  - shared/utils/fingerprint.ts
+  - src/routes/**/*.tsx
+  - mobile/app/**/*.tsx
+alwaysApply: false
+---
+
+## Async Job Pattern (standard for AI-heavy features)
+
+Any feature involving LLM generation, AI scoring, or long-running computation uses this pattern. Never block the UI on an operation that takes more than 2 seconds.
+
+### Data flow
+
+1. Client computes `fingerprint_hash = SHA-256(sorted inputs)` via `shared/utils/fingerprint.ts`
+2. Client calls Supabase to INSERT into `jobs` (status=`pending`, fingerprint_hash)
+   - If fingerprint_hash already exists: return existing job_id instead of inserting
+   - UNIQUE constraint on `fingerprint_hash` handles race conditions at DB level
+3. DB webhook fires → triggers `process-job` Edge Function
+4. Edge Function: updates status → `processing`, calls LLM, writes result, updates status → `completed` or `failed`
+5. Client subscribes via `shared/hooks/useJob(jobId)` — Realtime push on status change, polling fallback every 3s, self-cancels on terminal status
+
+### Critical rules
+
+- **Never poll after terminal status.** `useJob` self-cancels when status is `completed` or `failed` — do not override `refetchInterval`.
+- **Never hardcode prompts in Edge Functions.** Load from `workflows` table. Prompt iteration = DB update, not a code deploy.
+- **Always write fingerprint_hash before dispatching.** The UNIQUE constraint is the dedup guard — it only works if the hash is present.
+- **Free/paid split is a column, not a separate table.** `jobs.tier` determines priority. Split into separate Edge Functions only when paid latency is measurably degraded by free backlog.
+- **Edge Function timeout is 150 seconds.** Design LLM calls to complete under 120s. If a job legitimately needs more time, decompose into multiple chained jobs.
+
+## Common Pitfalls
+
+1. **Don't use `status` as a UI loading boolean.** `status === 'processing'` ≠ "show spinner" — `pending` also needs a loading state. Check `!TERMINAL.has(status)` instead.
+2. **Don't mutate `output` JSONB in place.** Always replace the entire `output` column in a single update. Partial JSONB updates via Supabase client require `.update({ output: { ...existing, newKey: value } })` — fetch first, merge, then update.
+3. **Don't call the Edge Function directly from the client.** The DB webhook is the trigger — client only inserts the job row. Direct function calls bypass the dedup and status machine.
+4. **Don't skip RLS on `jobs`.** Users must only see their own jobs. Missing RLS leaks job outputs across users.
+5. **Don't activate multiple workflows simultaneously.** `workflows.is_active` should have at most one `true` row. The migration enforces this via a partial unique index (`uq_workflows_single_active`) — admin UI must respect it (set old row to `false` before setting new row to `true` in a single transaction).

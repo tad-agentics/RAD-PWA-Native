@@ -1,16 +1,17 @@
 {
-  "contract_version": "3",
+  "contract_version": "3.1",
   "source_tool": "claude-design",
   "tool_version": "beta-2026-04",
   "generated_at": "2026-04-15T14:32:00Z",
-  "adapter": "claude-design-adapter@1.0.0",
+  "adapter": "claude-design-adapter@1.1.0",
   "mode": "initial",
   "feature_name": null,
   "screens_exported": 3,
   "primitives_exported": 5,
   "canonical": {
     "repo_linked_at_generation": true,
-    "tokens_match_app_css": null
+    "tokens_match_app_css": null,
+    "design_md_version": "0.1.1"
   },
   "tool_specific": {
     "claude_design_project_id": "example-12345"

@@ -3,7 +3,7 @@
 #
 # Simulates switching design tool adapters mid-project without pipeline-file
 # changes. Produces two mock handoffs (claude-design shape, manual shape),
-# validates both against contract v3 canonical shape, confirms the pipeline
+# validates both against the canonical contract shape (v3.1 hybrid format),
 # accepts both.
 #
 # This test is additive — it never writes to the project's src/design-handoff/
@@ -287,7 +287,7 @@ if errors:
 print('  canonical checks passed')
 " || fail "claude-design canonical validation failed"
 
-pass "claude-design handoff validates against contract v3"
+pass "claude-design handoff validates against contract v3.1"
 
 # ---------- Test 2: manual adapter handoff (same canonical shape, different source_tool) ----------
 
@@ -332,7 +332,7 @@ for primitive in button card dialog input badge; do
   cp "$CD_HANDOFF/components/ui/$primitive.tsx" "$MANUAL_HANDOFF/components/ui/$primitive.tsx"
 done
 
-# Use screens/ instead of routes/ — both are valid per contract v3
+# Use screens/ instead of routes/ — both are valid per contract v3.1
 for screen in home settings profile; do
   cat > "$MANUAL_HANDOFF/screens/$screen.tsx" <<TSX
 export default function ${screen^}Screen() { return null; }
@@ -377,7 +377,7 @@ if errors:
 print('  canonical checks passed')
 " || fail "manual canonical validation failed"
 
-pass "manual handoff validates against contract v3"
+pass "manual handoff validates against contract v3.1"
 
 # ---------- Test 2b: DESIGN.md YAML validates for both handoffs ----------
 

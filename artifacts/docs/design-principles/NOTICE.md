@@ -22,7 +22,7 @@ http://www.apache.org/licenses/LICENSE-2.0
 Files in this directory have been modified from the original Impeccable source to:
 1. Remove or adapt references to Impeccable-specific commands (`/impeccable teach`, `/impeccable craft`, `/shape`, etc.) that do not exist in RAD
 2. Reframe cross-references to point at RAD's pipeline (Phase 1 EDS, Phase 2 screen specs, the active design adapter)
-3. Integrate with RAD's canonical design handoff contract v3
+3. Integrate with RAD's canonical design handoff contract (v3.1 current, v3 accepted during adapter migration)
 4. Absorbed UX-writing patterns from Impeccable's `/clarify` skill (upstream v2.1.1) into `.cursor/rules/copy-rules.mdc` §UX Writing Principles. `/clarify` is NOT imported as a standalone skill — its content is rule-shape, not skill-shape. Attribution preserved here.
 
 The modifications are RAD-specific and do not impair the design principles documented in the original Impeccable reference library.

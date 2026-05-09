@@ -158,7 +158,7 @@ Re-run `/design`. The pipeline, agents, rules, and commands are tool-agnostic �
 
 **Adapter not found in .cursor/skills/design-adapters/:** Check the adapter name in `artifacts/design-tool.config.json` matches a directory under `.cursor/skills/design-adapters/[name]-adapter/`. Note the `-adapter` suffix.
 
-**Canonical verification fails but adapter-specific passes:** The handoff violates contract v3. Check `handoff-manifest.json` schema compliance and `design-context.md` section completeness first — these are the new v3 requirements adapters may be under-producing.
+**Canonical verification fails but adapter-specific passes:** The handoff violates the canonical contract (v3 or v3.1, whichever is declared in `handoff-manifest.json.contract_version`). Check `handoff-manifest.json` schema compliance and `design-context.md` section completeness first — these are the contract requirements adapters may be under-producing. For v3.1 handoffs, also check the DESIGN.md lint output for malformed YAML frontmatter.
 
 **Adapter-specific verification fails:** Read the adapter SKILL's §Failure Modes section. Most failures have documented fixes.
 

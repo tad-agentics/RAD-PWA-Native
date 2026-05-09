@@ -35,8 +35,8 @@ cp -r .cursor/skills/design-adapters/claude-design-adapter .cursor/skills/design
 Replace:
 - `name: [tool]-adapter`
 - `description:` tool-specific one-liner
-- `version: [tool]-adapter@1.0.0`
-- `targets_contract_version: "3"` (or current)
+- `version: [tool]-adapter@1.0.0` (start at 1.0.0; bump per the semver guidance below as the adapter evolves)
+- `targets_contract_version: "3.1"` (current — bump when a future contract version ships)
 
 ### Step 3 — Rewrite the adapter contract section
 
@@ -128,7 +128,7 @@ Adapter semver rules:
 - **Minor (1.0.0 → 1.1.0):** new gate added, new tool-specific field handled, backward-compatible
 - **Major (1.0.0 → 2.0.0):** breaking change — projects pinned to 1.x must migrate or stay on the old adapter
 
-Contract version targets are separate from adapter semver. An adapter targets one contract version at a time (`targets_contract_version: "3"`). When contract v4 ships, adapters ship a major version bump to target it.
+Contract version targets are separate from adapter semver. An adapter targets one contract version at a time (`targets_contract_version: "3.1"` currently). When the contract bumps (v3 → v3.1 was a backward-compatible minor; a future v4 would be breaking), the adapter ships a corresponding semver bump to track it.
 
 ---
 

@@ -8,7 +8,7 @@ alwaysApply: false
 
 ## Design Adapter Porting
 
-The design adapter produces a canonical handoff at `src/design-handoff/` per handoff-contract.md v3 — a complete working React + Tailwind app with every button, form, and list rendering against hardcoded mock data. The frontend agent's role is **integrator**: copy the adapter's handoff files directly, then make targeted edits. **Never rewrite a handoff file from scratch. Never "port" by reading the handoff code and writing new code inspired by it.**
+The design adapter produces a canonical handoff at `src/design-handoff/` per handoff-contract.md (v3 or v3.1) — a complete working React + Tailwind app with every button, form, and list rendering against hardcoded mock data. The frontend agent's role is **integrator**: copy the adapter's handoff files directly, then make targeted edits. **Never rewrite a handoff file from scratch. Never "port" by reading the handoff code and writing new code inspired by it.**
 
 The adapter exports the handoff into `src/design-handoff/` (or `src/design-handoff/new-feature-[name]/` for incremental work; `src/design-handoff/regen-[screen]/` for drift regen).
 

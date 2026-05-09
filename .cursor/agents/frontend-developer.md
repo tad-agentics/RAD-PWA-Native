@@ -138,6 +138,23 @@ Build auth layout and screens at `src/routes/_auth/`:
 - All auth screens use `supabase.auth` methods from `src/lib/supabase.ts`
 - On success: redirect to `/app/home` via `useNavigate()`
 
+**Step 7 — Preserve translation sources for mobile (mode ≠ pwa only):**
+
+Per `artifacts/docs/handoff-contract.md` §What Foundation does with this — Step 4b. If the deployment mode is `native` or `pwa-then-native`, copy the web-shape screen TSX from the handoff bundle into `artifacts/docs/design-reference/web/` as a frozen translation source for the mobile-developer:
+
+```bash
+mkdir -p artifacts/docs/design-reference/web
+cp src/design-handoff/routes/*.tsx artifacts/docs/design-reference/web/   # or screens/*.tsx per adapter
+```
+
+Why: the mobile-developer translates from **mock-shaped** TSX (pre-Supabase wiring) to preserve design intent cleanly. After Feature Mode str_replace edits land, `src/routes/` no longer matches the original handoff shape — translating from edited code loses fidelity. The frozen `web/` snapshot is what mobile reads.
+
+For `mode: pwa` (web-only) skip this step — there's no mobile work to feed.
+
+If the active adapter produced native-targeted briefs at `src/design-handoff/native/[screen]/` (claude-design-adapter SKILL §2b — RN-flavored TSX for HIGH-risk screens), also copy those into `artifacts/docs/design-reference/native/[screen]/`.
+
+`artifacts/docs/design-reference/` is gitignored — this is local staging, not committed. Fresh clones running mobile work re-run `/design` + `/foundation` first.
+
 **Gates before committing:**
 - `npm run build` — 0 TypeScript errors
 - Design tokens render correctly (check token values against the adapter's theme.css)
@@ -146,6 +163,7 @@ Build auth layout and screens at `src/routes/_auth/`:
 - Install prompt fires on Android Chrome (test in DevTools mobile emulation)
 - Auth flow works end-to-end (signup → login → redirect to /app)
 - No raw hex codes or arbitrary values — all styling via design tokens
+- (mode ≠ pwa) `artifacts/docs/design-reference/web/` exists and contains screen TSX files
 
 **Commit:** `feat(foundation): shared components + landing page + auth screens complete`
 
